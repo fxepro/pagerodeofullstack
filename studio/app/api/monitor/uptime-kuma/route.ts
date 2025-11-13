@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     })
 
     switch (action) {
-      case 'add':
+      case 'add': {
         // Login if using username/password
         if (UPTIME_KUMA_USERNAME && UPTIME_KUMA_PASSWORD) {
           await kumaClient.login()
@@ -43,8 +43,9 @@ export async function POST(request: NextRequest) {
           message: `Monitor created for ${url}`,
           monitor
         })
+      }
 
-      case 'status':
+      case 'status': {
         const { monitorId } = await request.json()
         if (!monitorId) {
           return NextResponse.json(
@@ -58,8 +59,9 @@ export async function POST(request: NextRequest) {
           success: true,
           status
         })
+      }
 
-      case 'uptime':
+      case 'uptime': {
         const { monitorId: uptimeMonitorId, period } = await request.json()
         if (!uptimeMonitorId) {
           return NextResponse.json(
@@ -73,6 +75,7 @@ export async function POST(request: NextRequest) {
           success: true,
           stats: uptimeStats
         })
+      }
 
       default:
         return NextResponse.json(
