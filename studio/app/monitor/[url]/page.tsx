@@ -24,13 +24,14 @@ function MonitorReportLoading() {
 }
 
 interface MonitorPageProps {
-  params: {
+  params: Promise<{
     url: string
-  }
+  }>
 }
 
-export default function MonitorDetailPage({ params }: MonitorPageProps) {
-  const decodedUrl = decodeURIComponent(params.url)
+export default async function MonitorDetailPage({ params }: MonitorPageProps) {
+  const { url } = await params
+  const decodedUrl = decodeURIComponent(url)
   
   return (
     <Suspense fallback={<MonitorReportLoading />}>
