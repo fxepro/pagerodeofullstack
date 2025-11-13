@@ -93,10 +93,6 @@ interface BillingTransaction {
   created_at: string;
 }
 
-interface DashboardPageProps {
-  user?: any;
-}
-
 const emptyCorporate: CorporateInfo = {
   company_name: "",
   job_title: "",
@@ -112,7 +108,7 @@ const emptyCorporate: CorporateInfo = {
   notes: "",
 };
 
-export default function ProfilePage({ user: userProp }: DashboardPageProps) {
+export default function ProfilePage() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [corporateInfo, setCorporateInfo] = useState<CorporateInfo>(emptyCorporate);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
