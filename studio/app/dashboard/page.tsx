@@ -16,10 +16,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-interface DashboardPageProps {
-  user?: any;
-}
-
 interface AuditReport {
   id: string;
   url: string;
@@ -37,7 +33,7 @@ interface MonitoredSite {
   status: 'up' | 'down' | 'checking';
 }
 
-export default function DashboardPage({ user }: DashboardPageProps) {
+export default function DashboardPage() {
   const [stats, setStats] = useState({
     totalAudits: 0,
     monitoredSites: 0,
