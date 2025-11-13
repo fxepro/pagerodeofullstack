@@ -1,0 +1,68 @@
+{% extends "admin/index.html" %}
+{% load i18n static %}
+
+{% block content %}
+{{ block.super }}
+
+<!-- Add Monitoring Dashboard Section -->
+<div class="module">
+    <table>
+        <caption>
+            <a href="{% url 'admin:monitoring_dashboard' %}" class="section" title="Monitoring Dashboard">
+                📊 Monitoring & Logs
+            </a>
+        </caption>
+        <tbody>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'admin:monitoring_dashboard' %}">Monitoring Dashboard</a>
+                </th>
+                <td>
+                    <a href="{% url 'admin:monitoring_dashboard' %}" class="addlink">View Dashboard</a>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'admin:view_logs_admin' 'app' %}">Application Logs</a>
+                </th>
+                <td>
+                    <a href="{% url 'admin:view_logs_admin' 'app' %}" class="viewlink">View Logs</a>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'admin:view_logs_admin' 'error' %}">Error Logs</a>
+                </th>
+                <td>
+                    <a href="{% url 'admin:view_logs_admin' 'error' %}" class="viewlink">View Logs</a>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'admin:view_logs_admin' 'requests' %}">Request Logs</a>
+                </th>
+                <td>
+                    <a href="{% url 'admin:view_logs_admin' 'requests' %}" class="viewlink">View Logs</a>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'admin:view_logs_admin' 'jobs' %}">Job Logs</a>
+                </th>
+                <td>
+                    <a href="{% url 'admin:view_logs_admin' 'jobs' %}" class="viewlink">View Logs</a>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    <a href="{% url 'admin:view_logs_admin' 'performance' %}">Performance Logs</a>
+                </th>
+                <td>
+                    <a href="{% url 'admin:view_logs_admin' 'performance' %}" class="viewlink">View Logs</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

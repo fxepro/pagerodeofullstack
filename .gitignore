@@ -1,0 +1,134 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+package-lock.json
+pnpm-lock.yaml
+
+# Next.js
+.next/
+out/
+build/
+.vercel
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+/static
+
+# Logs
+logs/
+*.log
+backend/logs/
+*.log.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+coverage/
+*.cover
+.hypothesis/
+.coverage.*
+.nyc_output
+
+# Backup files
+backups/
+*.dump
+*.sql
+*.sql.gz
+*.backup
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets
+secrets/
+*.pem
+*.key
+*.crt
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# Oracle Cloud
+.oci/
+oci-config
+
+# CI/CD
+.github/workflows/*.yml.bak
+
+# Documentation
+/docs/
+docs/
+/studio/public/screens/
+/studio/public/pages/
+studio/public/screens/
+studio/public/pages/
+

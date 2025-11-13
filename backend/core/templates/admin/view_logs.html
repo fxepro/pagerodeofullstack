@@ -1,0 +1,149 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}View Logs: {{ log_file }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .log-viewer {
+        padding: 20px;
+    }
+    .log-viewer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #417690;
+    }
+    .log-viewer-header h1 {
+        margin: 0;
+    }
+    .log-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    .log-actions select,
+    .log-actions input {
+        padding: 5px 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 3px;
+    }
+    .log-actions button {
+        background: #417690;
+        color: white;
+        border: none;
+        padding: 5px 15px;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    .log-actions button:hover {
+        background: #205067;
+    }
+    .log-navigation {
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    .log-navigation a {
+        color: #417690;
+        text-decoration: none;
+        margin-right: 15px;
+    }
+    .log-navigation a:hover {
+        text-decoration: underline;
+    }
+    .log-content {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 15px;
+        border-radius: 5px;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        max-height: 600px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    .log-info {
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+    .log-info strong {
+        color: #417690;
+    }
+    .log-line {
+        margin-bottom: 2px;
+    }
+    .log-line.error {
+        color: #ff6b6b;
+    }
+    .log-line.warning {
+        color: #ffd93d;
+    }
+    .log-line.info {
+        color: #6bcf7f;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="log-viewer">
+    <div class="log-viewer-header">
+        <h1>View Logs: {{ log_file }}</h1>
+        <div class="log-actions">
+            <form method="get" action="{% url 'admin:view_logs_admin' log_type %}" style="display: flex; gap: 10px; align-items: center;">
+                <label>Lines:</label>
+                <select name="lines">
+                    <option value="50" {% if lines_requested == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if lines_requested == 100 %}selected{% endif %}>100</option>
+                    <option value="200" {% if lines_requested == 200 %}selected{% endif %}>200</option>
+                    <option value="500" {% if lines_requested == 500 %}selected{% endif %}>500</option>
+                    <option value="1000" {% if lines_requested == 1000 %}selected{% endif %}>1000</option>
+                </select>
+                <button type="submit">Refresh</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="log-navigation">
+        <strong>View Logs:</strong>
+        {% for type in available_log_types %}
+            <a href="{% url 'admin:view_logs_admin' type %}?lines={{ lines_requested }}"
+               {% if type == log_type %}style="font-weight: bold; color: #205067;"{% endif %}>
+                {{ type|title }}
+            </a>
+        {% endfor %}
+        |
+        <a href="{% url 'admin:monitoring_dashboard' %}">Back to Dashboard</a>
+    </div>
+    
+    <div class="log-info">
+        <strong>Log File:</strong> {{ log_file }}<br>
+        <strong>Total Lines:</strong> {{ total_lines }}<br>
+        <strong>Showing:</strong> Last {{ returned_lines }} lines
+    </div>
+    
+    <div class="log-content">
+        {% for line in log_lines %}
+            <div class="log-line 
+                {% if 'ERROR' in line %}error
+                {% elif 'WARNING' in line %}warning
+                {% elif 'INFO' in line %}info
+                {% endif %}">
+                {{ line }}
+            </div>
+        {% empty %}
+            <div style="color: #6c757d; font-style: italic;">No log entries found</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
