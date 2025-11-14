@@ -397,8 +397,15 @@ try:
     SECURE_REFERRER_POLICY = SECURE_REFERRER_POLICY
     
     # Proxy SSL Header (if behind reverse proxy)
+    # Must be a tuple of (header_name, header_value) for Django
     if SECURE_PROXY_SSL_HEADER:
-        SECURE_PROXY_SSL_HEADER = tuple(SECURE_PROXY_SSL_HEADER) if isinstance(SECURE_PROXY_SSL_HEADER, list) else SECURE_PROXY_SSL_HEADER
+        # Convert to tuple if it's a list or Csv object
+        if isinstance(SECURE_PROXY_SSL_HEADER, (list, tuple)) or hasattr(SECURE_PROXY_SSL_HEADER, '__iter__'):
+            if not isinstance(SECURE_PROXY_SSL_HEADER, str):
+                SECURE_PROXY_SSL_HEADER = tuple(SECURE_PROXY_SSL_HEADER)
+                # Ensure it has exactly 2 elements
+                if len(SECURE_PROXY_SSL_HEADER) != 2:
+                    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     
     # Secure Cookies
     SESSION_COOKIE_SECURE = SESSION_COOKIE_SECURE

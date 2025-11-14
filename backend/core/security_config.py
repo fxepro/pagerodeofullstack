@@ -47,7 +47,11 @@ def get_env_int(key, default=0):
 def get_env_list(key, default=None):
     """Get list environment variable (comma-separated)"""
     if USE_DECOUPLE:
-        return config(key, default=default or [], cast=Csv)
+        result = config(key, default=default or [], cast=Csv)
+        # Ensure we return a list, not a Csv object
+        if hasattr(result, '__iter__') and not isinstance(result, (str, bytes)):
+            return list(result)
+        return result if isinstance(result, list) else (default or [])
     value = config(key, default='')
     if not value:
         return default or []
