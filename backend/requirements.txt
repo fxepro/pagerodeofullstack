@@ -26,5 +26,8 @@ pytest-cov==5.0.0
 pytest-mock==3.14.0
 factory-boy==3.3.0
 
+# Production Server
+gunicorn==21.2.0
+
 # Security (optional - for CSP support)
 # django-csp==3.8

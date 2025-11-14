@@ -48,7 +48,7 @@ export function useMonitorAnalysis(options: UseMonitorAnalysisOptions = {}) {
 
   const handleMonitor = useCallback(async () => {
     if (!cleanedUrl) {
-      toast({ title: "URL Required", description: "Please enter a website URL to monitor.", variant: "destructive" });
+      toast.error("URL Required: Please enter a website URL to monitor.");
       return;
     }
     

@@ -61,7 +61,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 feature: 'Error Boundary',
                 domain: window.location.hostname,
                 retryable: false,
-                errorCode: 'ERROR_BOUNDARY',
+                code: 'ERROR_BOUNDARY',
+                timestamp: new Date().toISOString(),
               }}
               onRetry={this.resetError}
               onDismiss={this.resetError}

@@ -62,7 +62,7 @@ export function WaterfallChart({ resources, timeline }: WaterfallChartProps) {
 
   // Generate time markers based on duration
   const markerInterval = maxTime <= 2 ? 0.5 : maxTime <= 5 ? 1 : 2
-  const timeMarkers = []
+  const timeMarkers: number[] = []
   for (let i = 0; i <= Math.ceil(maxTime); i += markerInterval) {
     timeMarkers.push(i)
   }

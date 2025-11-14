@@ -1,0 +1,74 @@
+
+# Django Settings
+# SECURITY WARNING: Keep the secret key used in production secret!
+# Generate a new secret key: python manage.py shell -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+SECRET_KEY=$$)ds85bh!ki#hv1rkrnfhqhb7a^#v25(g4k$xt36bxqsydt@)
+DEBUG=False
+ALLOWED_HOSTS=localhost,127.0.0.1,129.146.57.158,https://pagerodeo.com, https://www.pagerodeo.com
+
+# Database Configuration
+DB_NAME=pagerodeo
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+
+# Email Configuration
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+
+EMAIL_HOST_USER=pagerodeo25@gmail.com
+EMAIL_HOST_PASSWORD=tbwgwvrqpkrmgsox
+DEFAULT_FROM_EMAIL=pagerodeo25@gmail.com
+SERVER_EMAIL=pagerodeo25@gmail.com
+
+
+# Security Settings
+# Note: Security settings automatically adjust based on DEBUG mode
+# - When DEBUG=True (development): Security settings are automatically disabled
+# - When DEBUG=False (production): Security settings are automatically enabled
+# You can override these defaults by uncommenting and setting the values below
+
+# HTTPS Enforcement (automatically False when DEBUG=True, True when DEBUG=False)
+# SECURE_SSL_REDIRECT=False  # Uncomment to override default
+
+# HSTS (HTTP Strict Transport Security)
+# SECURE_HSTS_SECONDS=31536000  # Automatically 0 when DEBUG=True
+# SECURE_HSTS_INCLUDE_SUBDOMAINS=True  # Automatically False when DEBUG=True
+# SECURE_HSTS_PRELOAD=True  # Automatically False when DEBUG=True
+
+# Secure Cookies (automatically False when DEBUG=True, True when DEBUG=False)
+# SESSION_COOKIE_SECURE=False  # Uncomment to override default
+SESSION_COOKIE_HTTPONLY=True  # Always enabled (works in both HTTP and HTTPS)
+SESSION_COOKIE_SAMESITE=Lax
+# CSRF_COOKIE_SECURE=False  # Uncomment to override default
+CSRF_COOKIE_HTTPONLY=True  # Always enabled (works in both HTTP and HTTPS)
+CSRF_COOKIE_SAMESITE=Lax
+
+# Rate Limiting
+RATE_LIMIT_ENABLE=True
+RATE_LIMIT_PER_MINUTE=60
+RATE_LIMIT_PER_HOUR=1000
+
+# Google PageSpeed Insights API Key for REAL website analysis
+# Get your API key from: https://developers.google.com/speed/docs/insights/v5/get-started
+PAGESPEED_API_KEY=AIzaSyAOD0d7eLXHJq10ps1Sr8IUwj3AMiuk0AM
+
+# Gemini AI API Key for performance analysis and recommendations
+# Gemini Ai Studio Pagepulse Key  
+# Project name projects/882156159033 
+# Project number 882156159033
+GEMINI_API_KEY=AIzaSyAOD0d7eLXHJq10ps1Sr8IUwj3AMiuk0AM
+
+# Next.js Environment
+NEXT_PUBLIC_APP_URL=https://pagerodeo.com
+
+# PostHog Analytics Configuration
+# Get your PostHog key from: https://app.posthog.com/project/settings
+NEXT_PUBLIC_POSTHOG_KEY=phx_RYhGB9PFwzUZMGF1ygoWchQTEvvj0bJo1qw6fM0BDFJ5lMD
+NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+
+
+# Proxy SSL Header (if behind reverse proxy like nginx)

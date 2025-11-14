@@ -1,6 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { callGeminiWithMetrics } from "@/lib/ai-metrics-collector"
 
+// Resource type for performance data
+interface Resource {
+  name: string
+  type: string
+  size: number
+  duration: number
+}
+
 // You'll need to set up your Gemini API key in .env.local
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
@@ -46,7 +54,7 @@ Core Web Vitals:
 - Load Complete: ${performanceData.timeline.loadComplete}ms
 
 Resource Breakdown:
-${performanceData.resources.map(r => `- ${r.name} (${r.type}): ${r.size.toFixed(1)}KB, ${r.duration}ms`).join('\n')}
+${(performanceData.resources as Resource[]).map((r) => `- ${r.name} (${r.type}): ${r.size.toFixed(1)}KB, ${r.duration}ms`).join('\n')}
 
 Previous AI Analysis Context:
 ${context ? `Grade: ${context.grade}, Summary: ${context.summary}` : 'No previous analysis available'}

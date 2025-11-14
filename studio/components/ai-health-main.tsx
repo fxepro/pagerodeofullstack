@@ -348,27 +348,27 @@ export function AIHealthMain({ url: initialUrl = "" }: AIHealthMainProps) {
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-palette-primary">
-                      {healthStatus?.responseTime ? `${healthStatus.responseTime}ms` : 'N/A'}
+                      {healthStatus?.averageResponseTime ? `${healthStatus.averageResponseTime}ms` : 'N/A'}
                     </div>
-                    <p className="text-sm text-slate-600">Response Time</p>
+                    <p className="text-sm text-slate-600">Average Response Time</p>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-700">
-                      {healthStatus?.uptime ? `${healthStatus.uptime}%` : 'N/A'}
+                      {healthStatus?.successRate ? `${healthStatus.successRate}%` : 'N/A'}
                     </div>
-                    <p className="text-sm text-slate-600">Uptime</p>
+                    <p className="text-sm text-slate-600">Success Rate</p>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-700">
-                      {healthStatus?.errorRate ? `${healthStatus.errorRate}%` : '0%'}
+                      {healthStatus?.totalRequests || 0}
                     </div>
-                    <p className="text-sm text-slate-600">Error Rate</p>
+                    <p className="text-sm text-slate-600">Total Requests</p>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-orange-700">
-                      {healthStatus?.status || 'Unknown'}
+                      {healthStatus?.overall || 'Unknown'}
                     </div>
-                    <p className="text-sm text-slate-600">Status</p>
+                    <p className="text-sm text-slate-600">Overall Status</p>
                   </div>
                 </div>
               </CardContent>

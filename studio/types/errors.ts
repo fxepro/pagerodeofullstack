@@ -59,6 +59,47 @@ export interface ErrorDetails {
   feature?: string;
 }
 
+export interface AppError {
+  category: ErrorCategory | string;
+  code: string;
+  message: string;
+  feature: string;
+  domain?: string;
+  timestamp: string;
+  retryable: boolean;
+  technicalDetails?: {
+    stack?: string;
+    response?: any;
+    config?: any;
+  };
+}
+
+export interface RetryState {
+  currentAttempt: number;
+  maxAttempts: number;
+  nextRetryDelay: number;
+  canRetry: boolean;
+}
+
+export interface RetryStrategy {
+  shouldRetry: boolean;
+  maxAttempts: number;
+  delayMs: number;
+  useExponentialBackoff: boolean;
+}
+
+export type ErrorType = ErrorCategory | string;
+
+export interface ErrorDisplayOptions {
+  severity: 'error' | 'warning' | 'info';
+  icon?: string;
+  color?: string;
+  showTechnicalDetails?: boolean;
+  showRetryButton?: boolean;
+  showDismissButton?: boolean;
+  autoRetry?: boolean;
+}
+
 export interface RetryConfig {
   maxRetries: number;
   baseDelay: number; // milliseconds

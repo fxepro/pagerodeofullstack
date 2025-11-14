@@ -238,7 +238,17 @@ async function checkSslCertificate(domain: string): Promise<any> {
 }
 
 async function checkDnsRecords(domain: string) {
-  const results = {
+  const results: {
+    ipv4: string[]
+    ipv6: string[]
+    mx: string[]
+    txt: string[]
+    ns: string[]
+    dnsError?: {
+      code: string
+      message: string
+    }
+  } = {
     ipv4: [] as string[],
     ipv6: [] as string[],
     mx: [] as string[],
@@ -310,7 +320,7 @@ async function checkDnsRecords(domain: string) {
     results.dnsError = {
       code: 'DNS_NOT_FOUND',
       message: `Domain ${domain} cannot be resolved`
-    } as any
+    }
   }
 
   return results

@@ -142,7 +142,7 @@ export function useApiAnalysis(options: UseApiAnalysisOptions = {}) {
 
   const runTests = useCallback(async () => {
     if (!domain.trim()) {
-      toast({ title: "Domain Required", description: "Please enter a domain to test API endpoints.", variant: "destructive" });
+      toast.error("Domain Required: Please enter a domain to test API endpoints.");
       return;
     }
     
@@ -168,7 +168,7 @@ export function useApiAnalysis(options: UseApiAnalysisOptions = {}) {
           setDiscovered(endpoints);
           if (endpoints.length === 0) {
             setStatusMessage("❌ No endpoints found to test");
-            toast({ title: "No API Endpoints Found", description: "No /api/ endpoints found. Add custom endpoints to test specific APIs.", variant: "destructive" });
+            toast.error("No API Endpoints Found: No /api/ endpoints found. Add custom endpoints to test specific APIs.");
             return;
           }
 
@@ -192,7 +192,7 @@ export function useApiAnalysis(options: UseApiAnalysisOptions = {}) {
           const authRequiredCount = out.filter(r => !r.pass && (r.status === 401 || r.status === 403)).length;
           const failedCount = out.filter(r => !r.pass && r.status !== 401 && r.status !== 403).length;
           setStatusMessage(authRequiredCount > 0 ? `✅ Testing complete! ${passedCount} passed, ${authRequiredCount} require auth, ${failedCount} failed` : `✅ Testing complete! ${passedCount}/${endpoints.length} endpoints passed`);
-          toast({ title: "API Testing Complete", description: `${passedCount}/${out.length} endpoints passed the test.` });
+          toast.success(`API Testing Complete: ${passedCount}/${out.length} endpoints passed the test.`);
         },
         'API Analysis',
         cleanDomain
@@ -232,6 +232,7 @@ export function useApiAnalysis(options: UseApiAnalysisOptions = {}) {
     loading,
     discovered,
     statusMessage,
+    setStatusMessage,
     runTests,
     clearAll,
     error,

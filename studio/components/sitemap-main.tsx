@@ -517,8 +517,8 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                                 <Badge 
                                   variant="secondary" 
                                   className={`text-xs ${
-                                    parseFloat(node.priority) >= 0.8 ? 'bg-green-100 text-green-800' :
-                                    parseFloat(node.priority) >= 0.5 ? 'bg-yellow-100 text-yellow-800' :
+                                    (node.priority ?? 0) >= 0.8 ? 'bg-green-100 text-green-800' :
+                                    (node.priority ?? 0) >= 0.5 ? 'bg-yellow-100 text-yellow-800' :
                                     'bg-gray-100 text-gray-800'
                                   }`}
                                 >

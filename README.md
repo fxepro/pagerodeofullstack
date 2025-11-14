@@ -141,7 +141,26 @@ cd backend
 
 ### Oracle Cloud Infrastructure
 
-See `docs/Oracle-Cloud-Deployment.md` for detailed deployment instructions.
+**Free Tier Setup:**
+- **VM.Standard.A1.Flex** (Always Free-eligible)
+  - 1 OCPU, 6GB RAM (sufficient for development and small production)
+  - ARM64 architecture (all dependencies compatible)
+  - See `docs/Oracle-Cloud-Free-Tier-Setup.md` for free tier deployment
+
+**Quick Start:**
+1. See `docs/Oracle-Cloud-Free-Tier-Setup.md` for free tier deployment
+2. See `docs/Oracle-Cloud-Quick-Start.md` for step-by-step deployment
+3. See `docs/Oracle-Cloud-Deployment.md` for detailed deployment guide
+4. Use `scripts/deploy-oracle-cloud.sh` for automated deployment
+
+**Deployment Steps:**
+1. Create Oracle Cloud free tier account
+2. Create VM.Standard.A1.Flex instance (Always Free)
+3. Configure security rules (SSH, HTTP, HTTPS)
+4. Connect via SSH
+5. Run deployment script: `bash scripts/deploy-oracle-cloud.sh`
+6. Configure Nginx: `bash scripts/setup-nginx.sh yourdomain.com`
+7. Setup SSL: `bash scripts/setup-ssl.sh yourdomain.com`
 
 ### Production Checklist
 

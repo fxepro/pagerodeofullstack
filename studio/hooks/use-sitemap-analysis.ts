@@ -114,7 +114,7 @@ export function useSitemapAnalysis(options: UseSitemapAnalysisOptions = {}) {
 
   const runAnalysis = useCallback(async () => {
     if (!cleanedUrl) {
-      toast({ title: "Please enter a valid URL", variant: "destructive" });
+      toast.error("Please enter a valid URL");
       return;
     }
     

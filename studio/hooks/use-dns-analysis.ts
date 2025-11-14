@@ -68,7 +68,7 @@ export function useDnsAnalysis(options: UseDnsAnalysisOptions = {}) {
 
   const handleCheck = useCallback(async () => {
     if (!cleanDomain) {
-      toast({ title: "Domain Required", description: "Please enter a domain to check", variant: "destructive" });
+      toast.error("Domain Required: Please enter a domain to check");
       return;
     }
     

@@ -8,28 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Shield, Save, RotateCcw, Plus, Edit, Trash2 } from "lucide-react";
 import { applyTheme } from "@/lib/theme";
+import { Role, Permission } from "@/lib/types/role";
 import axios from "axios";
-
-interface Permission {
-  id: number;
-  name: string;
-  content_type: {
-    app_label: string;
-    model: string;
-  };
-  codename: string;
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  permissions: Permission[];
-  is_system_role: boolean;
-  user_count: number;
-  created_at: string;
-  updated_at: string;
-}
 
 interface PermissionsPanelProps {
   selectedRole: Role | null;
@@ -45,7 +25,7 @@ export function PermissionsPanel({ selectedRole, allPermissions, onRoleUpdate }:
 
   useEffect(() => {
     if (selectedRole) {
-      const rolePermissionIds = selectedRole.permissions.map(p => p.id);
+      const rolePermissionIds = selectedRole.permissions.map(p => Number(p.id));
       setSelectedPermissions(rolePermissionIds);
       setHasChanges(false);
     } else {
@@ -60,7 +40,7 @@ export function PermissionsPanel({ selectedRole, allPermissions, onRoleUpdate }:
         ? prev.filter(id => id !== permissionId)
         : [...prev, permissionId];
       
-      setHasChanges(JSON.stringify(newPermissions.sort()) !== JSON.stringify(selectedRole?.permissions.map(p => p.id).sort() || []));
+      setHasChanges(JSON.stringify(newPermissions.sort()) !== JSON.stringify(selectedRole?.permissions.map(p => Number(p.id)).sort() || []));
       return newPermissions;
     });
   };
@@ -94,7 +74,7 @@ export function PermissionsPanel({ selectedRole, allPermissions, onRoleUpdate }:
 
   const handleResetPermissions = () => {
     if (selectedRole) {
-      const rolePermissionIds = selectedRole.permissions.map(p => p.id);
+      const rolePermissionIds = selectedRole.permissions.map(p => Number(p.id));
       setSelectedPermissions(rolePermissionIds);
       setHasChanges(false);
     }
@@ -212,7 +192,7 @@ export function PermissionsPanel({ selectedRole, allPermissions, onRoleUpdate }:
                       checked={selectedPermissions.length === allPermissions.length}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setSelectedPermissions(allPermissions.map(p => p.id));
+                          setSelectedPermissions(allPermissions.map(p => Number(p.id)));
                         } else {
                           setSelectedPermissions([]);
                         }
@@ -230,8 +210,8 @@ export function PermissionsPanel({ selectedRole, allPermissions, onRoleUpdate }:
             </TableHeader>
             <TableBody>
               {allPermissions.map((permission) => {
-                const permissionType = getPermissionType(permission.codename);
-                const isSelected = selectedPermissions.includes(permission.id);
+                const permissionType = getPermissionType(permission.codename || '');
+                const isSelected = selectedPermissions.includes(Number(permission.id));
                 
                 return (
                   <TableRow key={permission.id} className={isSelected ? "bg-slate-50" : ""}>
@@ -239,7 +219,7 @@ export function PermissionsPanel({ selectedRole, allPermissions, onRoleUpdate }:
                       {editingRole && !selectedRole.is_system_role ? (
                         <Checkbox
                           checked={isSelected}
-                          onCheckedChange={() => handlePermissionToggle(permission.id)}
+                          onCheckedChange={() => handlePermissionToggle(Number(permission.id))}
                           className="border-2 border-slate-400 data-[state=checked]:bg-palette-primary data-[state=checked]:border-palette-primary h-5 w-5"
                         />
                       ) : (
@@ -257,12 +237,12 @@ export function PermissionsPanel({ selectedRole, allPermissions, onRoleUpdate }:
                     </TableCell>
                     <TableCell>
                       <span className={`font-medium ${applyTheme.text('secondary')}`}>
-                        {permission.content_type.model}
+                        {permission.content_type?.model || 'N/A'}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getAppColor(permission.content_type.app_label)}>
-                        {permission.content_type.app_label}
+                      <Badge className={getAppColor(permission.content_type?.app_label || 'unknown')}>
+                        {permission.content_type?.app_label || 'N/A'}
                       </Badge>
                     </TableCell>
                   </TableRow>

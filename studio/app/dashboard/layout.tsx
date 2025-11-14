@@ -133,7 +133,7 @@ export default function DashboardLayout({
       {/* Main Content */}
       <div className={cn("pt-8 flex-1 transition-all duration-300", sidebarCollapsed ? "ml-20" : "ml-64") }>
         <div className="px-8 pt-0 pb-8">
-          {React.cloneElement(children as React.ReactElement, { user })}
+          {children}
         </div>
       </div>
 

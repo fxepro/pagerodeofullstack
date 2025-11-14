@@ -284,7 +284,13 @@ export const applyTheme = {
     // Use palette primary color for headings to make them dynamic
     return `${theme.typography[`h${level}` as keyof typeof theme.typography]} text-palette-primary`;
   },
-  text: (size: 'body' | 'bodyLarge' | 'bodySmall' | 'primary' | 'secondary' | 'muted' = 'body') => {
+  text: (size: 'body' | 'bodyLarge' | 'bodySmall' | 'primary' | 'secondary' | 'muted' | 'label' = 'body') => {
+    if (size === 'label') {
+      const currentTheme = getCurrentTheme();
+      const themeColors = getTheme(currentTheme);
+      return `${theme.typography.label} ${themeColors.textSecondary}`;
+    }
+    
     const currentTheme = getCurrentTheme();
     const themeColors = getTheme(currentTheme);
     

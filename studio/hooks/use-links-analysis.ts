@@ -52,7 +52,7 @@ export function useLinksAnalysis(options: UseLinksAnalysisOptions = {}) {
     const testDomain = cleanedDomain;
 
     if (!testDomain) {
-      toast({ title: "Please enter a domain", variant: "destructive" });
+      toast.error("Please enter a domain");
       return;
     }
 

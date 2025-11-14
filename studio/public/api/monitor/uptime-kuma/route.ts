@@ -9,9 +9,10 @@ const UPTIME_KUMA_API_KEY = process.env.UPTIME_KUMA_API_KEY
 
 export async function POST(request: NextRequest) {
   try {
-    const { url, action } = await request.json()
+    const body = await request.json()
+    const { url, action, monitorId, period } = body
 
-    if (!url) {
+    if (!url && action !== 'status' && action !== 'uptime') {
       return NextResponse.json(
         { error: 'URL is required' },
         { status: 400 }
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     })
 
     switch (action) {
-      case 'add':
+      case 'add': {
         // Login if using username/password
         if (UPTIME_KUMA_USERNAME && UPTIME_KUMA_PASSWORD) {
           await kumaClient.login()
@@ -35,17 +36,17 @@ export async function POST(request: NextRequest) {
 
         // Create monitor
         const monitor = createMonitorFromUrl(url)
-        const monitorId = await kumaClient.addMonitor(monitor)
+        const newMonitorId = await kumaClient.addMonitor(monitor)
 
         return NextResponse.json({
           success: true,
-          monitorId,
+          monitorId: newMonitorId,
           message: `Monitor created for ${url}`,
           monitor
         })
+      }
 
-      case 'status':
-        const { monitorId } = await request.json()
+      case 'status': {
         if (!monitorId) {
           return NextResponse.json(
             { error: 'Monitor ID is required for status check' },
@@ -58,21 +59,22 @@ export async function POST(request: NextRequest) {
           success: true,
           status
         })
+      }
 
-      case 'uptime':
-        const { monitorId: uptimeMonitorId, period } = await request.json()
-        if (!uptimeMonitorId) {
+      case 'uptime': {
+        if (!monitorId) {
           return NextResponse.json(
             { error: 'Monitor ID is required for uptime stats' },
             { status: 400 }
           )
         }
 
-        const uptimeStats = await kumaClient.getUptimeStats(uptimeMonitorId, period)
+        const uptimeStats = await kumaClient.getUptimeStats(monitorId, period)
         return NextResponse.json({
           success: true,
           stats: uptimeStats
         })
+      }
 
       default:
         return NextResponse.json(

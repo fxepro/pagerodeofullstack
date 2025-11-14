@@ -17,6 +17,7 @@ import Link from "next/link";
 import { ErrorDisplay } from "@/components/error-display";
 
 interface DetailedData {
+  url: string;
   resources: Array<{
     name: string;
     type: string;
@@ -68,6 +69,7 @@ export default function PerformanceDashboard({ url: initialUrl = "" }: { url?: s
       if (response.ok) {
         const analysisData = await response.json();
         setDetailedData({
+          url: data.url,
           resources: analysisData.resources || [],
           timeline: analysisData.timeline || {},
           totalSize: analysisData.resources?.reduce((sum: number, r: any) => sum + r.size, 0) || 0,
@@ -368,7 +370,7 @@ export default function PerformanceDashboard({ url: initialUrl = "" }: { url?: s
             </TabsContent>
 
             <TabsContent value="ai-insights" className="mt-6">
-              <LLMFeedback url={data.url} performanceData={detailedData} />
+              <LLMFeedback url={detailedData.url} performanceData={detailedData} />
             </TabsContent>
           </Tabs>
         )}

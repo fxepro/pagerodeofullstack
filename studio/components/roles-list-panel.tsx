@@ -7,25 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Shield, Plus, Edit, Trash2, Search, RefreshCw, Users } from "lucide-react";
 import { applyTheme } from "@/lib/theme";
+import { Role, Permission } from "@/lib/types/role";
 import axios from "axios";
-
-interface Permission {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  permissions: Permission[];
-  is_system_role: boolean;
-  user_count: number;
-  created_at: string;
-  updated_at: string;
-}
 
 interface RolesListPanelProps {
   roles: Role[];

@@ -20,7 +20,17 @@ import {
 } from "lucide-react";
 
 // Page configuration mapping
-const pageConfig = {
+const pageConfig: Record<string, {
+  title: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  primaryAction?: {
+    label: string;
+    icon: React.ComponentType<any>;
+    href?: string;
+    onClick?: () => void;
+  };
+}> = {
   "/admin/dashboard": {
     title: "Overview",
     description: "Admin dashboard overview and key metrics",
@@ -79,7 +89,7 @@ export function DynamicPageHeader({
   const pathname = usePathname();
   
   // Get page config or use custom props
-  const config = pageConfig[pathname as keyof typeof pageConfig] || {};
+  const config = pageConfig[pathname] || {};
   
   const title = customTitle || config.title || "Page";
   const description = customDescription || config.description || "";

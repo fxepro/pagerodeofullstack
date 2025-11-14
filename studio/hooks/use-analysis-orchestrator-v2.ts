@@ -205,7 +205,10 @@ export function useAnalysisOrchestrator() {
           currentIndex: -1,
           startTime: null,
           endTime: null,
-          analyses: initializeAnalyses()
+          analyses: initializeAnalyses(),
+          runSequence: 0,
+          currentRunId: null,
+          lastCompletedRunId: null
         });
         localStorage.removeItem(STORAGE_KEY);
       }

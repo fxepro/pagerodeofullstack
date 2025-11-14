@@ -129,7 +129,7 @@ export function useTypographyAnalysis(options: UseTypographyAnalysisOptions = {}
   const runAnalysis = useCallback(async () => {
     const testUrl = cleanedUrl;
     if (!testUrl) {
-      toast({ title: "URL Required", description: "Please enter a URL to analyze", variant: "destructive" });
+      toast.error("URL Required: Please enter a URL to analyze");
       return;
     }
 

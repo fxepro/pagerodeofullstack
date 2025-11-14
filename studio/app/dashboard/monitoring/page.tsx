@@ -604,8 +604,8 @@ export default function MonitoringPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-600">
-                        {new Date(site.lastCheck).toLocaleTimeString()}
+                      <TableCell className="text-sm text-slate-600">        
+                        {site.lastCheck ? new Date(site.lastCheck).toLocaleTimeString() : 'Never'}
                       </TableCell>
                       <TableCell className="text-center">
                         <Link href={`/dashboard/monitoring/${encodeURIComponent(site.id)}`}>

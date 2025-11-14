@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { applyTheme } from "@/lib/theme";
+import { Role } from "@/lib/types/role";
 import { Loader2, Save, X } from "lucide-react";
 import axios from "axios";
 
@@ -37,11 +38,6 @@ interface EditUserModalProps {
   onSave: (updatedUser: User) => void;
 }
 
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-}
 
 export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalProps) {
   const [formData, setFormData] = useState({
@@ -159,7 +155,7 @@ export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalPr
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className={`p-3 rounded-md bg-red-50 border border-red-200 ${applyTheme.text('error')}`}>
+            <div className={`p-3 rounded-md bg-red-50 border border-red-200 ${applyTheme.status('error')}`}>
               {error}
             </div>
           )}

@@ -15,50 +15,50 @@ import {
  * Categorize an error based on its type and properties
  */
 export function categorizeError(error: unknown): ErrorCategory {
-  if (!error) return 'UNKNOWN'
+  if (!error) return ErrorCategory.UNKNOWN
 
   const err = error as any
 
   // Check error MESSAGE first (more specific than status codes)
-  if (err.message?.includes('cannot be resolved')) return 'DNS_ERROR'
-  if (err.message?.includes('Domain not found')) return 'DNS_ERROR'
-  if (err.message?.includes('ENOTFOUND')) return 'DNS_ERROR'
-  if (err.message?.includes('invalid domain')) return 'INVALID_INPUT'
-  if (err.message?.includes('certificate') || err.message?.includes('SSL')) return 'SSL_ERROR'
-  if (err.message?.includes('CORS') || err.message?.includes('cross-origin')) return 'CORS_ERROR'
-  if (err.message?.includes('parse') || err.message?.includes('JSON')) return 'PARSE_ERROR'
+  if (err.message?.includes('cannot be resolved')) return ErrorCategory.NETWORK
+  if (err.message?.includes('Domain not found')) return ErrorCategory.NETWORK
+  if (err.message?.includes('ENOTFOUND')) return ErrorCategory.NETWORK
+  if (err.message?.includes('invalid domain')) return ErrorCategory.VALIDATION
+  if (err.message?.includes('certificate') || err.message?.includes('SSL')) return ErrorCategory.NETWORK
+  if (err.message?.includes('CORS') || err.message?.includes('cross-origin')) return ErrorCategory.NETWORK
+  if (err.message?.includes('parse') || err.message?.includes('JSON')) return ErrorCategory.APPLICATION
 
   // Network error codes (direct errors, not wrapped in HTTP response)
-  if (err.code === 'ENOTFOUND') return 'DNS_ERROR'
-  if (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') return 'TIMEOUT'
-  if (err.code === 'ECONNREFUSED') return 'NETWORK_ERROR'
-  if (err.code === 'ECONNRESET') return 'NETWORK_ERROR'
+  if (err.code === 'ENOTFOUND') return ErrorCategory.NETWORK
+  if (err.code === 'ETIMEDOUT' || err.code === 'ESOCKETTIMEDOUT') return ErrorCategory.TIMEOUT
+  if (err.code === 'ECONNREFUSED') return ErrorCategory.NETWORK
+  if (err.code === 'ECONNRESET') return ErrorCategory.NETWORK
 
   // HTTP status errors (check last, less specific)
   if (err.response?.status) {
     const status = err.response.status
-    if (status === 401) return 'AUTH_ERROR'
-    if (status === 403) return 'FORBIDDEN'
-    if (status === 404) return 'NOT_FOUND'
-    if (status === 408) return 'TIMEOUT'
-    if (status === 429) return 'RATE_LIMITED'
-    if (status >= 500) return 'SERVER_ERROR'
-    if (status >= 400) return 'CLIENT_ERROR'
+    if (status === 401) return ErrorCategory.AUTHENTICATION
+    if (status === 403) return ErrorCategory.HTTP
+    if (status === 404) return ErrorCategory.HTTP
+    if (status === 408) return ErrorCategory.TIMEOUT
+    if (status === 429) return ErrorCategory.RATE_LIMIT
+    if (status >= 500) return ErrorCategory.HTTP
+    if (status >= 400) return ErrorCategory.HTTP
   }
 
   // Also check status property directly (for cases where response is not wrapped)
   if (err.status) {
     const status = err.status
-    if (status === 401) return 'AUTH_ERROR'
-    if (status === 403) return 'FORBIDDEN'
-    if (status === 404) return 'NOT_FOUND'
-    if (status === 408) return 'TIMEOUT'
-    if (status === 429) return 'RATE_LIMITED'
-    if (status >= 500) return 'SERVER_ERROR'
-    if (status >= 400) return 'CLIENT_ERROR'
+    if (status === 401) return ErrorCategory.AUTHENTICATION
+    if (status === 403) return ErrorCategory.HTTP
+    if (status === 404) return ErrorCategory.HTTP
+    if (status === 408) return ErrorCategory.TIMEOUT
+    if (status === 429) return ErrorCategory.RATE_LIMIT
+    if (status >= 500) return ErrorCategory.HTTP
+    if (status >= 400) return ErrorCategory.HTTP
   }
 
-  return 'UNKNOWN'
+  return ErrorCategory.UNKNOWN
 }
 
 /**
@@ -93,10 +93,10 @@ export function createAppError(
  */
 export function isRetryable(category: ErrorCategory): boolean {
   const retryableCategories: ErrorCategory[] = [
-    'TIMEOUT',
-    'NETWORK_ERROR',
-    'SERVER_ERROR',
-    'RATE_LIMITED'
+    ErrorCategory.TIMEOUT,
+    ErrorCategory.NETWORK,
+    ErrorCategory.HTTP,
+    ErrorCategory.RATE_LIMIT
   ]
   return retryableCategories.includes(category)
 }
@@ -159,107 +159,69 @@ export function getRetryStrategy(error: AppError): RetryStrategy {
  * Format user-friendly error message
  */
 export function formatErrorMessage(error: AppError): string {
+  const category = typeof error.category === 'string' ? error.category as ErrorCategory : error.category
   const messages: Record<ErrorCategory, string> = {
-    DNS_ERROR: `Domain "${error.domain || 'unknown'}" cannot be resolved. Please check the spelling and try again.`,
-    TIMEOUT: `Request timed out. The server at "${error.domain || 'unknown'}" took too long to respond.`,
-    NETWORK_ERROR: `Cannot reach server. Please check your internet connection.`,
-    AUTH_ERROR: `Authentication required. Please log in to continue.`,
-    FORBIDDEN: `Access denied. The server at "${error.domain || 'unknown'}" blocked the request.`,
-    NOT_FOUND: `Page not found. Please verify the URL is correct.`,
-    RATE_LIMITED: `Too many requests. Please wait a moment before trying again.`,
-    SERVER_ERROR: `Server error occurred. We're automatically retrying...`,
-    CLIENT_ERROR: `Invalid request. Please check your input and try again.`,
-    INVALID_INPUT: `Invalid input format. Please check and try again.`,
-    SSL_ERROR: `SSL certificate is invalid or expired for "${error.domain || 'unknown'}".`,
-    CORS_ERROR: `Cross-origin request blocked by the server's security policy.`,
-    PARSE_ERROR: `Unable to parse server response. The data may be corrupted.`,
-    UNKNOWN: `An unexpected error occurred. Please try again.`
+    [ErrorCategory.NETWORK]: `Network error: "${error.domain || 'unknown'}" cannot be reached. Please check the domain and try again.`,
+    [ErrorCategory.HTTP]: `HTTP error occurred. Please try again.`,
+    [ErrorCategory.APPLICATION]: `Application error occurred. Please try again.`,
+    [ErrorCategory.VALIDATION]: `Invalid input format. Please check and try again.`,
+    [ErrorCategory.TIMEOUT]: `Request timed out. The server at "${error.domain || 'unknown'}" took too long to respond.`,
+    [ErrorCategory.AUTHENTICATION]: `Authentication required. Please log in to continue.`,
+    [ErrorCategory.RATE_LIMIT]: `Too many requests. Please wait a moment before trying again.`,
+    [ErrorCategory.UNKNOWN]: `An unexpected error occurred. Please try again.`
   }
 
-  return messages[error.category] || messages.UNKNOWN
+  return messages[category] || messages[ErrorCategory.UNKNOWN]
 }
 
 /**
  * Get troubleshooting steps for an error
  */
 export function getTroubleshootingSteps(error: AppError): string[] {
+  const category = typeof error.category === 'string' ? error.category as ErrorCategory : error.category
   const steps: Record<ErrorCategory, string[]> = {
-    DNS_ERROR: [
+    [ErrorCategory.NETWORK]: [
       'Check domain spelling carefully',
       'Try without "www" prefix',
       'Verify the domain exists and is active',
+      'Check your internet connection',
       'Check if you can access it in a browser'
     ],
-    TIMEOUT: [
-      'The server may be slow or overloaded',
-      'Try again in a few moments',
-      'Check if the site loads in your browser',
-      'Contact the site administrator if issue persists'
-    ],
-    NETWORK_ERROR: [
-      'Check your internet connection',
-      'Verify you can access other websites',
-      'Try disabling VPN if enabled',
-      'Check firewall settings'
-    ],
-    AUTH_ERROR: [
-      'Log in to your account',
-      'Check if your session has expired',
-      'Verify your credentials are correct'
-    ],
-    FORBIDDEN: [
+    [ErrorCategory.HTTP]: [
+      'Check the URL for typos',
       'The server may be blocking automated requests',
       'Try accessing the site in a browser first',
-      'Check if the URL requires special permissions',
-      'Contact the site administrator'
+      'Contact the site administrator if issue persists'
     ],
-    NOT_FOUND: [
-      'Check the URL for typos',
-      'Verify the page exists',
-      'Try the homepage instead',
-      'The page may have been moved or deleted'
-    ],
-    RATE_LIMITED: [
-      'Wait a few moments before trying again',
-      'You may be making requests too frequently',
-      'Consider upgrading for higher rate limits'
-    ],
-    SERVER_ERROR: [
-      'The server is experiencing issues',
-      'We\'ll automatically retry',
-      'Try again in a few moments',
-      'Report to support if issue persists'
-    ],
-    CLIENT_ERROR: [
-      'Check your input for errors',
-      'Verify all required fields are filled',
-      'Ensure the format is correct'
-    ],
-    INVALID_INPUT: [
-      'Check the format of your input',
-      'Example: example.com or https://example.com',
-      'Remove any special characters',
-      'Ensure the domain is valid'
-    ],
-    SSL_ERROR: [
-      'The site\'s SSL certificate has issues',
-      'The certificate may be expired',
-      'Contact the site administrator',
-      'Proceed with caution if accessing sensitive data'
-    ],
-    CORS_ERROR: [
-      'This is a browser security restriction',
-      'The server needs to allow cross-origin requests',
-      'Cannot be bypassed from the client side',
-      'Contact the API provider'
-    ],
-    PARSE_ERROR: [
+    [ErrorCategory.APPLICATION]: [
       'The server returned invalid data',
       'Try again later',
       'Report to support with details',
       'The server may be misconfigured'
     ],
-    UNKNOWN: [
+    [ErrorCategory.VALIDATION]: [
+      'Check the format of your input',
+      'Example: example.com or https://example.com',
+      'Remove any special characters',
+      'Ensure the domain is valid'
+    ],
+    [ErrorCategory.TIMEOUT]: [
+      'The server may be slow or overloaded',
+      'Try again in a few moments',
+      'Check if the site loads in your browser',
+      'Contact the site administrator if issue persists'
+    ],
+    [ErrorCategory.AUTHENTICATION]: [
+      'Log in to your account',
+      'Check if your session has expired',
+      'Verify your credentials are correct'
+    ],
+    [ErrorCategory.RATE_LIMIT]: [
+      'Wait a few moments before trying again',
+      'You may be making requests too frequently',
+      'Consider upgrading for higher rate limits'
+    ],
+    [ErrorCategory.UNKNOWN]: [
       'Try again',
       'Refresh the page',
       'Clear browser cache',
@@ -267,19 +229,20 @@ export function getTroubleshootingSteps(error: AppError): string[] {
     ]
   }
 
-  return steps[error.category] || steps.UNKNOWN
+  return steps[category] || steps[ErrorCategory.UNKNOWN]
 }
 
 /**
  * Get display options for an error
  */
 export function getErrorDisplayOptions(error: AppError): ErrorDisplayOptions {
+  const category = typeof error.category === 'string' ? error.category as ErrorCategory : error.category
   return {
     showTechnicalDetails: false, // Admin-only in production
     showRetryButton: error.retryable,
     showDismissButton: true,
-    severity: getSeverity(error.category),
-    autoRetry: error.category === 'SERVER_ERROR' || error.category === 'TIMEOUT'
+    severity: getSeverity(category),
+    autoRetry: category === ErrorCategory.HTTP || category === ErrorCategory.TIMEOUT
   }
 }
 
@@ -288,21 +251,16 @@ export function getErrorDisplayOptions(error: AppError): ErrorDisplayOptions {
  */
 function getSeverity(category: ErrorCategory): 'error' | 'warning' | 'info' {
   const errorCategories: ErrorCategory[] = [
-    'DNS_ERROR',
-    'AUTH_ERROR',
-    'FORBIDDEN',
-    'NOT_FOUND',
-    'SSL_ERROR',
-    'PARSE_ERROR',
-    'UNKNOWN'
+    ErrorCategory.NETWORK,
+    ErrorCategory.AUTHENTICATION,
+    ErrorCategory.APPLICATION,
+    ErrorCategory.UNKNOWN
   ]
 
   const warningCategories: ErrorCategory[] = [
-    'TIMEOUT',
-    'NETWORK_ERROR',
-    'SERVER_ERROR',
-    'CLIENT_ERROR',
-    'INVALID_INPUT'
+    ErrorCategory.TIMEOUT,
+    ErrorCategory.HTTP,
+    ErrorCategory.VALIDATION
   ]
 
   if (errorCategories.includes(category)) return 'error'
@@ -393,7 +351,7 @@ export function logError(error: AppError): void {
           feature: error.feature,
           domain: error.domain,
           retryable: error.retryable,
-          errorCode: error.errorCode,
+          errorCode: error.code,
           timestamp: new Date().toISOString(),
         })
       }).catch(() => {

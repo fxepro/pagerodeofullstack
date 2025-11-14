@@ -76,7 +76,7 @@ export function useSslAnalysis(options: UseSslAnalysisOptions = {}) {
 
   const handleCheck = useCallback(async () => {
     if (!cleanedDomain) {
-      toast({ title: "Please enter a domain", description: "Enter a domain or URL to check SSL and DNS information", variant: "destructive" });
+      toast.error("Please enter a domain: Enter a domain or URL to check SSL and DNS information");
       return;
     }
     

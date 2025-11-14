@@ -53,30 +53,44 @@ let metricsStats = {
   averageResponseTime: 0
 }
 
+// Token pricing types
+type ModelPricing = {
+  input: number
+  output: number
+}
+
+type PricingRecord = Record<string, ModelPricing>
+
+type TokenPricing = {
+  gemini: PricingRecord
+  openai: PricingRecord
+  anthropic: PricingRecord
+}
+
 // Token pricing per provider (in USD per 1K tokens)
-const TOKEN_PRICING = {
-  'gemini': {
+const TOKEN_PRICING: TokenPricing = {
+  gemini: {
     'gemini-1.5-flash': { input: 0.000075, output: 0.0003 },
     'gemini-1.5-pro': { input: 0.00125, output: 0.005 }
-  },
-  'openai': {
+  } as PricingRecord,
+  openai: {
     'gpt-3.5-turbo': { input: 0.0005, output: 0.0015 },
     'gpt-4': { input: 0.03, output: 0.06 },
     'gpt-4-turbo': { input: 0.01, output: 0.03 }
-  },
-  'anthropic': {
+  } as PricingRecord,
+  anthropic: {
     'claude-3-haiku-20240307': { input: 0.00025, output: 0.00125 },
     'claude-3-sonnet-20240229': { input: 0.003, output: 0.015 },
     'claude-3-opus-20240229': { input: 0.015, output: 0.075 }
-  }
+  } as PricingRecord
 }
 
 // Calculate cost based on provider, model, and token usage
 function calculateCost(provider: string, model: string, inputTokens: number, outputTokens: number): number {
-  const pricing = TOKEN_PRICING[provider.toLowerCase() as keyof typeof TOKEN_PRICING]
+  const pricing = TOKEN_PRICING[provider.toLowerCase() as keyof TokenPricing]
   if (!pricing) return 0
   
-  const modelPricing = pricing[model as keyof typeof pricing]
+  const modelPricing = pricing[model] as ModelPricing | undefined
   if (!modelPricing) return 0
   
   const inputCost = (inputTokens / 1000) * modelPricing.input

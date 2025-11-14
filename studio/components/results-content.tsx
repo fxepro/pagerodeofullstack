@@ -44,6 +44,21 @@ interface AnalysisData {
     bestPractices: number
     seo: number
   }
+  resources?: Array<{
+    name: string
+    type: string
+    size: number
+    startTime: number
+    duration: number
+    status: number
+  }>
+  timeline?: {
+    domContentLoaded: number
+    loadComplete: number
+    firstPaint: number
+    firstContentfulPaint: number
+    largestContentfulPaint: number
+  }
 }
 
 export function ResultsContent() {
@@ -164,8 +179,8 @@ export function ResultsContent() {
         seo: data.lighthouseResults.seo,
       } : null,
       recommendations: data.recommendations,
-      resources: data.resources,
-      timeline: data.timeline,
+      resources: data.resources || [],
+      timeline: data.timeline || {},
     }
 
     // Convert to JSON and download

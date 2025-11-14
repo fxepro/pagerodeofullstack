@@ -238,7 +238,7 @@ export default function MonitoringDetailPage() {
               </div>
             </div>
             <p className="text-xs text-slate-600 mt-2">
-              {siteDetail.currentStatusDuration}
+              {siteDetail.statusDuration}
             </p>
           </CardContent>
         </Card>
@@ -290,10 +290,10 @@ export default function MonitoringDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-800">
-              {new Date(siteDetail.lastCheck).toLocaleTimeString()}
+              {siteDetail.lastCheck ? new Date(siteDetail.lastCheck).toLocaleTimeString() : 'Never'}
             </div>
             <p className="text-xs text-slate-600 mt-2">
-              {new Date(siteDetail.lastCheck).toLocaleDateString()}
+              {siteDetail.lastCheck ? new Date(siteDetail.lastCheck).toLocaleDateString() : 'No data'}
             </p>
           </CardContent>
         </Card>

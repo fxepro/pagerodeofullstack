@@ -180,16 +180,19 @@ export async function POST(request: NextRequest) {
     await browser.close()
 
     // Process fonts and detect source
-    const processedFonts = analysis.fonts.map(font => {
+    const processedFonts = (analysis.fonts as { family: string; weights: string[]; usedOn: string[] }[]).map((font) => {
       // Detect if Google Font
       const isGoogleFont = font.family.match(/Roboto|Open Sans|Lato|Montserrat|Raleway|Poppins|Inter|Nunito/i)
       const isSystemFont = font.family.match(/Arial|Helvetica|Times|Georgia|Verdana|system-ui|sans-serif|serif/i)
       
+      // Ensure weights is string[]
+      const weights = Array.isArray(font.weights) ? font.weights as string[] : []
+      
       return {
         family: font.family,
         source: isGoogleFont ? 'google' as const : isSystemFont ? 'system' as const : 'custom' as const,
-        variants: font.weights.map((weight: string) => ({
-          weight: parseInt(weight) || 400,
+        variants: weights.map((weight) => ({
+          weight: parseInt(String(weight)) || 400,
           style: 'normal' as const,
           size: 0, // Will be populated from fontRequests
           format: 'woff2'

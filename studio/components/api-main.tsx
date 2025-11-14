@@ -50,6 +50,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
     loading,
     discovered,
     statusMessage,
+    setStatusMessage,
     runTests,
     clearAll,
     error,
@@ -128,7 +129,8 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
       return uniqueLinks
     } catch (error) {
       console.warn('Crawling failed:', error)
-      setStatusMessage("❌ Crawling failed: " + error.message)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      setStatusMessage("❌ Crawling failed: " + errorMessage)
       return []
     }
   }
@@ -233,7 +235,8 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
           console.log(`❌ Endpoint not found: ${url} (status: ${res.status})`)
         }
       } catch (error) {
-        console.log(`❌ Endpoint not found: ${url} (error: ${error.message})`)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.log(`❌ Endpoint not found: ${url} (error: ${errorMessage})`)
         // Endpoint doesn't exist or timed out
       }
     }

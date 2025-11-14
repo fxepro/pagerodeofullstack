@@ -7,25 +7,8 @@ import { Shield, Plus, Edit, Trash2, Users, Settings, BarChart3, Loader2 } from 
 import { applyTheme, LAYOUT } from "@/lib/theme";
 import { RolesListPanel } from "@/components/roles-list-panel";
 import { PermissionsPanel } from "@/components/permissions-panel";
+import { Role, Permission } from "@/lib/types/role";
 import axios from "axios";
-
-interface Permission {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  permissions: Permission[];
-  is_system_role: boolean;
-  user_count: number;
-  created_at: string;
-  updated_at: string;
-}
 
 export default function AdminRolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);

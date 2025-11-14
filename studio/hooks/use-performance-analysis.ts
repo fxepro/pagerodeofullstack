@@ -44,7 +44,7 @@ export function usePerformanceAnalysis(options: UsePerformanceAnalysisOptions = 
 
   const analyzeWebsite = useCallback(async () => {
     if (!cleanedUrl) {
-      toast({ title: "URL Required", description: "Please enter a URL to analyze", variant: "destructive" });
+      toast.error("URL Required: Please enter a URL to analyze");
       return;
     }
     
