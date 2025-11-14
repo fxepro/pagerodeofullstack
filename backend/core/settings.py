@@ -86,29 +86,20 @@ def get_env_list(key, default=None):
             else:
                 default_str = ''
             
-            # Get value from environment with Csv cast
+            # Get value from environment as string first, then parse
             try:
-                raw_value = config(key, default=default_str, cast=Csv)
+                # Get as string (don't use Csv cast to avoid issues)
+                raw_str = config(key, default='')
+                # If empty, use default
+                if not raw_str or raw_str.strip() == '':
+                    return ensure_list(None, default_list)
+                # Parse comma-separated string manually
+                parsed_list = [v.strip() for v in str(raw_str).split(',') if v.strip()]
+                # If parsing results in empty list, use default
+                if not parsed_list:
+                    return ensure_list(None, default_list)
             except Exception:
                 # If config fails, use default
-                return ensure_list(None, default_list)
-            
-            # Ensure raw_value is a list
-            if raw_value is None:
-                return ensure_list(None, default_list)
-            
-            # Convert to list if needed
-            if isinstance(raw_value, list):
-                parsed_list = raw_value
-            elif isinstance(raw_value, tuple):
-                parsed_list = list(raw_value)
-            elif isinstance(raw_value, str):
-                # Handle string case (shouldn't happen with Csv, but handle it)
-                if not raw_value or raw_value.strip() == '':
-                    return ensure_list(None, default_list)
-                parsed_list = [v.strip() for v in raw_value.split(',') if v.strip()]
-            else:
-                # Unexpected type - use default
                 return ensure_list(None, default_list)
             
             # Filter out empty strings and None values
