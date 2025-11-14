@@ -40,7 +40,6 @@ urlpatterns = [
     path('', include('users.urls')),
     path('', include('emails.urls')),
     path('', include('dns.urls')),
-    path('api/', include('audit_reports.urls')),
 ]
 
 # Add site_settings URLs explicitly
@@ -59,12 +58,21 @@ token_refresh_view = TokenRefreshView.as_view()
 RateLimitedTokenObtainPairView = rate_limit_login(token_obtain_view)
 RateLimitedTokenRefreshView = rate_limit_api(token_refresh_view)
 
+# API routes - specific routes first, then health check, then router
 urlpatterns += [
+    # Specific API routes (must come before catch-all /api/)
     path('api/token/', RateLimitedTokenObtainPairView, name='token_obtain_pair'),
     path('api/token/refresh/', RateLimitedTokenRefreshView, name='token_refresh'),
-    path('favicon.ico', favicon_view, name='favicon'),  # Prevent 404s in logs
     # Monitoring and log viewing endpoints
     path('api/monitoring/logs/', views.log_files_list, name='log_files_list'),
     path('api/monitoring/logs/<str:log_type>/', views.view_logs, name='view_logs'),
     path('api/monitoring/status/', views.system_status, name='system_status'),
+    # Health check endpoint at /api/ root (must come after specific routes but before router)
+    # This handles /api/ requests when path is exactly /api/
+    path('api/', views.health_check, name='api_health'),
+    # Audit reports router (includes /api/reports/ via router.urls)
+    # Note: When accessing /api/reports/, Django will skip the health_check pattern
+    # because it requires an exact match for /api/, and will match this include instead
+    path('api/', include('audit_reports.urls')),
+    path('favicon.ico', favicon_view, name='favicon'),  # Prevent 404s in logs
 ]
