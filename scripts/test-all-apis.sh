@@ -2,7 +2,8 @@
 # Comprehensive API Testing Script for PageRodeo Production
 # Tests all APIs listed in API-TESTING-CHECKLIST.md
 
-set -e
+# Don't exit on errors - we want to test all endpoints
+set +e
 
 # Configuration
 BASE_URL="http://129.146.57.158"
@@ -37,17 +38,17 @@ print_test() {
 
 print_pass() {
     echo -e "${GREEN}✓ PASS${NC}: $1"
-    ((PASSED++))
+    PASSED=$((PASSED + 1))
 }
 
 print_fail() {
     echo -e "${RED}✗ FAIL${NC}: $1"
-    ((FAILED++))
+    FAILED=$((FAILED + 1))
 }
 
 print_skip() {
     echo -e "${YELLOW}⊘ SKIP${NC}: $1"
-    ((SKIPPED++))
+    SKIPPED=$((SKIPPED + 1))
 }
 
 test_endpoint() {
@@ -148,6 +149,7 @@ else
     echo ""
     echo -e "${RED}⚠️  Cannot continue with authenticated tests without access token${NC}"
     SKIPPED=$((SKIPPED + 20))  # Skip remaining authenticated tests
+    ACCESS_TOKEN=""  # Ensure it's empty
 fi
 
 # 3. Get User Info (if we have a token)
