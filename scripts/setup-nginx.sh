@@ -5,7 +5,7 @@
 set -e
 
 DOMAIN="${1:-yourdomain.com}"
-PROJECT_DIR="/opt/pagerodeo"
+PROJECT_DIR="/opt/pagerodeofullstack"
 BACKEND_DIR="$PROJECT_DIR/backend"
 FRONTEND_DIR="$PROJECT_DIR/studio"
 
@@ -23,32 +23,15 @@ upstream nextjs {
     server 127.0.0.1:3000;
 }
 
-# HTTP to HTTPS redirect
+# HTTP server (for IP access without SSL)
 server {
     listen 80;
-    server_name $DOMAIN www.$DOMAIN;
-    return 301 https://\$server_name\$request_uri;
-}
-
-# HTTPS server
-server {
-    listen 443 ssl http2;
-    server_name $DOMAIN www.$DOMAIN;
-
-    # SSL certificates (will be set up by Let's Encrypt)
-    # ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
-    # ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
-
-    # SSL configuration
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_prefer_server_ciphers on;
+    server_name $DOMAIN www.$DOMAIN _;
 
     # Security headers
     add_header X-Frame-Options "DENY" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     # Next.js API routes (handled by Next.js, not Django)
     # These must come BEFORE the Django /api/ catch-all
