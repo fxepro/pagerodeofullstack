@@ -178,8 +178,20 @@ if [ -n "$ACCESS_TOKEN" ]; then
     RESEND_VERIFY_DATA="{\"email\":\"${TEST_EMAIL}\"}"
     test_endpoint "POST" "${API_BASE}/auth/resend-verification/" "200" "$RESEND_VERIFY_DATA" "" "Resend Verification Email"
     
-    # Note: Verify Email with Token requires actual token from email
-    print_skip "Verify Email with Token (requires token from email)"
+    # 7. Verify Email with Token (test with invalid token to verify endpoint exists)
+    VERIFY_TOKEN_DATA="{\"token\":\"invalid_test_token_12345\"}"
+    print_test "Verify Email with Token (Invalid Token Test)"
+    VERIFY_RESPONSE=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -d "$VERIFY_TOKEN_DATA" -X POST "${API_BASE}/auth/verify-email/" 2>/dev/null || echo -e "\n000")
+    VERIFY_STATUS=$(echo "$VERIFY_RESPONSE" | tail -n 1)
+    VERIFY_BODY=$(echo "$VERIFY_RESPONSE" | head -n -1)
+    # Expect 400 for invalid token (endpoint exists and working)
+    if [ "$VERIFY_STATUS" = "400" ]; then
+        print_pass "Verify Email with Token (HTTP $VERIFY_STATUS - endpoint working, correctly rejects invalid token)"
+    else
+        print_fail "Verify Email with Token (Expected: 400, Got: $VERIFY_STATUS)"
+        echo "Response: $VERIFY_BODY" | head -c 200
+        echo ""
+    fi
 fi
 
 # ============================================
@@ -223,16 +235,28 @@ else
 fi
 
 # ============================================
-# Site Audit APIs
+# Site Audit APIs (Next.js API Routes)
 # ============================================
-echo -e "${YELLOW}=== Site Audit APIs ===${NC}"
+echo -e "${YELLOW}=== Site Audit APIs (Next.js) ===${NC}"
 
-# Note: These endpoints are Next.js API routes (frontend), not Django backend
-# They should be tested separately against the frontend URL
-print_skip "Run Site Audit (/api/analyze) - Next.js API route, test against frontend"
-print_skip "DNS Analysis (/api/dns) - Next.js API route, test against frontend"
-print_skip "SSL Analysis (/api/ssl) - Next.js API route, test against frontend"
-print_skip "Links Analysis (/api/links) - Next.js API route, test against frontend"
+# These are Next.js API routes running on the frontend server
+# Test against BASE_URL (same server, different from Django /api/ endpoints)
+
+# 12. Run Site Audit (Performance Analysis)
+AUDIT_DATA="{\"url\":\"example.com\"}"
+test_endpoint "POST" "${BASE_URL}/api/analyze" "200" "$AUDIT_DATA" "" "Run Site Audit (Performance)"
+
+# 13. DNS Analysis
+DNS_DATA="{\"domain\":\"example.com\"}"
+test_endpoint "POST" "${BASE_URL}/api/dns" "200" "$DNS_DATA" "" "DNS Analysis"
+
+# 14. SSL Analysis
+SSL_DATA="{\"domain\":\"example.com\"}"
+test_endpoint "POST" "${BASE_URL}/api/ssl" "200" "$SSL_DATA" "" "SSL Analysis"
+
+# 15. Links Analysis
+LINKS_DATA="{\"url\":\"https://example.com\"}"
+test_endpoint "POST" "${BASE_URL}/api/links" "200" "$LINKS_DATA" "" "Links Analysis"
 
 # ============================================
 # Settings APIs
