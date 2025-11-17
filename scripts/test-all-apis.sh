@@ -104,8 +104,9 @@ echo ""
 echo -e "${YELLOW}=== Health Check APIs ===${NC}"
 
 test_endpoint "GET" "${API_BASE}/" "200" "" "" "API Root"
-test_endpoint "GET" "${API_BASE}/schema/" "200" "" "" "API Schema (OpenAPI)"
-test_endpoint "GET" "${API_BASE}/site-settings/" "200" "" "" "Site Settings (Public)"
+# Note: OpenAPI schema endpoint not configured in Django
+print_skip "API Schema (OpenAPI) - not configured"
+test_endpoint "GET" "${API_BASE}/site-config/public/" "200" "" "" "Site Settings (Public)"
 
 # ============================================
 # Authentication APIs
@@ -171,11 +172,11 @@ if [ -n "$ACCESS_TOKEN" ]; then
     
     # 5. Send Verification Email
     SEND_VERIFY_DATA="{\"email\":\"${TEST_EMAIL}\"}"
-    test_endpoint "POST" "${API_BASE}/send-verification-email/" "200" "$SEND_VERIFY_DATA" "$ACCESS_TOKEN" "Send Verification Email"
+    test_endpoint "POST" "${API_BASE}/auth/send-verification/" "200" "$SEND_VERIFY_DATA" "$ACCESS_TOKEN" "Send Verification Email"
     
     # 6. Resend Verification Email
     RESEND_VERIFY_DATA="{\"email\":\"${TEST_EMAIL}\"}"
-    test_endpoint "POST" "${API_BASE}/resend-verification-email/" "200" "$RESEND_VERIFY_DATA" "" "Resend Verification Email"
+    test_endpoint "POST" "${API_BASE}/auth/resend-verification/" "200" "$RESEND_VERIFY_DATA" "" "Resend Verification Email"
     
     # Note: Verify Email with Token requires actual token from email
     print_skip "Verify Email with Token (requires token from email)"
@@ -226,28 +227,19 @@ fi
 # ============================================
 echo -e "${YELLOW}=== Site Audit APIs ===${NC}"
 
-# 12. Run Site Audit
-AUDIT_DATA="{\"url\":\"example.com\"}"
-test_endpoint "POST" "${API_BASE}/analyze/" "200" "$AUDIT_DATA" "" "Run Site Audit"
-
-# 13. DNS Analysis
-DNS_DATA="{\"domain\":\"example.com\"}"
-test_endpoint "POST" "${API_BASE}/dns/" "200" "$DNS_DATA" "" "DNS Analysis"
-
-# 14. SSL Analysis
-SSL_DATA="{\"domain\":\"example.com\"}"
-test_endpoint "POST" "${API_BASE}/ssl/" "200" "$SSL_DATA" "" "SSL Analysis"
-
-# 15. Links Analysis
-LINKS_DATA="{\"url\":\"https://example.com\"}"
-test_endpoint "POST" "${API_BASE}/links/" "200" "$LINKS_DATA" "" "Links Analysis"
+# Note: These endpoints are Next.js API routes (frontend), not Django backend
+# They should be tested separately against the frontend URL
+print_skip "Run Site Audit (/api/analyze) - Next.js API route, test against frontend"
+print_skip "DNS Analysis (/api/dns) - Next.js API route, test against frontend"
+print_skip "SSL Analysis (/api/ssl) - Next.js API route, test against frontend"
+print_skip "Links Analysis (/api/links) - Next.js API route, test against frontend"
 
 # ============================================
 # Settings APIs
 # ============================================
 echo -e "${YELLOW}=== Settings APIs ===${NC}"
 
-test_endpoint "GET" "${API_BASE}/typography/presets/" "200" "" "" "Get Typography Presets"
+test_endpoint "GET" "${API_BASE}/typography/" "200" "" "" "Get Typography Presets"
 test_endpoint "GET" "${API_BASE}/typography/active/" "200" "" "" "Get Active Typography"
 
 # ============================================
@@ -256,7 +248,7 @@ test_endpoint "GET" "${API_BASE}/typography/active/" "200" "" "" "Get Active Typ
 if [ -n "$ACCESS_TOKEN" ]; then
     echo -e "${YELLOW}=== Reports APIs ===${NC}"
     
-    test_endpoint "GET" "${API_BASE}/audit-reports/" "200" "" "$ACCESS_TOKEN" "List Audit Reports"
+    test_endpoint "GET" "${API_BASE}/reports/" "200" "" "$ACCESS_TOKEN" "List Audit Reports"
     
     # Note: Get Report Details requires actual report ID
     print_skip "Get Report Details (requires report ID)"
