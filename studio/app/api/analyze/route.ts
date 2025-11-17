@@ -30,7 +30,18 @@ function getResourceType(resourceType: string | undefined): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { url } = await request.json()
+    // Parse request body with error handling
+    let requestBody
+    try {
+      requestBody = await request.json()
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      )
+    }
+    
+    const { url } = requestBody
 
     if (!url) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 })
@@ -112,9 +123,14 @@ Please try a different website or check if the site is accessible.`)
       const pageSpeedData = await response.json()
       console.log("[pagerodeo] SUCCESS! Real PageSpeed data received")
       
+      // Validate response structure
+      if (!pageSpeedData || !pageSpeedData.lighthouseResult) {
+        throw new Error("Invalid response from PageSpeed API. The API may have returned an unexpected format.")
+      }
+      
       // Extract REAL data from PageSpeed Insights
       const lighthouseResult = pageSpeedData.lighthouseResult
-      const audits = lighthouseResult.audits
+      const audits = lighthouseResult.audits || {}
       
       // Debug: Log available categories
       console.log("[pagerodeo] Available categories:", Object.keys(lighthouseResult.categories || {}))
@@ -131,18 +147,18 @@ Please try a different website or check if the site is accessible.`)
       const bestPracticesScore = Math.round((lighthouseResult.categories['best-practices']?.score || 0) * 100)
       const seoScore = Math.round((lighthouseResult.categories.seo?.score || 0) * 100)
       
-      // Extract real Core Web Vitals
+      // Extract real Core Web Vitals (with safe access)
       const lcp = audits['largest-contentful-paint']?.numericValue || 0
       const fid = audits['max-potential-fid']?.numericValue || 0
       const cls = audits['cumulative-layout-shift']?.numericValue || 0
       
-      // Extract real recommendations
+      // Extract real recommendations (with safe access)
       const recommendations = Object.values(audits)
-        .filter((audit: any) => audit.score !== null && audit.score < 1 && audit.title)
+        .filter((audit: any) => audit && audit.score !== null && audit.score < 1 && audit.title)
         .slice(0, 5)
         .map((audit: any) => audit.title)
       
-      // Extract real resources
+      // Extract real resources (with safe access)
       const networkRequests = audits['network-requests']?.details?.items || []
       console.log("[pagerodeo] Sample network request data:", networkRequests.slice(0, 2))
       
@@ -198,6 +214,7 @@ Please try a different website or check if the site is accessible.`)
         }
       })
       
+      // Build analysis data with safe defaults
       const analysisData = {
         url: targetUrl,
         loadTime: (audits['speed-index']?.numericValue || 0) / 1000,
@@ -209,7 +226,7 @@ Please try a different website or check if the site is accessible.`)
           "No specific recommendations available from PageSpeed analysis"
         ],
         timestamp: new Date().toISOString(),
-        resources: resources,
+        resources: resources || [],
         timeline: {
           domContentLoaded: Math.round(audits['interactive']?.numericValue || 0),
           loadComplete: Math.round(audits['speed-index']?.numericValue || 0),
@@ -229,27 +246,31 @@ Please try a different website or check if the site is accessible.`)
       
     } catch (pageSpeedError) {
       console.error("[pagerodeo] PageSpeed API failed:", pageSpeedError)
+      const errorMessage = pageSpeedError instanceof Error ? pageSpeedError.message : "Unknown error"
       return NextResponse.json({ 
         error: "Failed to analyze website. Please check the URL and try again.",
-        details: pageSpeedError instanceof Error ? pageSpeedError.message : "Unknown error"
+        details: errorMessage
       }, { status: 500 })
     }
     
   } catch (error) {
-    console.error("[pagerodeo] Lighthouse analysis error:", error)
+    console.error("[pagerodeo] Analysis error:", error)
     
-    // Provide more specific error messages
+    // Ensure we always return JSON, never HTML
     let errorMessage = "Failed to analyze website. Please check the URL and try again."
     let statusCode = 500
+    let details = "Unknown error"
     
     if (error instanceof Error) {
+      details = error.message
+      
       if (error.message.includes('timeout')) {
         errorMessage = "Website took too long to load. Please try again or check if the site is accessible."
         statusCode = 408
-      } else if (error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+      } else if (error.message.includes('ERR_NAME_NOT_RESOLVED') || error.message.includes('ENOTFOUND')) {
         errorMessage = "Could not resolve the website domain. Please check the URL and try again."
         statusCode = 400
-      } else if (error.message.includes('ERR_CONNECTION_REFUSED')) {
+      } else if (error.message.includes('ERR_CONNECTION_REFUSED') || error.message.includes('ECONNREFUSED')) {
         errorMessage = "Could not connect to the website. The site may be down or blocking our requests."
         statusCode = 503
       } else if (error.message.includes('net::ERR_')) {
@@ -258,16 +279,28 @@ Please try a different website or check if the site is accessible.`)
       } else if (error.message.includes('Protocol error')) {
         errorMessage = "Browser protocol error. This may be due to the website blocking automated testing."
         statusCode = 503
+      } else if (error.message.includes('PageSpeed API key')) {
+        errorMessage = "PageSpeed API key is not configured. Please configure PAGESPEED_API_KEY in environment variables."
+        statusCode = 500
+      } else if (error.message.includes('Invalid response')) {
+        errorMessage = "Received invalid response from PageSpeed API. Please try again later."
+        statusCode = 502
       }
     }
     
+    // Always return JSON, never HTML
     return NextResponse.json(
       {
         error: errorMessage,
-        details: error instanceof Error ? error.message : "Unknown error",
+        details: details,
         suggestion: "Try testing a different website or check if the site allows automated testing"
       },
-      { status: statusCode },
+      { 
+        status: statusCode,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
     )
   }
 }
