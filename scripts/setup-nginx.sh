@@ -25,8 +25,8 @@ upstream nextjs {
 
 # HTTP server (for IP access without SSL)
 server {
-    listen 80;
-    server_name $DOMAIN www.$DOMAIN _;
+    listen 80 default_server;
+    server_name _ $DOMAIN www.$DOMAIN;
 
     # Security headers
     add_header X-Frame-Options "DENY" always;
