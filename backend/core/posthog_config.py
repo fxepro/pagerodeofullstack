@@ -2,14 +2,21 @@
 PostHog configuration for Django backend
 """
 import os
+from pathlib import Path
 
-# Try to use python-decouple if available, otherwise use os.environ
+# Use django-environ for environment variables (consistent with settings.py)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 try:
-    from decouple import config
-    POSTHOG_API_KEY = config('POSTHOG_API_KEY', default='')
-    POSTHOG_HOST = config('POSTHOG_HOST', default='https://app.posthog.com')
+    import environ
+    env = environ.Env()
+    env_file = BASE_DIR / '.env'
+    if env_file.exists():
+        env.read_env(str(env_file))
+    POSTHOG_API_KEY = env('POSTHOG_API_KEY', default='')
+    POSTHOG_HOST = env('POSTHOG_HOST', default='https://app.posthog.com')
 except ImportError:
-    # Fallback to os.environ if decouple is not installed
+    # Fallback to os.environ if django-environ is not installed
     POSTHOG_API_KEY = os.environ.get('POSTHOG_API_KEY', '')
     POSTHOG_HOST = os.environ.get('POSTHOG_HOST', 'https://app.posthog.com')
 
