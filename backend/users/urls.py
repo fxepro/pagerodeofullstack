@@ -12,11 +12,31 @@ from .role_views import (
     list_permissions, get_role_permissions, update_role_permissions
 )
 from .sitemap_views import generate_sitemap, fetch_sitemap_xml
+from .views import (
+    send_verification_email_endpoint, verify_email, 
+    resend_verification_email, verification_status,
+    setup_2fa, verify_and_enable_2fa, disable_2fa,
+    generate_backup_codes_2fa, verify_2fa_login, get_2fa_status,
+    debug_email_settings
+)
 
 urlpatterns = [
     # Existing endpoints
     path('api/user-info/', user_info, name='user_info'),
     path('api/register/', register_user, name='register_user'),
+    # Email verification endpoints
+    path('api/auth/send-verification/', send_verification_email_endpoint, name='send_verification_email'),
+    path('api/auth/verify-email/', verify_email, name='verify_email'),
+    path('api/auth/resend-verification/', resend_verification_email, name='resend_verification'),
+    path('api/auth/verification-status/', verification_status, name='verification_status'),
+    path('api/debug/email-settings/', debug_email_settings, name='debug_email_settings'),
+    # Two-factor authentication endpoints
+    path('api/auth/2fa/setup/', setup_2fa, name='setup_2fa'),
+    path('api/auth/2fa/verify-enable/', verify_and_enable_2fa, name='verify_and_enable_2fa'),
+    path('api/auth/2fa/disable/', disable_2fa, name='disable_2fa'),
+    path('api/auth/2fa/generate-backup-codes/', generate_backup_codes_2fa, name='generate_backup_codes_2fa'),
+    path('api/auth/2fa/verify-login/', verify_2fa_login, name='verify_2fa_login'),
+    path('api/auth/2fa/status/', get_2fa_status, name='get_2fa_status'),
     path('api/profile/update/', update_own_profile, name='update_own_profile'),
     path('api/profile/change-password/', change_password, name='change_password'),
     path('api/profile/corporate/', corporate_profile, name='corporate_profile'),

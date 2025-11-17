@@ -127,10 +127,10 @@ export default function MonitoringPage() {
       });
 
       if (response.status === 401) {
+        // Redirect to login with error message
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        setAuthError(true);
-        setInitialLoading(false);
+        window.location.href = `/login?error=${encodeURIComponent('Your session has expired. Please log in again.')}`;
         return;
       }
 
@@ -257,7 +257,7 @@ export default function MonitoringPage() {
       if (response.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        setAuthError(true);
+        window.location.href = `/login?error=${encodeURIComponent('Your session has expired. Please log in again.')}`;
         return;
       }
 
@@ -310,7 +310,7 @@ export default function MonitoringPage() {
       if (response.status === 401) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        setAuthError(true);
+        window.location.href = `/login?error=${encodeURIComponent('Your session has expired. Please log in again.')}`;
         return;
       }
 

@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,17 +10,31 @@ import { Label } from "@/components/ui/label";
 import { User, Lock, LogIn } from "lucide-react";
 import { captureEvent, identifyUser } from "@/lib/posthog";
 
-export default function LoginPage() {
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+
+function LoginPageContent() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check for error message in URL params (from session timeout redirect)
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+      // Clean up URL by removing error parameter
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     try {
-      const res = await axios.post("http://localhost:8000/api/token/", {
+      const res = await axios.post(`${API_BASE}/api/token/`, {
         username,
         password,
       });
@@ -28,7 +42,7 @@ export default function LoginPage() {
       localStorage.setItem("refresh_token", res.data.refresh);
       
       // Fetch user info to check roles
-      const userRes = await axios.get("http://localhost:8000/api/user-info/", {
+      const userRes = await axios.get(`${API_BASE}/api/user-info/`, {
         headers: { Authorization: `Bearer ${res.data.access}` },
       });
       
@@ -45,6 +59,21 @@ export default function LoginPage() {
         email: userRes.data.email || '',
       });
       
+      // Check email verification status - SECURITY: Default to false if not provided
+      const emailVerified = res.data.email_verified ?? false;
+
+      if (!emailVerified) {
+        // Clear tokens - unverified users should not have access
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.setItem("email_verified", "false");
+        setError("Please verify your email before logging in. Check your inbox for the verification link.");
+        router.push("/verify-email");
+        return;
+      } else {
+        localStorage.removeItem("email_verified");
+      }
+
       // Redirect Admin users to admin dashboard, others to regular dashboard
       if (userRes.data.role === 'admin') {
         router.push("/admin/dashboard");
@@ -125,8 +154,8 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-600 text-sm text-center">{error}</p>
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-700 text-sm text-center font-medium">{error}</p>
                 </div>
               )}
 
@@ -155,5 +184,23 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-palette-accent-3 via-palette-accent-2 to-palette-primary/70">
+        <div className="w-full max-w-md">
+          <Card className="bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
+            <CardContent className="pt-12 pb-12 px-8 text-center">
+              <p className="text-slate-600">Loading...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }

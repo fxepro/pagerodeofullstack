@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, BarChart3, LogIn, LogOut, User, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+
 export function TopNavigation() {
   const pathname = usePathname();
   const router = useRouter();
@@ -13,18 +15,36 @@ export function TopNavigation() {
 
   // Update loggedIn state on route change and storage events
   useEffect(() => {
-    const checkToken = () => {
+    const checkToken = async () => {
       const token = localStorage.getItem("access_token");
-      setLoggedIn(!!token);
-      if (token) {
-        // Fetch user info to check roles
-        fetch("http://localhost:8000/api/user-info/", {
+      if (!token) {
+        setLoggedIn(false);
+        setUser(null);
+        return;
+      }
+      
+      // Validate token by fetching user info
+      try {
+        const res = await fetch(`${API_BASE}/api/user-info/`, {
           headers: { Authorization: `Bearer ${token}` },
-        })
-          .then(res => res.json())
-          .then(data => setUser(data))
-          .catch(() => setUser(null));
-      } else {
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+          setLoggedIn(true);
+        } else {
+          // Token is invalid - clear it
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          setLoggedIn(false);
+          setUser(null);
+        }
+      } catch (error) {
+        // Network error or invalid token
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        setLoggedIn(false);
         setUser(null);
       }
     };
@@ -34,18 +54,40 @@ export function TopNavigation() {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    setLoggedIn(!!token);
-    if (token) {
-      fetch("http://localhost:8000/api/user-info/", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(res => res.json())
-        .then(data => setUser(data))
-        .catch(() => setUser(null));
-    } else {
-      setUser(null);
-    }
+    const checkToken = async () => {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setLoggedIn(false);
+        setUser(null);
+        return;
+      }
+      
+      // Validate token by fetching user info
+      try {
+        const res = await fetch(`${API_BASE}/api/user-info/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+          setLoggedIn(true);
+        } else {
+          // Token is invalid - clear it
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          setLoggedIn(false);
+          setUser(null);
+        }
+      } catch (error) {
+        // Network error or invalid token
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        setLoggedIn(false);
+        setUser(null);
+      }
+    };
+    checkToken();
   }, [pathname]);
 
   const handleLogout = () => {

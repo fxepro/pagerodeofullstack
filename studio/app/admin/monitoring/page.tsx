@@ -20,6 +20,8 @@ import {
   Zap,
 } from "lucide-react";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
+
 interface SystemStatus {
   status: string;
   monitoring: {
@@ -91,14 +93,17 @@ export default function AdminMonitoringPage() {
         return;
       }
 
-      const response = await axios.get("http://localhost:8000/api/monitoring/status/", {
+      const response = await axios.get(`${API_BASE}/api/monitoring/status/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setSystemStatus(response.data);
     } catch (error: any) {
-      console.error("Error fetching system status:", error);
-      setError(error.response?.data?.error || "Failed to fetch system status");
+      if (error?.response?.status === 403) {
+        setError("Admin access required. Please log in with an admin account.");
+      } else {
+        setError(error.response?.data?.error || "Failed to fetch system status");
+      }
     } finally {
       setLoading(false);
     }
@@ -109,12 +114,15 @@ export default function AdminMonitoringPage() {
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
-      const response = await axios.get("http://localhost:8000/api/monitoring/logs/", {
+      const response = await axios.get(`${API_BASE}/api/monitoring/logs/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setLogFiles(response.data.log_files || []);
     } catch (error: any) {
+      if (error?.response?.status === 403) {
+        setError("Admin access required. Please log in with an admin account.");
+      }
       console.error("Error fetching log files:", error);
     }
   };
@@ -126,7 +134,7 @@ export default function AdminMonitoringPage() {
       if (!token) return;
 
       const response = await axios.get(
-        `http://localhost:8000/api/monitoring/logs/${logType}/?lines=${lines}`,
+        `${API_BASE}/api/monitoring/logs/${logType}/?lines=${lines}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -134,8 +142,12 @@ export default function AdminMonitoringPage() {
 
       setLogData(response.data);
     } catch (error: any) {
+      if (error?.response?.status === 403) {
+        setError("Admin access required. Please log in with an admin account.");
+      } else {
+        setError(error.response?.data?.error || "Failed to fetch logs");
+      }
       console.error("Error fetching logs:", error);
-      setError(error.response?.data?.error || "Failed to fetch logs");
     } finally {
       setLogLoading(false);
     }

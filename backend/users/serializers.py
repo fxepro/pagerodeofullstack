@@ -20,10 +20,11 @@ class UserSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField()
     is_active = serializers.SerializerMethodField()
     last_login = serializers.SerializerMethodField()
+    email_verified = serializers.SerializerMethodField()
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'last_login', 'role', 'is_active', 'profile']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'last_login', 'role', 'is_active', 'email_verified', 'profile']
         read_only_fields = ['id', 'date_joined']
     
     def get_role(self, obj):
@@ -52,6 +53,13 @@ class UserSerializer(serializers.ModelSerializer):
             return obj.profile.last_login or obj.last_login
         except UserProfile.DoesNotExist:
             return obj.last_login
+    
+    def get_email_verified(self, obj):
+        # Get email_verified status from profile
+        try:
+            return obj.profile.email_verified
+        except UserProfile.DoesNotExist:
+            return False
 
 class UserActivitySerializer(serializers.ModelSerializer):
     class Meta:

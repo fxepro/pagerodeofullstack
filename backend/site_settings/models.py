@@ -335,6 +335,12 @@ class SiteConfig(models.Model):
         help_text='Expose API documentation endpoint'
     )
     
+    # Analytics Settings
+    enable_analytics = models.BooleanField(
+        default=False,
+        help_text='Enable client-side analytics (PostHog) in production'
+    )
+    
     # Metadata
     updated_by = models.ForeignKey(
         User,

@@ -15,7 +15,8 @@ import {
   TrendingUp,
   Plug,
   Webhook,
-  Wrench
+  Wrench,
+  Settings
 } from "lucide-react";
 
 interface UserSidebarProps {
@@ -49,6 +50,12 @@ export default function UserSidebar({ currentPath, collapsed = false, onToggle }
       href: "/dashboard/reports",
       icon: BarChart3,
       description: "Analytics and reports"
+    },
+    {
+      title: "Settings",
+      href: "/dashboard/settings",
+      icon: Settings,
+      description: "Configure your preferences"
     }
   ];
 

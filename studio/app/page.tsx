@@ -1,11 +1,48 @@
-import React from "react"
+"use client";
+import React, { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Zap, Clock, FileText, TrendingUp, Shield, BarChart3, Globe, Sparkles, ArrowRight, CheckCircle, Star, Play, Users, Award, Target, Rocket, Activity, Eye, Monitor } from "lucide-react"
 import { UrlInputForm } from "@/components/url-input-form"
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+
 export default function HomePage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if user is logged in and redirect to dashboard
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      // Validate token by checking user info
+      fetch(`${API_BASE}/api/user-info/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => {
+          if (res.ok) {
+            return res.json();
+          }
+          throw new Error('Invalid token');
+        })
+        .then(data => {
+          // If email is verified, redirect to appropriate dashboard
+          if (data.email_verified !== false) {
+            if (data.role === 'admin') {
+              router.push("/admin/dashboard");
+            } else {
+              router.push("/dashboard");
+            }
+          }
+        })
+        .catch(() => {
+          // Token is invalid, clear it and stay on homepage
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+        });
+    }
+  }, [router]);
   return (
     <div className="min-h-screen overflow-x-hidden">
       {/* Hero Section - Uses Palette Colors */}

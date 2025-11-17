@@ -2,13 +2,18 @@
 Views for system monitoring and log viewing
 """
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser, AllowAny
+from rest_framework.permissions import IsAdminUser, AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from pathlib import Path
 import os
 from django.conf import settings
 from django.db import connection
+from django.contrib.auth import authenticate
+from users.models import UserProfile
 
 # Get logs directory
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,6 +45,87 @@ def health_check(request):
             'service': 'PageRodeo Backend',
             'error': str(e),
         }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Custom token serializer that includes email_verified and 2FA status"""
+    
+    def validate(self, attrs):
+        # First authenticate user
+        authenticate_kwargs = {
+            self.username_field: attrs[self.username_field],
+            'password': attrs['password'],
+        }
+        
+        user = authenticate(**authenticate_kwargs)
+        
+        if not user:
+            raise AuthenticationFailed('No active account found with the given credentials')
+        
+        self.user = user
+        
+        # Check if 2FA is enabled for this user
+        try:
+            profile = self.user.profile
+            two_factor_enabled = profile.two_factor_enabled
+            
+            # Check if site-wide 2FA is required
+            from site_settings.models import SiteConfig
+            site_config = SiteConfig.get_config()
+            site_2fa_enabled = site_config.enable_two_factor if site_config else False
+            
+            # If user has 2FA enabled or site requires it, check for 2FA token
+            if two_factor_enabled and site_2fa_enabled:
+                two_factor_token = self.initial_data.get('two_factor_token')
+                backup_code = self.initial_data.get('backup_code')
+                
+                if not two_factor_token and not backup_code:
+                    # 2FA required but token not provided
+                    # Return special response indicating 2FA is needed
+                    raise ValidationError({
+                        'two_factor_required': True,
+                        'message': 'Two-factor authentication required. Please provide a 2FA token or backup code.'
+                    })
+                
+                # Verify 2FA token
+                if two_factor_token:
+                    from users.two_factor import decrypt_secret, verify_totp
+                    secret = decrypt_secret(profile.two_factor_secret)
+                    if not verify_totp(secret, two_factor_token):
+                        raise AuthenticationFailed('Invalid 2FA token')
+                elif backup_code:
+                    from users.two_factor import verify_backup_code
+                    is_valid, updated_codes = verify_backup_code(profile.two_factor_backup_codes, backup_code)
+                    if not is_valid:
+                        raise AuthenticationFailed('Invalid backup code')
+                    # Update backup codes (remove used one)
+                    profile.two_factor_backup_codes = updated_codes
+                    profile.save()
+        except UserProfile.DoesNotExist:
+            # If profile doesn't exist, create it
+            profile = UserProfile.objects.create(user=self.user, role='viewer', email_verified=False)
+            two_factor_enabled = False
+        
+        # Generate JWT tokens (standard flow)
+        refresh = self.get_token(self.user)
+        
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+        
+        # Add email_verified status
+        data['email_verified'] = profile.email_verified
+        
+        # Add 2FA status
+        data['two_factor_enabled'] = two_factor_enabled
+        
+        return data
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """Custom token obtain view that includes email_verified status"""
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 @api_view(['GET'])

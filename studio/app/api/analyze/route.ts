@@ -54,15 +54,12 @@ export async function POST(request: NextRequest) {
       console.log("[pagerodeo] API Key available:", apiKey ? "YES" : "NO")
       console.log("[pagerodeo] API Key length:", apiKey ? apiKey.length : 0)
       console.log("[pagerodeo] API Key starts with:", apiKey ? apiKey.substring(0, 10) + "..." : "N/A")
-      console.log("[pagerodeo] All env vars:", Object.keys(process.env).filter(key => key.includes('PAGESPEED')))
+      console.log("[pagerodeo] NODE_ENV:", process.env.NODE_ENV)
+      console.log("[pagerodeo] Next.js env loading:", apiKey ? "✅ Working (API key loaded)" : "❌ Not working (API key missing)")
       console.log("[pagerodeo] === END DEBUG ===")
       
-      // Also check if .env.local is being loaded
-      console.log("[pagerodeo] NODE_ENV:", process.env.NODE_ENV)
-      console.log("[pagerodeo] NEXT env loading working:", process.env.NEXT_PUBLIC_APP_URL ? "YES" : "NO")
-      
       if (!apiKey || apiKey === 'NO_KEY') {
-        throw new Error("PageSpeed API key is not configured. Please add PAGESPEED_API_KEY to .env.local")
+        throw new Error("PageSpeed API key is not configured. Please add PAGESPEED_API_KEY to .env.local and restart the dev server or rebuild the production app.")
       }
       
       // Use Google PageSpeed Insights API for REAL data  
@@ -81,6 +78,34 @@ export async function POST(request: NextRequest) {
       if (!response.ok) {
         const errorText = await response.text()
         console.error("[pagerodeo] PageSpeed API error response:", errorText)
+        
+        // Parse error to provide better error messages
+        let parsedError: any = null
+        try {
+          parsedError = JSON.parse(errorText)
+        } catch {
+          // Not JSON, use raw text
+        }
+        
+        // Handle specific PageSpeed API errors
+        if (parsedError?.error?.errors?.[0]?.reason === 'lighthouseUserError') {
+          const errorMsg = parsedError.error.errors[0].message || parsedError.error.message
+          
+          if (errorMsg.includes('NO_FCP') || errorMsg.includes('did not paint any content')) {
+            throw new Error(`The website "${targetUrl}" did not render any content. This could mean:
+- The page is blocking automated testing
+- The page takes too long to load
+- The page has rendering issues
+- The page requires user interaction to load
+
+Please try a different website or check if the site is accessible.`)
+          } else if (errorMsg.includes('FAILED_DOCUMENT_REQUEST')) {
+            throw new Error(`Could not load the website "${targetUrl}". The page may be down or blocking requests.`)
+          } else if (errorMsg.includes('PROTOCOL_TIMEOUT')) {
+            throw new Error(`The website "${targetUrl}" took too long to load. Please try again or test a different website.`)
+          }
+        }
+        
         throw new Error(`PageSpeed API error: ${response.status} ${response.statusText} - ${errorText}`)
       }
       

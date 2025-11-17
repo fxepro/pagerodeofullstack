@@ -200,6 +200,16 @@ def get_site_config(request):
     return Response(serializer.data)
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_public_site_flags(request):
+    """Public endpoint for client runtime flags (no secrets)"""
+    config = SiteConfig.get_config()
+    return Response({
+        'enable_analytics': getattr(config, 'enable_analytics', False),
+    })
+
+
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAdminUser])
 def update_site_config(request):

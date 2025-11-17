@@ -11,41 +11,61 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Environment variable loading
-# Try to use python-decouple if available, otherwise use os.environ
-# python-decouple automatically looks for .env file in current directory and parent directories
-# When Django runs from backend/, .env should be in backend/ directory
+# Use django-environ - explicitly point to .env in same directory as settings.py
 try:
-    from decouple import config, Csv
-    USE_DECOUPLE = True
-except ImportError:
-    USE_DECOUPLE = False
-    # Fallback function for os.environ
-    def config(key, default=None, cast=None):
-        value = os.environ.get(key, default)
-        if cast is not None and value is not None and value != default:
-            try:
-                return cast(value)
-            except (ValueError, TypeError):
-                return default
-        return value
-    def Csv(value, cast=None):
-        if value is None:
-            return []
-        return [v.strip() for v in value.split(',') if v.strip()]
+    import environ
+except ImportError as e:
+    print(f"[SETTINGS ERROR] Failed to import environ module")
+    print(f"[SETTINGS ERROR] Python executable: {sys.executable}")
+    print(f"[SETTINGS ERROR] Python path: {sys.path[:3]}")
+    print(f"[SETTINGS ERROR] Import error: {e}")
+    print(f"[SETTINGS ERROR] Please install django-environ: pip install django-environ")
+    raise
+
+# .env file should be in backend/ directory (backend/.env)
+env_file = BASE_DIR / '.env'
+env = environ.Env(
+    # Set casting and default values
+    DEBUG=(bool, False),
+    EMAIL_USE_TLS=(bool, True),
+    EMAIL_PORT=(int, 587),
+)
+
+# Read .env file from core/ directory
+if env_file.exists():
+    env.read_env(str(env_file))
+    print(f"[SETTINGS] Loading .env from: {env_file}")
+else:
+    print(f"[SETTINGS] WARNING: .env file not found at {env_file}")
+
+# Helper function for compatibility
+def config(key, default=None, cast=None):
+    """Helper function to read env vars with optional casting"""
+    try:
+        if cast is not None:
+            return env(key, cast=cast, default=default)
+        return env(key, default=default)
+    except Exception:
+        return default
+
+def Csv(value, cast=None):
+    """Helper function for comma-separated values"""
+    if value is None:
+        return []
+    return [v.strip() for v in value.split(',') if v.strip()]
 
 
 def get_env_bool(key, default=False):
     """Get boolean environment variable"""
-    if USE_DECOUPLE:
-        return config(key, default=default, cast=bool)
-    value = config(key, default=str(default))
-    return value.lower() in ('true', '1', 'yes', 'on')
+    return env(key, cast=bool, default=default)
 
 
 def get_env_list(key, default=None):
@@ -78,47 +98,46 @@ def get_env_list(key, default=None):
         else:
             return fallback_default.copy() if fallback_default else []
     
-    if USE_DECOUPLE:
-        try:
-            # Convert default list to comma-separated string for python-decouple
-            if default_list:
-                default_str = ','.join(str(v) for v in default_list)
-            else:
-                default_str = ''
-            
-            # Get value from environment as string first, then parse
-            try:
-                # Get as string (don't use Csv cast to avoid issues)
-                raw_str = config(key, default='')
-                # If empty, use default
-                if not raw_str or raw_str.strip() == '':
-                    return ensure_list(None, default_list)
-                # Parse comma-separated string manually
-                parsed_list = [v.strip() for v in str(raw_str).split(',') if v.strip()]
-                # If parsing results in empty list, use default
-                if not parsed_list:
-                    return ensure_list(None, default_list)
-            except Exception:
-                # If config fails, use default
-                return ensure_list(None, default_list)
-            
-            # Filter out empty strings and None values
-            filtered_list = [str(v).strip() for v in parsed_list if v is not None and str(v).strip()]
-            
-            # If filtered list is empty and we have a default, return default
-            if not filtered_list and default_list:
-                return ensure_list(default_list.copy(), default_list)
-            
-            # Return filtered list (ensure it's a list)
-            return ensure_list(filtered_list, default_list)
-            
-        except Exception:
-            # On any exception, return default as a list
-            return ensure_list(None, default_list)
-    
-    # Fallback to os.environ (when python-decouple is not available)
+    # Use django-environ to read comma-separated values
     try:
-        value = config(key, default='')
+        # Convert default list to comma-separated string
+        if default_list:
+            default_str = ','.join(str(v) for v in default_list)
+        else:
+            default_str = ''
+        
+        # Get value from environment as string
+        try:
+            raw_str = env(key, default=default_str)
+            # If empty, use default
+            if not raw_str or raw_str.strip() == '':
+                return ensure_list(None, default_list)
+            # Parse comma-separated string manually
+            parsed_list = [v.strip() for v in str(raw_str).split(',') if v.strip()]
+            # If parsing results in empty list, use default
+            if not parsed_list:
+                return ensure_list(None, default_list)
+        except Exception:
+            # If env fails, use default
+            return ensure_list(None, default_list)
+        
+        # Filter out empty strings and None values
+        filtered_list = [str(v).strip() for v in parsed_list if v is not None and str(v).strip()]
+        
+        # If filtered list is empty and we have a default, return default
+        if not filtered_list and default_list:
+            return ensure_list(default_list.copy(), default_list)
+        
+        # Return filtered list (ensure it's a list)
+        return ensure_list(filtered_list, default_list)
+        
+    except Exception:
+        # On any exception, return default as a list
+        return ensure_list(None, default_list)
+    
+    # Fallback (should not reach here, but just in case)
+    try:
+        value = env(key, default='')
         if not value or value == '':
             return ensure_list(None, default_list)
         
@@ -181,6 +200,13 @@ INSTALLED_APPS = [
     'audit_reports',
 ]
 
+# Conditionally add anymail if available
+try:
+    import anymail
+    INSTALLED_APPS.insert(INSTALLED_APPS.index('rest_framework'), 'anymail')
+except ImportError:
+    pass
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -226,8 +252,11 @@ DATABASES = {
         'NAME': config('DB_NAME', default='pagerodeo'),
         'USER': config('DB_USER', default='postgres'),
         'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='localhost'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),  # Use 127.0.0.1 instead of localhost to force IPv4
         'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+        },
     }
 }
 
@@ -279,20 +308,51 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Email Configuration - Gmail SMTP
-# Load email credentials from environment variables - REQUIRED in production
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
-EMAIL_PORT = int(config('EMAIL_PORT', default='587'))
-EMAIL_USE_TLS = get_env_bool('EMAIL_USE_TLS', default=True)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')  # Load from environment variable
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
-SERVER_EMAIL = config('SERVER_EMAIL', default=EMAIL_HOST_USER)
+# Email Configuration
+# Check if anymail is available, otherwise fall back to SMTP
+try:
+    import anymail
+    # Default to Amazon SES via django-anymail if EMAIL_BACKEND not explicitly set
+    EMAIL_BACKEND = env('EMAIL_BACKEND', default='anymail.backends.amazon_ses.EmailBackend')
+except ImportError:
+    # Fallback to SMTP if anymail is not installed
+    EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 
-# Email settings
+# SMTP configuration
+# Use env() to read from .env file
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = env('EMAIL_PORT', cast=int, default=587)
+EMAIL_USE_TLS = env('EMAIL_USE_TLS', cast=bool, default=True)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+
+# Debug logging
+if DEBUG:
+    print(f"[SETTINGS] EMAIL_HOST_USER loaded: '{EMAIL_HOST_USER}' (type: {type(EMAIL_HOST_USER).__name__}, empty: {not EMAIL_HOST_USER})")
+
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+
+if DEBUG:
+    print(f"[SETTINGS] DEFAULT_FROM_EMAIL loaded: '{DEFAULT_FROM_EMAIL}' (type: {type(DEFAULT_FROM_EMAIL).__name__}, empty: {not DEFAULT_FROM_EMAIL})")
+SERVER_EMAIL = env('SERVER_EMAIL', default=env('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER))
+
+# anymail (Amazon SES) configuration
+# If using Amazon SES with API, set AWS creds and region in environment
+try:
+    import anymail
+    ANYMAIL = {
+        "AMAZON_SES_CLIENT_PARAMS": {
+            # boto3 will also read standard AWS env vars:
+            # AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN
+            "region_name": config('AWS_REGION', default=config('AWS_DEFAULT_REGION', default='us-east-1')),
+        }
+    }
+except ImportError:
+    ANYMAIL = {}
+
+# Email settings common
 EMAIL_TIMEOUT = 30
-EMAIL_USE_SSL = False  # Use TLS instead of SSL for port 587
+EMAIL_USE_SSL = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -312,6 +372,35 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# JWT Token Configuration
+# Default was 5 minutes, now set to 30 minutes for better user experience
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Changed from default 5 minutes to 30 minutes
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Default: 1 day
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': False,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+    'JTI_CLAIM': 'jti',
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
 # API Documentation

@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Lock, Mail, UserPlus, ArrowLeft } from "lucide-react";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     username: "",
@@ -59,7 +61,7 @@ export default function RegisterPage() {
 
     try {
       // Create user via public registration endpoint
-      const res = await axios.post("http://localhost:8000/api/register/", {
+      const res = await axios.post(`${API_BASE}/api/register/`, {
         username: formData.username,
         email: formData.email,
         password: formData.password,
@@ -69,7 +71,7 @@ export default function RegisterPage() {
       });
 
       // Auto-login after successful registration
-      const loginRes = await axios.post("http://localhost:8000/api/token/", {
+      const loginRes = await axios.post(`${API_BASE}/api/token/`, {
         username: formData.username,
         password: formData.password,
       });
@@ -78,22 +80,38 @@ export default function RegisterPage() {
       localStorage.setItem("refresh_token", loginRes.data.refresh);
 
       // Redirect to appropriate dashboard
-      const userRes = await axios.get("http://localhost:8000/api/user-info/", {
+      const userRes = await axios.get(`${API_BASE}/api/user-info/`, {
         headers: { Authorization: `Bearer ${loginRes.data.access}` },
       });
 
-      if (userRes.data.role === 'admin') {
+      // Check if email verification is required
+      const emailVerified = res.data.email_verified ?? false;
+      
+      if (!emailVerified) {
+        // Redirect to verification page
+        router.push("/verify-email");
+      } else if (userRes.data.role === 'admin') {
         router.push("/admin/dashboard");
       } else {
         router.push("/dashboard");
       }
     } catch (err: any) {
-      if (err.response?.data?.username) {
+      console.error("Registration error:", err);
+      
+      // Handle different error types
+      if (err.response?.data?.error) {
+        // Backend returned specific error message
+        setError(err.response.data.error);
+      } else if (err.response?.data?.username) {
         setError("Username already exists. Please choose a different one.");
       } else if (err.response?.data?.email) {
         setError("Email already exists. Please use a different email.");
+      } else if (err.message?.includes('Network Error') || err.code === 'ECONNREFUSED') {
+        setError("Cannot connect to server. Please check if the backend is running.");
+      } else if (err.response?.status === 429) {
+        setError("Too many registration attempts. Please try again later.");
       } else {
-        setError("Registration failed. Please try again.");
+        setError(err.response?.data?.message || err.message || "Registration failed. Please try again.");
       }
       setLoading(false);
     }

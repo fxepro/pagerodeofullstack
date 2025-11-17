@@ -21,6 +21,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from core.views import CustomTokenObtainPairView
 import site_settings.urls
 from core import views
 
@@ -51,7 +52,8 @@ print(f"DEBUG: Total URLs now: {len(urlpatterns)}")
 
 # Create rate-limited JWT views
 # Apply rate limiting decorators to JWT token views
-token_obtain_view = TokenObtainPairView.as_view()
+# Use CustomTokenObtainPairView which includes email_verified status
+token_obtain_view = CustomTokenObtainPairView.as_view()
 token_refresh_view = TokenRefreshView.as_view()
 
 # Apply rate limiting decorators

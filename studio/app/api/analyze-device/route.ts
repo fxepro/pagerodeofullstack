@@ -18,8 +18,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Normalize URL
-    const targetUrl = url.startsWith('http') ? url : `https://${url}`;
+    // Validate and normalize URL
+    let targetUrl: string;
+    try {
+      targetUrl = url.startsWith('http') ? url : `https://${url}`;
+      new URL(targetUrl); // Validate URL format
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid URL format' },
+        { status: 400 }
+      );
+    }
 
     // Get PageSpeed API key
     const apiKey = process.env.PAGESPEED_API_KEY;
@@ -45,8 +54,54 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[pagerodeo] PageSpeed API error:', errorText);
-      throw new Error(`PageSpeed API error: ${response.status}`);
+      console.error('[pagerodeo] PageSpeed API error response:', errorText);
+      
+      // Parse error to provide better error messages
+      let parsedError: any = null;
+      try {
+        parsedError = JSON.parse(errorText);
+      } catch {
+        // Not JSON, use raw text
+      }
+      
+      // Handle specific PageSpeed API errors
+      if (parsedError?.error?.errors?.[0]?.reason === 'lighthouseUserError') {
+        const errorMsg = parsedError.error.errors[0].message || parsedError.error.message;
+        
+        if (errorMsg.includes('NO_FCP') || errorMsg.includes('did not paint any content')) {
+          throw new Error(`The website "${targetUrl}" did not render any content. This could mean:
+- The page is blocking automated testing
+- The page takes too long to load
+- The page has rendering issues
+- The page requires user interaction to load
+
+Please try a different website or check if the site is accessible.`);
+        } else if (errorMsg.includes('FAILED_DOCUMENT_REQUEST')) {
+          throw new Error(`Could not load the website "${targetUrl}". The page may be down or blocking requests.`);
+        } else if (errorMsg.includes('PROTOCOL_TIMEOUT')) {
+          throw new Error(`The website "${targetUrl}" took too long to load. Please try again or test a different website.`);
+        } else if (errorMsg.includes('INVALID_URL')) {
+          throw new Error(`Invalid URL format: "${targetUrl}". Please check the URL and try again.`);
+        } else if (errorMsg.includes('INVALID_API_KEY')) {
+          throw new Error(`Invalid PageSpeed API key. Please check your PAGESPEED_API_KEY configuration.`);
+        }
+      }
+      
+      // Check for other common error reasons
+      if (parsedError?.error?.errors?.[0]?.reason) {
+        const reason = parsedError.error.errors[0].reason;
+        const message = parsedError.error.errors[0].message || parsedError.error.message || errorText;
+        
+        if (reason === 'badRequest') {
+          throw new Error(`Bad request to PageSpeed API: ${message}`);
+        } else if (reason === 'forbidden') {
+          throw new Error(`Access forbidden. Please check your API key permissions.`);
+        } else if (reason === 'notFound') {
+          throw new Error(`The website "${targetUrl}" could not be found or is not accessible.`);
+        }
+      }
+      
+      throw new Error(`PageSpeed API error: ${response.status} ${response.statusText} - ${parsedError?.error?.message || errorText}`);
     }
 
     const pageSpeedData = await response.json();

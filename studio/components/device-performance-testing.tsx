@@ -71,7 +71,26 @@ export function DevicePerformanceTesting({ url }: DevicePerformanceTestingProps)
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        // Try to extract error message from response
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          if (errorData.details) {
+            errorMessage += `: ${errorData.details}`;
+          }
+        } catch {
+          // If response is not JSON, try to get text
+          try {
+            const errorText = await response.text();
+            if (errorText) {
+              errorMessage = errorText.length > 200 ? `${errorText.substring(0, 200)}...` : errorText;
+            }
+          } catch {
+            // Ignore if we can't read the response
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -79,7 +98,8 @@ export function DevicePerformanceTesting({ url }: DevicePerformanceTestingProps)
       toast.success(`${device.charAt(0).toUpperCase() + device.slice(1)} test complete`);
     } catch (error: any) {
       console.error(`${device} test failed:`, error);
-      toast.error(`Failed to test ${device}: ${error.message}`);
+      const errorMessage = error.message || 'Unknown error occurred';
+      toast.error(`Failed to test ${device}: ${errorMessage}`);
     } finally {
       setTesting(prev => ({ ...prev, [device]: false }));
     }

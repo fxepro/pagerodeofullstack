@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,71 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Shield, Settings, BarChart3, Bell, Save, Database, Globe, Lock } from "lucide-react";
 import { applyTheme, LAYOUT, getCurrentTheme, setTheme, type ThemeVariant } from "@/lib/theme";
+import axios from "axios";
+import { toast } from "sonner";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
 export default function AdminSettingsPage() {
   const currentTheme = getCurrentTheme();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [siteConfig, setSiteConfig] = useState({
+    enable_two_factor: false,  // Default: OFF
+    enable_email_verification: false,
+    require_strong_passwords: true,
+    enable_analytics: false,
+  });
+
+  useEffect(() => {
+    fetchSiteConfig();
+  }, []);
+
+  const fetchSiteConfig = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    try {
+      const res = await axios.get(`${API_BASE}/api/site-config/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSiteConfig({
+        enable_two_factor: res.data.enable_two_factor ?? false,
+        enable_email_verification: res.data.enable_email_verification ?? false,
+        require_strong_passwords: res.data.require_strong_passwords ?? false,
+        enable_analytics: res.data.enable_analytics ?? false,
+      });
+    } catch (err) {
+      console.error("Failed to fetch site config:", err);
+      toast.error("Failed to load site configuration");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast.error("Please log in to save settings");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await axios.patch(
+        `${API_BASE}/api/site-config/update/`,
+        siteConfig,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Settings saved successfully!");
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to save settings");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleThemeChange = (theme: ThemeVariant) => {
     setTheme(theme);
@@ -144,21 +206,48 @@ export default function AdminSettingsPage() {
                   <Label htmlFor="strong-passwords" className={applyTheme.text('label')}>Require strong passwords</Label>
                   <p className={`text-sm ${applyTheme.text('secondary')}`}>Enforce password complexity requirements</p>
                 </div>
-                <Switch id="strong-passwords" defaultChecked />
+                <Switch 
+                  id="strong-passwords" 
+                  checked={siteConfig.require_strong_passwords}
+                  onCheckedChange={(checked) => setSiteConfig({ ...siteConfig, require_strong_passwords: checked })}
+                  disabled={loading}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="two-factor" className={applyTheme.text('label')}>Enable two-factor authentication</Label>
-                  <p className={`text-sm ${applyTheme.text('secondary')}`}>Require 2FA for all admin accounts</p>
+                  <p className={`text-sm ${applyTheme.text('secondary')}`}>Require 2FA for all admin accounts (Future feature)</p>
                 </div>
-                <Switch id="two-factor" defaultChecked />
+                <Switch 
+                  id="two-factor" 
+                  checked={siteConfig.enable_two_factor}
+                  onCheckedChange={(checked) => setSiteConfig({ ...siteConfig, enable_two_factor: checked })}
+                  disabled={loading}
+                />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="email-verification" className={applyTheme.text('label')}>Enable email verification</Label>
                   <p className={`text-sm ${applyTheme.text('secondary')}`}>Verify email addresses on registration</p>
                 </div>
-                <Switch id="email-verification" />
+                <Switch 
+                  id="email-verification" 
+                  checked={siteConfig.enable_email_verification}
+                  onCheckedChange={(checked) => setSiteConfig({ ...siteConfig, enable_email_verification: checked })}
+                  disabled={loading}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="enable-analytics" className={applyTheme.text('label')}>Enable analytics (PostHog)</Label>
+                  <p className={`text-sm ${applyTheme.text('secondary')}`}>Allow client-side analytics in production</p>
+                </div>
+                <Switch 
+                  id="enable-analytics" 
+                  checked={siteConfig.enable_analytics}
+                  onCheckedChange={(checked) => setSiteConfig({ ...siteConfig, enable_analytics: checked })}
+                  disabled={loading}
+                />
               </div>
             </div>
           </CardContent>
@@ -311,6 +400,18 @@ export default function AdminSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Save Button */}
+        <div className="flex justify-end mt-6">
+          <Button 
+            onClick={handleSaveSettings}
+            disabled={loading || saving}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {saving ? "Saving..." : "Save Settings"}
+          </Button>
+        </div>
       </div>
     </div>
   );

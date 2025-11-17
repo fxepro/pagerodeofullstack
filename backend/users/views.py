@@ -1,13 +1,25 @@
 from django.shortcuts import get_object_or_404
 from urllib.parse import urlparse
+from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.db.models import Q
+from django.utils import timezone
 from core.rate_limiting import rate_limit_register, rate_limit_api
+from site_settings.models import SiteConfig
+from .email_verification import send_verification_email
+from .two_factor import (
+    generate_secret, generate_qr_code, verify_totp,
+    generate_backup_codes, encrypt_secret, decrypt_secret,
+    encrypt_backup_codes, verify_backup_code
+)
+import logging
+
+logger = logging.getLogger(__name__)
 from .models import (
     UserProfile,
     UserActivity,
@@ -29,6 +41,7 @@ from .serializers import (
     MonitoredSiteUpdateSerializer,
 )
 import json
+from rest_framework_simplejwt.tokens import RefreshToken
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -61,6 +74,7 @@ def user_info(request):
         'role': role,
         'is_active': profile.is_active,
         'roles': [role],  # Keep for compatibility
+        'email_verified': profile.email_verified,  # Include email verification status
     })
 
 @api_view(['GET'])
@@ -145,17 +159,53 @@ def register_user(request):
         )
         
         # Create profile with selected role (default to viewer if not provided)
-        UserProfile.objects.create(
+        profile = UserProfile.objects.create(
             user=user,
             role=data.get('role', 'viewer'),
-            is_active=True
+            is_active=True,
+            email_verified=False  # Default to unverified
         )
         
+        # Check if email verification is enabled in site settings
+        site_config = SiteConfig.get_config()
+        email_verification_enabled = site_config.enable_email_verification if site_config else False
+        
+        # If email verification is enabled, send verification email
+        token = None
+        verification_link = None
+        if email_verification_enabled:
+            try:
+                token = profile.generate_verification_token()
+                # Build verification link for debug
+                frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None) or 'http://localhost:3000'
+                if frontend_url == 'http://localhost:8000':
+                    frontend_url = 'http://localhost:3000'
+                verification_link = f"{frontend_url.rstrip('/')}/verify-email?token={token}"
+                
+                email_sent = send_verification_email(user, token)
+                if not email_sent:
+                    logger.warning(f"Failed to send verification email to {user.email}, but user was created")
+            except Exception as e:
+                logger.error(f"Error sending verification email to {user.email}: {str(e)}", exc_info=True)
+                # Don't fail registration if email sending fails
+                email_sent = False
+        
         serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        response_data = serializer.data
+        response_data['email_verified'] = profile.email_verified
+        # Include token in DEBUG mode for testing
+        if getattr(settings, 'DEBUG', False) and token:
+            response_data['verification_token'] = token
+            response_data['verification_link'] = verification_link
+        return Response(response_data, status=status.HTTP_201_CREATED)
         
     except Exception as e:
-        return Response({'error': 'Registration failed. Please try again.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Log the actual error for debugging
+        logger.error(f"Registration failed: {str(e)}", exc_info=True)
+        
+        # Return more helpful error message
+        error_message = str(e) if settings.DEBUG else 'Registration failed. Please try again.'
+        return Response({'error': error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -526,3 +576,458 @@ def monitored_site_detail(request, site_id):
         serializer.save()
         return Response(MonitoredSiteSerializer(site).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ==================== EMAIL VERIFICATION ENDPOINTS ====================
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@rate_limit_api
+def send_verification_email_endpoint(request):
+    """Send verification email to user (Public endpoint, rate limited)"""
+    email = (request.data.get('email') or '').strip()
+
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # At this point the user is expected to exist (registration already validated email).
+    # If it doesn't exist, treat as an error instead of silently swallowing it so that
+    # verification code generation is deterministic for valid flows.
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'No user found for this email. Complete registration first.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    
+    # Check if already verified
+    try:
+        profile = user.profile
+        if profile.email_verified:
+            return Response({'message': 'Email is already verified'}, status=status.HTTP_400_BAD_REQUEST)
+    except UserProfile.DoesNotExist:
+        profile = UserProfile.objects.create(user=user, role='viewer', email_verified=False)
+    
+    # Generate new token and send email
+    token = None
+    verification_link = None
+    try:
+        token = profile.generate_verification_token()
+        # Build verification link for optional debug surface
+        frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None) or 'http://localhost:3000'
+        if frontend_url == 'http://localhost:8000':
+            frontend_url = 'http://localhost:3000'
+        verification_link = f"{frontend_url.rstrip('/')}/verify-email?token={token}"
+        
+        email_sent = send_verification_email(user, token)
+        
+        if email_sent:
+            payload = {'message': 'Verification email sent successfully'}
+            if getattr(settings, 'DEBUG', False):
+                payload.update({'token': token, 'verification_link': verification_link})
+            return Response(payload, status=status.HTTP_200_OK)
+        else:
+            payload = {'error': 'Failed to send verification email'}
+            if getattr(settings, 'DEBUG', False):
+                payload.update({'token': token, 'verification_link': verification_link})
+            return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        logger.error(f"Error sending verification email: {str(e)}", exc_info=True)
+        err_msg = str(e) if getattr(settings, 'DEBUG', False) else 'Failed to send verification email'
+        payload = {'error': err_msg}
+        # Always include token in DEBUG mode, even if email send failed
+        if getattr(settings, 'DEBUG', False) and token:
+            payload.update({'token': token, 'verification_link': verification_link})
+        return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@rate_limit_api
+def verify_email(request):
+    """Verify email with token (Public endpoint, rate limited)"""
+    token = request.data.get('token')
+    
+    if not token:
+        return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Find user with matching token
+    profiles = UserProfile.objects.filter(email_verification_token__isnull=False)
+    verified_profile = None
+    
+    for profile in profiles:
+        if profile.verify_token(token):
+            # Check if token is expired
+            if profile.is_token_expired():
+                return Response({'error': 'Verification link has expired. Please request a new one.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if already verified
+            if profile.email_verified:
+                return Response({'message': 'Email is already verified'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            verified_profile = profile
+            break
+    
+    if not verified_profile:
+        return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Mark as verified and clear token
+    verified_profile.email_verified = True
+    verified_profile.email_verification_token = None
+    verified_profile.email_verification_sent_at = None
+    verified_profile.save()
+    
+    # Generate JWT tokens
+    refresh = RefreshToken.for_user(verified_profile.user)
+    access_token = str(refresh.access_token)
+    refresh_token = str(refresh)
+    
+    return Response({
+        'message': 'Email verified successfully',
+        'email_verified': True,
+        'access_token': access_token,
+        'refresh_token': refresh_token
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@rate_limit_api
+def resend_verification_email(request):
+    """Resend verification email.
+    If `email` is provided, send for that user (public). If not provided, requires authenticated user and uses their email.
+    In DEBUG, returns the token and verification_link to aid testing.
+    """
+    email = (request.data.get('email') or '').strip()
+
+    user = None
+    if email:
+        try:
+            # Case-insensitive lookup to avoid casing mismatches
+            user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            # Do not reveal existence; respond as if sent
+            return Response({'message': 'If the email exists, a verification email has been sent.'}, status=status.HTTP_200_OK)
+    else:
+        # No email provided; fall back to authenticated user
+        if not request.user or not request.user.is_authenticated:
+            return Response({'error': 'Authentication or email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+
+    # Ensure profile exists
+    try:
+        profile = user.profile
+    except UserProfile.DoesNotExist:
+        profile = UserProfile.objects.create(user=user, role='viewer', email_verified=False)
+
+    # If already verified, no need to send
+    if profile.email_verified:
+        return Response({'message': 'Email is already verified'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Generate new token and attempt send
+    token = None
+    verification_link = None
+    try:
+        token = profile.generate_verification_token()
+        # Build verification link (for debug)
+        frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None) or 'http://localhost:3000'
+        if frontend_url == 'http://localhost:8000':
+            frontend_url = 'http://localhost:3000'
+        verification_link = f"{frontend_url.rstrip('/')}/verify-email?token={token}"
+
+        email_sent = send_verification_email(user, token)
+
+        if email_sent:
+            payload = {'message': 'Verification email sent successfully'}
+            if getattr(settings, 'DEBUG', False):
+                payload.update({'token': token, 'verification_link': verification_link})
+            return Response(payload, status=status.HTTP_200_OK)
+        else:
+            payload = {'error': 'Failed to send verification email'}
+            if getattr(settings, 'DEBUG', False):
+                payload.update({'token': token, 'verification_link': verification_link})
+            return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        logger.error(f"Error resending verification email: {str(e)}", exc_info=True)
+        err_msg = str(e) if getattr(settings, 'DEBUG', False) else 'Failed to send verification email'
+        payload = {'error': err_msg}
+        # Always include token in DEBUG mode, even if email send failed
+        if getattr(settings, 'DEBUG', False) and token:
+            payload.update({'token': token, 'verification_link': verification_link})
+        return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def verification_status(request):
+    """Check email verification status for authenticated user"""
+    try:
+        profile = request.user.profile
+        return Response({
+            'email_verified': profile.email_verified,
+            'email': request.user.email
+        }, status=status.HTTP_200_OK)
+    except UserProfile.DoesNotExist:
+        return Response({
+            'email_verified': False,
+            'email': request.user.email
+        }, status=status.HTTP_200_OK)
+
+
+# ==================== TWO-FACTOR AUTHENTICATION ENDPOINTS ====================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@rate_limit_api
+def setup_2fa(request):
+    """Initialize 2FA setup for authenticated user (Rate limited)"""
+    user = request.user
+    
+    try:
+        profile = user.profile
+    except UserProfile.DoesNotExist:
+        profile = UserProfile.objects.create(user=user, role='viewer')
+    
+    # Check if 2FA is already enabled
+    if profile.two_factor_enabled:
+        return Response({'error': '2FA is already enabled'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Check if site-wide 2FA is enabled
+    site_config = SiteConfig.get_config()
+    if not site_config.enable_two_factor:
+        return Response({'error': 'Two-factor authentication is not enabled for this site'}, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        # Generate secret and provisioning URI
+        secret, provisioning_uri = generate_secret(user.username)
+        
+        # Encrypt and store secret (don't enable yet - user needs to verify first)
+        encrypted_secret = encrypt_secret(secret)
+        profile.two_factor_secret = encrypted_secret
+        profile.save()
+        
+        # Generate QR code
+        qr_code = generate_qr_code(provisioning_uri)
+        
+        return Response({
+            'secret': secret,  # Return plain secret for initial setup
+            'provisioning_uri': provisioning_uri,
+            'qr_code': qr_code,
+            'message': 'Scan the QR code with your authenticator app and verify to enable 2FA'
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error setting up 2FA: {str(e)}", exc_info=True)
+        return Response({'error': 'Failed to setup 2FA'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@rate_limit_api
+def verify_and_enable_2fa(request):
+    """Verify TOTP token and enable 2FA for authenticated user (Rate limited)"""
+    user = request.user
+    token = request.data.get('token')
+    
+    if not token:
+        return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        profile = user.profile
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if not profile.two_factor_secret:
+        return Response({'error': '2FA not initialized. Please setup 2FA first.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if profile.two_factor_enabled:
+        return Response({'error': '2FA is already enabled'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Decrypt secret and verify token
+    secret = decrypt_secret(profile.two_factor_secret)
+    if not verify_totp(secret, token):
+        return Response({'error': 'Invalid token. Please try again.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Token is valid - enable 2FA and generate backup codes
+    backup_codes = generate_backup_codes(count=10)
+    encrypted_backup_codes = encrypt_backup_codes(backup_codes)
+    
+    profile.two_factor_enabled = True
+    profile.two_factor_backup_codes = encrypted_backup_codes
+    profile.save()
+    
+    return Response({
+        'message': '2FA enabled successfully',
+        'backup_codes': backup_codes,  # Return plain codes only once - user should save them
+        'two_factor_enabled': True
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@rate_limit_api
+def disable_2fa(request):
+    """Disable 2FA for authenticated user (Rate limited)"""
+    user = request.user
+    password = request.data.get('password')  # Require password confirmation
+    
+    if not password:
+        return Response({'error': 'Password is required to disable 2FA'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Verify password
+    if not user.check_password(password):
+        return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        profile = user.profile
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if not profile.two_factor_enabled:
+        return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Disable 2FA and clear secrets
+    profile.two_factor_enabled = False
+    profile.two_factor_secret = None
+    profile.two_factor_backup_codes = []
+    profile.save()
+    
+    return Response({
+        'message': '2FA disabled successfully',
+        'two_factor_enabled': False
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@rate_limit_api
+def generate_backup_codes_2fa(request):
+    """Generate new backup codes for 2FA (Rate limited)"""
+    user = request.user
+    password = request.data.get('password')  # Require password confirmation
+    
+    if not password:
+        return Response({'error': 'Password is required to generate new backup codes'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Verify password
+    if not user.check_password(password):
+        return Response({'error': 'Invalid password'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        profile = user.profile
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if not profile.two_factor_enabled:
+        return Response({'error': '2FA is not enabled'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Generate new backup codes (replace old ones)
+    backup_codes = generate_backup_codes(count=10)
+    encrypted_backup_codes = encrypt_backup_codes(backup_codes)
+    
+    profile.two_factor_backup_codes = encrypted_backup_codes
+    profile.save()
+    
+    return Response({
+        'message': 'New backup codes generated successfully',
+        'backup_codes': backup_codes  # Return plain codes only once
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@rate_limit_api
+def verify_2fa_login(request):
+    """
+    Verify 2FA token during login (Public endpoint, rate limited)
+    This is called after initial username/password authentication
+    """
+    username = request.data.get('username')
+    token = request.data.get('token')
+    backup_code = request.data.get('backup_code')  # Alternative to TOTP token
+    
+    if not username:
+        return Response({'error': 'Username is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not token and not backup_code:
+        return Response({'error': 'Token or backup code is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        profile = user.profile
+    except UserProfile.DoesNotExist:
+        return Response({'error': '2FA not enabled'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not profile.two_factor_enabled:
+        return Response({'error': '2FA not enabled'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Verify token or backup code
+    verified = False
+    
+    if token:
+        # Verify TOTP token
+        secret = decrypt_secret(profile.two_factor_secret)
+        verified = verify_totp(secret, token)
+    elif backup_code:
+        # Verify backup code
+        is_valid, updated_codes = verify_backup_code(profile.two_factor_backup_codes, backup_code)
+        if is_valid:
+            verified = True
+            # Update backup codes list (remove used code)
+            profile.two_factor_backup_codes = updated_codes
+            profile.save()
+    
+    if not verified:
+        return Response({'error': 'Invalid token or backup code'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # 2FA verified - proceed with normal login
+    # Return success (actual JWT token generation happens in login flow)
+    return Response({
+        'message': '2FA verified successfully',
+        'verified': True
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_2fa_status(request):
+    """Get 2FA status for authenticated user"""
+    try:
+        profile = request.user.profile
+        return Response({
+            'two_factor_enabled': profile.two_factor_enabled,
+            'backup_codes_count': len(profile.two_factor_backup_codes) if profile.two_factor_backup_codes else 0
+        }, status=status.HTTP_200_OK)
+    except UserProfile.DoesNotExist:
+        return Response({
+            'two_factor_enabled': False,
+            'backup_codes_count': 0
+        }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def debug_email_settings(request):
+    """Debug endpoint to check email settings (DEBUG only)"""
+    if not getattr(settings, 'DEBUG', False):
+        return Response({'error': 'Not available in production'}, status=status.HTTP_403_FORBIDDEN)
+    
+    email_host_user = getattr(settings, 'EMAIL_HOST_USER', None)
+    default_from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
+    email_host = getattr(settings, 'EMAIL_HOST', None)
+    email_backend = getattr(settings, 'EMAIL_BACKEND', None)
+    
+    return Response({
+        'EMAIL_BACKEND': email_backend,
+        'EMAIL_HOST': email_host,
+        'EMAIL_HOST_USER': email_host_user,
+        'DEFAULT_FROM_EMAIL': default_from_email,
+        'EMAIL_HOST_USER_type': type(email_host_user).__name__,
+        'DEFAULT_FROM_EMAIL_type': type(default_from_email).__name__,
+        'EMAIL_HOST_USER_empty': not email_host_user if email_host_user else True,
+        'DEFAULT_FROM_EMAIL_empty': not default_from_email if default_from_email else True,
+    }, status=status.HTTP_200_OK)

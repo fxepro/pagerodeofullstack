@@ -97,11 +97,11 @@ export default function Reports2Page() {
       
       if (!response.ok) {
         if (response.status === 401) {
-          // Token expired - clear it and show empty state (no error message)
+          // Token expired - redirect to login
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
-          setReports([]);
-          setStats({ total: 0, pending: 0, generating: 0, ready: 0, failed: 0 });
+          window.location.href = `/login?error=${encodeURIComponent('Your session has expired. Please log in again.')}`;
+          return;
         } else if (response.status === 403) {
           setError('You do not have permission to view reports.');
         } else if (response.status === 404) {

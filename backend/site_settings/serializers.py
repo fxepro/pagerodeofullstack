@@ -162,6 +162,7 @@ class SiteConfigSerializer(serializers.ModelSerializer):
             'require_strong_passwords',
             'enable_two_factor',
             'enable_email_verification',
+            'enable_analytics',
             'enable_email_notifications',
             'enable_push_notifications',
             'enable_sms_notifications',

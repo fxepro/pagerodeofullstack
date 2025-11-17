@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+import uuid
 
 class UserProfile(models.Model):
     ROLE_CHOICES = [
@@ -19,8 +20,41 @@ class UserProfile(models.Model):
     last_login = models.DateTimeField(null=True, blank=True)
     login_count = models.IntegerField(default=0)
     
+    # Email verification fields
+    email_verified = models.BooleanField(default=False, help_text='Whether the user has verified their email address')
+    email_verification_token = models.CharField(max_length=255, null=True, blank=True, help_text='Hashed token for email verification')
+    email_verification_sent_at = models.DateTimeField(null=True, blank=True, help_text='When the verification email was sent')
+    
+    # Two-Factor Authentication fields
+    two_factor_enabled = models.BooleanField(default=False, help_text='Whether the user has enabled 2FA')
+    two_factor_secret = models.CharField(max_length=255, null=True, blank=True, help_text='Encrypted TOTP secret for 2FA')
+    two_factor_backup_codes = models.JSONField(default=list, blank=True, help_text='Encrypted backup codes for 2FA recovery')
+    
     def __str__(self):
         return f"{self.user.username} - {self.role}"
+    
+    def generate_verification_token(self):
+        """Generate a new verification token"""
+        from django.contrib.auth.hashers import make_password
+        token = str(uuid.uuid4())
+        self.email_verification_token = make_password(token)
+        self.email_verification_sent_at = timezone.now()
+        self.save()
+        return token
+    
+    def verify_token(self, token):
+        """Verify a token against the stored hash"""
+        from django.contrib.auth.hashers import check_password
+        if not self.email_verification_token:
+            return False
+        return check_password(token, self.email_verification_token)
+    
+    def is_token_expired(self):
+        """Check if verification token has expired (24 hours)"""
+        if not self.email_verification_sent_at:
+            return True
+        from datetime import timedelta
+        return timezone.now() - self.email_verification_sent_at > timedelta(hours=24)
     
     class Meta:
         verbose_name = "User Profile"

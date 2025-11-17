@@ -61,7 +61,8 @@ export function useSiteConfig() {
   const fetchSiteConfig = async () => {
     try {
       // Fetch active typography preset (public endpoint, no auth)
-      const typographyResponse = await axios.get('http://localhost:8000/api/typography/active/');
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
+      const typographyResponse = await axios.get(`${API_BASE}/api/typography/active/`);
       
       // Apply typography from the active preset
       if (typographyResponse.data) {
