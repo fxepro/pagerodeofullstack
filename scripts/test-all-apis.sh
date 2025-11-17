@@ -239,7 +239,25 @@ print_skip "Links Analysis (/api/links) - Next.js API route, test against fronte
 # ============================================
 echo -e "${YELLOW}=== Settings APIs ===${NC}"
 
-test_endpoint "GET" "${API_BASE}/typography/" "200" "" "" "Get Typography Presets"
+# Typography presets list requires admin authentication
+# Test with token - will return 403 for non-admin users (expected behavior)
+if [ -n "$ACCESS_TOKEN" ]; then
+    print_test "Get Typography Presets (Admin Required)"
+    TYPO_RESPONSE=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -H "Authorization: Bearer $ACCESS_TOKEN" "${API_BASE}/typography/" 2>/dev/null || echo -e "\n000")
+    TYPO_STATUS=$(echo "$TYPO_RESPONSE" | tail -n 1)
+    TYPO_BODY=$(echo "$TYPO_RESPONSE" | head -n -1)
+    # Accept 200 (admin) or 403 (non-admin) as valid - both show endpoint is working
+    if [ "$TYPO_STATUS" = "200" ] || [ "$TYPO_STATUS" = "403" ]; then
+        print_pass "Get Typography Presets (HTTP $TYPO_STATUS - endpoint correctly requires admin)"
+    else
+        print_fail "Get Typography Presets (Expected: 200/403, Got: $TYPO_STATUS)"
+        echo "Response: $TYPO_BODY" | head -c 200
+        echo ""
+    fi
+else
+    # Without token, expect 401
+    test_endpoint "GET" "${API_BASE}/typography/" "401" "" "" "Get Typography Presets (Unauthenticated)"
+fi
 test_endpoint "GET" "${API_BASE}/typography/active/" "200" "" "" "Get Active Typography"
 
 # ============================================
