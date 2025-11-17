@@ -6,8 +6,7 @@ import { X, Mail, RefreshCw, CheckCircle } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+import { getDjangoApiUrl } from "@/lib/api-config";
 
 export function EmailVerificationBanner() {
   const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
@@ -27,7 +26,7 @@ export function EmailVerificationBanner() {
     if (!token) return;
 
     try {
-      const res = await axios.get(`${API_BASE}/api/auth/verification-status/`, {
+      const res = await axios.get(getDjangoApiUrl('/api/auth/verification-status/'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       setEmailVerified(res.data.email_verified);
@@ -52,7 +51,7 @@ export function EmailVerificationBanner() {
     setResending(true);
     try {
       await axios.post(
-        `${API_BASE}/api/auth/resend-verification/`,
+        getDjangoApiUrl('/api/auth/resend-verification/'),
         {},
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -89,7 +89,8 @@ export default function Reports2Page() {
         return;
       }
       
-      const response = await fetch('http://localhost:8000/api/reports/', {
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
+      const response = await fetch(`${API_BASE}/api/reports/`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -122,7 +123,7 @@ export default function Reports2Page() {
         
         // Fetch stats
       try {
-        const statsResponse = await fetch('http://localhost:8000/api/reports/stats/', {
+        const statsResponse = await fetch(`${API_BASE}/api/reports/stats/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -154,7 +155,8 @@ export default function Reports2Page() {
 
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`http://localhost:8000/api/reports/${id}/`, {
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
+      const response = await fetch(`${API_BASE}/api/reports/${id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

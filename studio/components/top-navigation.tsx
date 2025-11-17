@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, BarChart3, LogIn, LogOut, User, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+import { getDjangoApiUrl } from "@/lib/api-config";
 
 export function TopNavigation() {
   const pathname = usePathname();
@@ -25,7 +25,7 @@ export function TopNavigation() {
       
       // Validate token by fetching user info
       try {
-        const res = await fetch(`${API_BASE}/api/user-info/`, {
+        const res = await fetch(getDjangoApiUrl('/api/user-info/'), {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -64,7 +64,7 @@ export function TopNavigation() {
       
       // Validate token by fetching user info
       try {
-        const res = await fetch(`${API_BASE}/api/user-info/`, {
+        const res = await fetch(getDjangoApiUrl('/api/user-info/'), {
           headers: { Authorization: `Bearer ${token}` },
         });
         

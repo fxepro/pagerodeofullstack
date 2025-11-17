@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Activity, BarChart3, Zap, Shield, Code, Brain, Link2, MessageCircle, Gauge, Eye, Lock, FileText, Menu, X, Server, Type } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+import { getDjangoApiUrl } from "@/lib/api-config";
 
 export function Navigation() {
   const pathname = usePathname();
@@ -28,7 +27,7 @@ export function Navigation() {
       
       // Validate token by fetching user info
       try {
-        const res = await fetch(`${API_BASE}/api/user-info/`, {
+        const res = await fetch(getDjangoApiUrl('/api/user-info/'), {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -67,7 +66,7 @@ export function Navigation() {
       
       // Validate token by fetching user info
       try {
-        const res = await fetch(`${API_BASE}/api/user-info/`, {
+        const res = await fetch(getDjangoApiUrl('/api/user-info/'), {
           headers: { Authorization: `Bearer ${token}` },
         });
         

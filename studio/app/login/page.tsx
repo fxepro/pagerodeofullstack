@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { User, Lock, LogIn } from "lucide-react";
 import { captureEvent, identifyUser } from "@/lib/posthog";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+import { getDjangoApiUrl } from "@/lib/api-config";
 
 function LoginPageContent() {
   const [username, setUsername] = useState("");
@@ -34,7 +34,7 @@ function LoginPageContent() {
     e.preventDefault();
     setError("");
     try {
-      const res = await axios.post(`${API_BASE}/api/token/`, {
+      const res = await axios.post(getDjangoApiUrl('/api/token/'), {
         username,
         password,
       });
@@ -42,7 +42,7 @@ function LoginPageContent() {
       localStorage.setItem("refresh_token", res.data.refresh);
       
       // Fetch user info to check roles
-      const userRes = await axios.get(`${API_BASE}/api/user-info/`, {
+      const userRes = await axios.get(getDjangoApiUrl('/api/user-info/'), {
         headers: { Authorization: `Bearer ${res.data.access}` },
       });
       

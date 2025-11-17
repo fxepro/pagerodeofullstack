@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, CheckCircle, AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+import { getDjangoApiUrl } from "@/lib/api-config";
 
 function VerifyEmailContent() {
   const [token, setToken] = useState("");
@@ -43,7 +43,7 @@ function VerifyEmailContent() {
     setSuccess(false);
 
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/verify-email/`, {
+      const res = await axios.post(getDjangoApiUrl('/api/auth/verify-email/'), {
         token: tokenToVerify,
       });
 
@@ -80,7 +80,7 @@ function VerifyEmailContent() {
     setError("");
 
     try {
-      const resp = await axios.post(`${API_BASE}/api/auth/send-verification/`, {
+      const resp = await axios.post(getDjangoApiUrl('/api/auth/send-verification/'), {
         email: email,
       });
       // In DEBUG mode, backend may include token and verification_link to unblock local testing

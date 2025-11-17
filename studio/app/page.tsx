@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Zap, Clock, FileText, TrendingUp, Shield, BarChart3, Globe, Sparkles, ArrowRight, CheckCircle, Star, Play, Users, Award, Target, Rocket, Activity, Eye, Monitor } from "lucide-react"
 import { UrlInputForm } from "@/components/url-input-form"
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+import { getDjangoApiUrl } from "@/lib/api-config";
 
 export default function HomePage() {
   const router = useRouter();
@@ -17,7 +16,7 @@ export default function HomePage() {
     const token = localStorage.getItem("access_token");
     if (token) {
       // Validate token by checking user info
-      fetch(`${API_BASE}/api/user-info/`, {
+      fetch(getDjangoApiUrl('/api/user-info/'), {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(res => {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getDjangoApiUrl } from '@/lib/api-config';
 
 export interface SiteConfig {
   id: number;
@@ -61,8 +62,7 @@ export function useSiteConfig() {
   const fetchSiteConfig = async () => {
     try {
       // Fetch active typography preset (public endpoint, no auth)
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
-      const typographyResponse = await axios.get(`${API_BASE}/api/typography/active/`);
+      const typographyResponse = await axios.get(getDjangoApiUrl('/api/typography/active/'));
       
       // Apply typography from the active preset
       if (typographyResponse.data) {
