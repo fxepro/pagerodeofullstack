@@ -74,7 +74,6 @@ def user_info(request):
         'role': role,
         'is_active': profile.is_active,
         'roles': [role],  # Keep for compatibility
-        'email_verified': profile.email_verified,  # Include email verification status
     })
 
 @api_view(['GET'])
@@ -171,17 +170,9 @@ def register_user(request):
         email_verification_enabled = site_config.enable_email_verification if site_config else False
         
         # If email verification is enabled, send verification email
-        token = None
-        verification_link = None
         if email_verification_enabled:
             try:
                 token = profile.generate_verification_token()
-                # Build verification link for debug
-                frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None) or 'http://localhost:3000'
-                if frontend_url == 'http://localhost:8000':
-                    frontend_url = 'http://localhost:3000'
-                verification_link = f"{frontend_url.rstrip('/')}/verify-email?token={token}"
-                
                 email_sent = send_verification_email(user, token)
                 if not email_sent:
                     logger.warning(f"Failed to send verification email to {user.email}, but user was created")
@@ -193,10 +184,6 @@ def register_user(request):
         serializer = UserSerializer(user)
         response_data = serializer.data
         response_data['email_verified'] = profile.email_verified
-        # Include token in DEBUG mode for testing
-        if getattr(settings, 'DEBUG', False) and token:
-            response_data['verification_token'] = token
-            response_data['verification_link'] = verification_link
         return Response(response_data, status=status.HTTP_201_CREATED)
         
     except Exception as e:
@@ -585,21 +572,16 @@ def monitored_site_detail(request, site_id):
 @rate_limit_api
 def send_verification_email_endpoint(request):
     """Send verification email to user (Public endpoint, rate limited)"""
-    email = (request.data.get('email') or '').strip()
-
+    email = request.data.get('email')
+    
     if not email:
         return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # At this point the user is expected to exist (registration already validated email).
-    # If it doesn't exist, treat as an error instead of silently swallowing it so that
-    # verification code generation is deterministic for valid flows.
+    
     try:
-        user = User.objects.get(email__iexact=email)
+        user = User.objects.get(email=email)
     except User.DoesNotExist:
-        return Response(
-            {'error': 'No user found for this email. Complete registration first.'},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        # Don't reveal if email exists for security
+        return Response({'message': 'If the email exists, a verification email has been sent.'}, status=status.HTTP_200_OK)
     
     # Check if already verified
     try:
@@ -610,17 +592,14 @@ def send_verification_email_endpoint(request):
         profile = UserProfile.objects.create(user=user, role='viewer', email_verified=False)
     
     # Generate new token and send email
-    token = None
-    verification_link = None
     try:
         token = profile.generate_verification_token()
+        email_sent = send_verification_email(user, token)
         # Build verification link for optional debug surface
         frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None) or 'http://localhost:3000'
         if frontend_url == 'http://localhost:8000':
             frontend_url = 'http://localhost:3000'
         verification_link = f"{frontend_url.rstrip('/')}/verify-email?token={token}"
-        
-        email_sent = send_verification_email(user, token)
         
         if email_sent:
             payload = {'message': 'Verification email sent successfully'}
@@ -635,11 +614,7 @@ def send_verification_email_endpoint(request):
     except Exception as e:
         logger.error(f"Error sending verification email: {str(e)}", exc_info=True)
         err_msg = str(e) if getattr(settings, 'DEBUG', False) else 'Failed to send verification email'
-        payload = {'error': err_msg}
-        # Always include token in DEBUG mode, even if email send failed
-        if getattr(settings, 'DEBUG', False) and token:
-            payload.update({'token': token, 'verification_link': verification_link})
-        return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'error': err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -704,8 +679,7 @@ def resend_verification_email(request):
     user = None
     if email:
         try:
-            # Case-insensitive lookup to avoid casing mismatches
-            user = User.objects.get(email__iexact=email)
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
             # Do not reveal existence; respond as if sent
             return Response({'message': 'If the email exists, a verification email has been sent.'}, status=status.HTTP_200_OK)
@@ -726,17 +700,14 @@ def resend_verification_email(request):
         return Response({'message': 'Email is already verified'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Generate new token and attempt send
-    token = None
-    verification_link = None
     try:
         token = profile.generate_verification_token()
+        email_sent = send_verification_email(user, token)
         # Build verification link (for debug)
         frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None) or 'http://localhost:3000'
         if frontend_url == 'http://localhost:8000':
             frontend_url = 'http://localhost:3000'
         verification_link = f"{frontend_url.rstrip('/')}/verify-email?token={token}"
-
-        email_sent = send_verification_email(user, token)
 
         if email_sent:
             payload = {'message': 'Verification email sent successfully'}
@@ -751,11 +722,7 @@ def resend_verification_email(request):
     except Exception as e:
         logger.error(f"Error resending verification email: {str(e)}", exc_info=True)
         err_msg = str(e) if getattr(settings, 'DEBUG', False) else 'Failed to send verification email'
-        payload = {'error': err_msg}
-        # Always include token in DEBUG mode, even if email send failed
-        if getattr(settings, 'DEBUG', False) and token:
-            payload.update({'token': token, 'verification_link': verification_link})
-        return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'error': err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
@@ -1007,27 +974,3 @@ def get_2fa_status(request):
             'two_factor_enabled': False,
             'backup_codes_count': 0
         }, status=status.HTTP_200_OK)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def debug_email_settings(request):
-    """Debug endpoint to check email settings (DEBUG only)"""
-    if not getattr(settings, 'DEBUG', False):
-        return Response({'error': 'Not available in production'}, status=status.HTTP_403_FORBIDDEN)
-    
-    email_host_user = getattr(settings, 'EMAIL_HOST_USER', None)
-    default_from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None)
-    email_host = getattr(settings, 'EMAIL_HOST', None)
-    email_backend = getattr(settings, 'EMAIL_BACKEND', None)
-    
-    return Response({
-        'EMAIL_BACKEND': email_backend,
-        'EMAIL_HOST': email_host,
-        'EMAIL_HOST_USER': email_host_user,
-        'DEFAULT_FROM_EMAIL': default_from_email,
-        'EMAIL_HOST_USER_type': type(email_host_user).__name__,
-        'DEFAULT_FROM_EMAIL_type': type(default_from_email).__name__,
-        'EMAIL_HOST_USER_empty': not email_host_user if email_host_user else True,
-        'DEFAULT_FROM_EMAIL_empty': not default_from_email if default_from_email else True,
-    }, status=status.HTTP_200_OK)

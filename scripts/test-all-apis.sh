@@ -170,13 +170,55 @@ fi
 if [ -n "$ACCESS_TOKEN" ]; then
     echo -e "${YELLOW}=== Email Verification APIs ===${NC}"
     
-    # 5. Send Verification Email
+    # 5. Send Verification Email (check response for actual email sending)
+    print_test "Send Verification Email"
     SEND_VERIFY_DATA="{\"email\":\"${TEST_EMAIL}\"}"
-    test_endpoint "POST" "${API_BASE}/auth/send-verification/" "200" "$SEND_VERIFY_DATA" "$ACCESS_TOKEN" "Send Verification Email"
+    SEND_VERIFY_RESPONSE=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -d "$SEND_VERIFY_DATA" -X POST "${API_BASE}/auth/send-verification/" 2>/dev/null || echo -e "\n000")
+    SEND_VERIFY_STATUS=$(echo "$SEND_VERIFY_RESPONSE" | tail -n 1)
+    SEND_VERIFY_BODY=$(echo "$SEND_VERIFY_RESPONSE" | head -n -1)
     
-    # 6. Resend Verification Email
+    if [ "$SEND_VERIFY_STATUS" = "200" ]; then
+        # Check if response indicates email was actually sent
+        if echo "$SEND_VERIFY_BODY" | grep -q "Verification email sent successfully"; then
+            print_pass "Send Verification Email (HTTP $SEND_VERIFY_STATUS - email sent)"
+        elif echo "$SEND_VERIFY_BODY" | grep -q "Failed to send verification email"; then
+            print_fail "Send Verification Email (HTTP $SEND_VERIFY_STATUS - but email sending FAILED)"
+            echo "Response: $SEND_VERIFY_BODY"
+        else
+            print_pass "Send Verification Email (HTTP $SEND_VERIFY_STATUS)"
+        fi
+        echo "$SEND_VERIFY_BODY" | head -c 200
+        echo ""
+    else
+        print_fail "Send Verification Email (Expected: 200, Got: $SEND_VERIFY_STATUS)"
+        echo "Response: $SEND_VERIFY_BODY" | head -c 200
+        echo ""
+    fi
+    
+    # 6. Resend Verification Email (check response for actual email sending)
+    print_test "Resend Verification Email"
     RESEND_VERIFY_DATA="{\"email\":\"${TEST_EMAIL}\"}"
-    test_endpoint "POST" "${API_BASE}/auth/resend-verification/" "200" "$RESEND_VERIFY_DATA" "" "Resend Verification Email"
+    RESEND_VERIFY_RESPONSE=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" -d "$RESEND_VERIFY_DATA" -X POST "${API_BASE}/auth/resend-verification/" 2>/dev/null || echo -e "\n000")
+    RESEND_VERIFY_STATUS=$(echo "$RESEND_VERIFY_RESPONSE" | tail -n 1)
+    RESEND_VERIFY_BODY=$(echo "$RESEND_VERIFY_RESPONSE" | head -n -1)
+    
+    if [ "$RESEND_VERIFY_STATUS" = "200" ]; then
+        # Check if response indicates email was actually sent
+        if echo "$RESEND_VERIFY_BODY" | grep -q "Verification email sent successfully"; then
+            print_pass "Resend Verification Email (HTTP $RESEND_VERIFY_STATUS - email sent)"
+        elif echo "$RESEND_VERIFY_BODY" | grep -q "Failed to send verification email"; then
+            print_fail "Resend Verification Email (HTTP $RESEND_VERIFY_STATUS - but email sending FAILED)"
+            echo "Response: $RESEND_VERIFY_BODY"
+        else
+            print_pass "Resend Verification Email (HTTP $RESEND_VERIFY_STATUS)"
+        fi
+        echo "$RESEND_VERIFY_BODY" | head -c 200
+        echo ""
+    else
+        print_fail "Resend Verification Email (Expected: 200, Got: $RESEND_VERIFY_STATUS)"
+        echo "Response: $RESEND_VERIFY_BODY" | head -c 200
+        echo ""
+    fi
     
     # 7. Verify Email with Token (test with invalid token to verify endpoint exists)
     VERIFY_TOKEN_DATA="{\"token\":\"invalid_test_token_12345\"}"

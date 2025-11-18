@@ -8,44 +8,36 @@ from pathlib import Path
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Use django-environ for environment variables (consistent with settings.py)
+# Try to use python-decouple for environment variables
+# Fallback to os.environ if not available
 try:
-    import environ
-    env = environ.Env(
-        DEBUG=(bool, True),
-        SECURE_SSL_REDIRECT=(bool, False),
-        SESSION_COOKIE_SECURE=(bool, False),
-        CSRF_COOKIE_SECURE=(bool, False),
-    )
-    
-    # Read .env file if it exists
-    env_file = BASE_DIR / '.env'
-    if env_file.exists():
-        env.read_env(str(env_file))
-    
-    USE_ENVIRON = True
+    from decouple import config, Csv
+    USE_DECOUPLE = True
 except ImportError:
-    USE_ENVIRON = False
-    # Fallback to os.environ
-    env = None
+    USE_DECOUPLE = False
+    # Fallback function for os.environ
+    def config(key, default=None):
+        return os.environ.get(key, default)
+    def Csv(value, cast=None):
+        if value is None:
+            return []
+        return [v.strip() for v in value.split(',') if v.strip()]
 
 
 # Environment variable loading
 def get_env_bool(key, default=False):
     """Get boolean environment variable"""
-    if USE_ENVIRON and env:
-        return env(key, cast=bool, default=default)
-    # Fallback to os.environ
-    value = os.environ.get(key, str(default)).lower()
-    return value in ('true', '1', 'yes', 'on')
+    if USE_DECOUPLE:
+        return config(key, default=default, cast=bool)
+    value = config(key, default=str(default))
+    return value.lower() in ('true', '1', 'yes', 'on')
 
 
 def get_env_int(key, default=0):
     """Get integer environment variable"""
-    if USE_ENVIRON and env:
-        return env(key, cast=int, default=default)
-    # Fallback to os.environ
-    value = os.environ.get(key, str(default))
+    if USE_DECOUPLE:
+        return config(key, default=default, cast=int)
+    value = config(key, default=str(default))
     try:
         return int(value)
     except ValueError:
@@ -54,23 +46,16 @@ def get_env_int(key, default=0):
 
 def get_env_list(key, default=None):
     """Get list environment variable (comma-separated)"""
-    if USE_ENVIRON and env:
-        value = env(key, default='')
-        if not value:
-            return default or []
-        return [v.strip() for v in str(value).split(',') if v.strip()]
-    # Fallback to os.environ
-    value = os.environ.get(key, '')
+    if USE_DECOUPLE:
+        result = config(key, default=default or [], cast=Csv)
+        # Ensure we return a list, not a Csv object
+        if hasattr(result, '__iter__') and not isinstance(result, (str, bytes)):
+            return list(result)
+        return result if isinstance(result, list) else (default or [])
+    value = config(key, default='')
     if not value:
         return default or []
     return [v.strip() for v in value.split(',') if v.strip()]
-
-
-def config(key, default=None):
-    """Get environment variable (string)"""
-    if USE_ENVIRON and env:
-        return env(key, default=default)
-    return os.environ.get(key, default)
 
 
 # Security Settings

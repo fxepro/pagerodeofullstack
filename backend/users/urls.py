@@ -16,8 +16,7 @@ from .views import (
     send_verification_email_endpoint, verify_email, 
     resend_verification_email, verification_status,
     setup_2fa, verify_and_enable_2fa, disable_2fa,
-    generate_backup_codes_2fa, verify_2fa_login, get_2fa_status,
-    debug_email_settings
+    generate_backup_codes_2fa, verify_2fa_login, get_2fa_status
 )
 
 urlpatterns = [
@@ -29,7 +28,6 @@ urlpatterns = [
     path('api/auth/verify-email/', verify_email, name='verify_email'),
     path('api/auth/resend-verification/', resend_verification_email, name='resend_verification'),
     path('api/auth/verification-status/', verification_status, name='verification_status'),
-    path('api/debug/email-settings/', debug_email_settings, name='debug_email_settings'),
     # Two-factor authentication endpoints
     path('api/auth/2fa/setup/', setup_2fa, name='setup_2fa'),
     path('api/auth/2fa/verify-enable/', verify_and_enable_2fa, name='verify_and_enable_2fa'),

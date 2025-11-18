@@ -355,31 +355,7 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
-    # Next.js API routes (handled by Next.js, not Django)
-    # These must come BEFORE the Django /api/ catch-all
-    location ~ ^/api/(analyze|analyze-device|dns|ssl|links|ai-analyze|ai-health|ai-question|monitor|typography|sitemap|test-errors) {
-        proxy_pass http://nextjs;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Backend API (Django) - catch-all for all other /api/* routes
-    location /api/ {
-        proxy_pass http://django;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Frontend (Next.js) - catch-all for everything else
+    # Frontend (Next.js)
     location / {
         proxy_pass http://nextjs;
         proxy_http_version 1.1;
@@ -387,6 +363,16 @@ server {
         proxy_set_header Connection 'upgrade';
         proxy_set_header Host $host;
         proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Backend API (Django)
+    location /api/ {
+        proxy_pass http://django;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;

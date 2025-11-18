@@ -103,10 +103,10 @@ export default function MonitoringDetailPage() {
       });
 
       if (response.status === 401) {
-        // Redirect to login with error message
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        window.location.href = `/login?error=${encodeURIComponent('Your session has expired. Please log in again.')}`;
+        setAuthError(true);
+        setLoading(false);
         return;
       }
 
@@ -211,29 +211,13 @@ export default function MonitoringDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Back Button and Site URL Header */}
-      <div className="flex items-center justify-between">
-        <Link href="/dashboard/monitoring">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Monitoring
-          </Button>
-        </Link>
-        {siteDetail && (
-          <div className="flex items-center gap-2">
-            <Monitor className="h-4 w-4 text-slate-500" />
-            <a
-              href={`https://${siteDetail.url}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-lg font-semibold text-slate-800 hover:text-palette-primary transition-colors flex items-center gap-2"
-            >
-              {siteDetail.url}
-              <ExternalLink className="h-4 w-4 text-slate-500" />
-            </a>
-          </div>
-        )}
-      </div>
+      {/* Back Button */}
+      <Link href="/dashboard/monitoring">
+        <Button variant="outline" size="sm">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Monitoring
+        </Button>
+      </Link>
 
       {/* Header Stats Cards - Real Data Only */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

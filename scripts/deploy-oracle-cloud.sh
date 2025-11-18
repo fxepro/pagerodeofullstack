@@ -101,13 +101,7 @@ source venv/bin/activate
 
 # Install dependencies
 pip install --upgrade pip
-# Use production requirements (excludes testing dependencies)
-if [ -f "requirements-prod.txt" ]; then
-    pip install -r requirements-prod.txt
-else
-    echo "⚠️  requirements-prod.txt not found, using requirements.txt"
-    pip install -r requirements.txt
-fi
+pip install -r requirements.txt
 
 # Create .env file if it doesn't exist
 if [ ! -f ".env" ]; then

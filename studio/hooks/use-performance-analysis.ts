@@ -70,32 +70,11 @@ export function usePerformanceAnalysis(options: UsePerformanceAnalysisOptions = 
             body: JSON.stringify({ url: cleanedUrl }) 
           });
           
-          // Check content type to ensure we got JSON, not HTML
-          const contentType = response.headers.get("content-type");
-          if (!contentType || !contentType.includes("application/json")) {
-            const text = await response.text();
-            const error: any = new Error(
-              text.includes("<!doctype") || text.includes("<html")
-                ? "Server returned HTML instead of JSON. The API endpoint may not be available."
-                : `Unexpected response format: ${contentType}`
-            );
-            error.response = { status: response.status };
-            throw error;
-          }
-          
           // Attach HTTP status to error
           if (!response.ok) {
-            let errorData: any = {};
-            try {
-              errorData = await response.json();
-            } catch (parseError) {
-              // If JSON parsing fails, use the response text
-              const text = await response.text();
-              errorData = { error: text || "Analysis failed" };
-            }
+            const errorData = await response.json().catch(() => ({}));
             const error: any = new Error(errorData.error || "Analysis failed");
             error.response = { status: response.status };
-            error.details = errorData.details;
             throw error;
           }
           

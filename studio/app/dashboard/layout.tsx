@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import UserNavigation from "@/components/user-navigation";
 import UserSidebar from "@/components/user-sidebar";
 import { FooterUser } from "@/components/footer-user";
@@ -25,7 +24,7 @@ export default function DashboardLayout({
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
-      router.push("/login?error=" + encodeURIComponent("Please log in to access the dashboard."));
+      router.push("/login");
       return;
     }
     
@@ -33,32 +32,18 @@ export default function DashboardLayout({
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {
-        // SECURITY: Block unverified users from accessing dashboard
         if (res.data && res.data.email_verified === false) {
-          // Clear tokens - unverified users should not have access
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          localStorage.setItem("email_verified", "false");
           router.push('/verify-email');
           return;
         }
         setUser(res.data);
         setLoading(false);
       })
-      .catch((err) => {
-        // Handle 401 or any auth error - redirect immediately to login
-        if (err.response?.status === 401 || !err.response) {
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          const errorMessage = err.response?.status === 401 
-            ? "Your session has expired or you have been logged out. Please log in again."
-            : "Session expired or invalid. Please log in again.";
-          router.push("/login?error=" + encodeURIComponent(errorMessage));
-        } else {
-          // Other errors - show in layout (shouldn't happen often)
-          setError("An error occurred. Please try again.");
-          setLoading(false);
-        }
+      .catch(() => {
+        setError("Session expired or invalid. Please log in again.");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        router.push("/login");
       });
   }, [router]);
 
@@ -73,20 +58,12 @@ export default function DashboardLayout({
     localStorage.setItem("pagerodeo_dashboard_sidebar_collapsed", sidebarCollapsed ? "true" : "false");
   }, [sidebarCollapsed]);
 
-  // Don't show error state - redirect to login instead
-  // Error state is only for non-auth errors (which should be rare)
-  if (error && !loading) {
+  if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80">
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
           <h1 className="text-2xl font-bold mb-4 text-center text-palette-primary">Dashboard</h1>
           <p className="text-red-500 text-center">{error}</p>
-          <Button 
-            onClick={() => router.push("/login")} 
-            className="mt-4 w-full bg-palette-primary hover:bg-palette-primary-hover"
-          >
-            Go to Login
-          </Button>
         </div>
       </div>
     );
@@ -107,9 +84,6 @@ export default function DashboardLayout({
   }
 
   // Get page title based on pathname
-  // RULE: All dashboard pages should have their title/description in the top nav (UserNavigation)
-  // Do NOT add page headers (h1, title, description) in individual page components
-  // Instead, add the pathname check here and return the appropriate title/description
   const getPageTitle = () => {
     if (pathname.includes('/monitoring/') && pathname !== '/dashboard/monitoring') {
       // Extract site URL from localStorage for detail pages
@@ -134,7 +108,6 @@ export default function DashboardLayout({
     if (pathname.includes('/site-audit')) return 'Site Audit';
     if (pathname.includes('/reports')) return 'Audit Reports';
     if (pathname.includes('/profile')) return 'Profile';
-    if (pathname.includes('/settings')) return 'Settings';
     return 'Overview';
   };
 
@@ -146,7 +119,6 @@ export default function DashboardLayout({
     if (pathname.includes('/site-audit')) return 'Comprehensive website analysis';
     if (pathname.includes('/reports')) return 'View and download your audit reports';
     if (pathname.includes('/profile')) return 'Manage your account settings';
-    if (pathname.includes('/settings')) return 'Configure your preferences and application settings';
     return 'Your main workspace';
   };
 

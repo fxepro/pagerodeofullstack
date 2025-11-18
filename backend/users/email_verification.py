@@ -6,8 +6,22 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import logging
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
+
+
+def _build_from_address() -> str:
+    # Prefer explicit DEFAULT_FROM_EMAIL, fall back to EMAIL_HOST_USER, then a safe local default
+    from_addr = (getattr(settings, 'DEFAULT_FROM_EMAIL', '') or '').strip()
+    if not from_addr:
+        from_addr = (getattr(settings, 'EMAIL_HOST_USER', '') or '').strip()
+    if not from_addr:
+        # derive domain from FRONTEND_URL if available, else use localhost
+        raw = getattr(settings, 'FRONTEND_URL', '') or getattr(settings, 'ALLOWED_HOSTS', ['localhost'])[0]
+        host = urlparse(raw).hostname or (raw if isinstance(raw, str) else 'localhost')
+        from_addr = f"no-reply@{host}"
+    return from_addr
 
 
 def send_verification_email(user, token):
@@ -45,23 +59,16 @@ def send_verification_email(user, token):
 
         html_message = render_to_string('emails/verify_email.html', context)
         plain_message = strip_tags(html_message)
-        
-        # ALWAYS pull from Django settings
-        email_host_user = (getattr(settings, 'EMAIL_HOST_USER', None) or '').strip()
-        default_from_email = (getattr(settings, 'DEFAULT_FROM_EMAIL', None) or '').strip()
-        
-        logger.info(f"Email config check: EMAIL_HOST_USER='{email_host_user}', DEFAULT_FROM_EMAIL='{default_from_email}'")
-        
-        from_addr = email_host_user or default_from_email
+        from_addr = _build_from_address()
 
+        # Final safety on from_addr
         if not from_addr or '@' not in from_addr:
-            msg = "No valid FROM email configured in settings. Set EMAIL_HOST_USER or DEFAULT_FROM_EMAIL."
-            logger.error(f"{msg} EMAIL_HOST_USER='{email_host_user}', DEFAULT_FROM_EMAIL='{default_from_email}'")
+            msg = f"Invalid from email: '{from_addr}'"
+            logger.error(msg)
             if getattr(settings, 'DEBUG', False):
                 raise ValueError(msg)
             return False
 
-        # Use Django's send_mail - it will use EMAIL_* settings from Django settings
         send_mail(
             subject=subject,
             message=plain_message,
@@ -70,8 +77,7 @@ def send_verification_email(user, token):
             html_message=html_message,
             fail_silently=False,
         )
-
-        logger.info(f"Verification email sent to {to_addr} from {from_addr}")
+        logger.info(f"Verification email sent to {to_addr}")
         return True
 
     except Exception as e:
@@ -79,3 +85,4 @@ def send_verification_email(user, token):
         if getattr(settings, 'DEBUG', False):
             raise
         return False
+

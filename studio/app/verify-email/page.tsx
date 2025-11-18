@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, CheckCircle, AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
 
-import { getDjangoApiUrl } from "@/lib/api-config";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
-function VerifyEmailContent() {
+export default function VerifyEmailPage() {
   const [token, setToken] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,7 +43,7 @@ function VerifyEmailContent() {
     setSuccess(false);
 
     try {
-      const res = await axios.post(getDjangoApiUrl('/api/auth/verify-email/'), {
+      const res = await axios.post(`${API_BASE}/api/auth/verify-email/`, {
         token: tokenToVerify,
       });
 
@@ -80,7 +80,7 @@ function VerifyEmailContent() {
     setError("");
 
     try {
-      const resp = await axios.post(getDjangoApiUrl('/api/auth/send-verification/'), {
+      const resp = await axios.post(`${API_BASE}/api/auth/send-verification/`, {
         email: email,
       });
       // In DEBUG mode, backend may include token and verification_link to unblock local testing
@@ -112,17 +112,13 @@ function VerifyEmailContent() {
 
   if (success && !token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-6">
-        <Card className="w-full max-w-lg bg-white/90 backdrop-blur-sm border-palette-accent-2/50 shadow-2xl">
-          <CardContent className="pt-12 pb-12 px-8 text-center space-y-6">
-            <div className="flex justify-center">
-              <CheckCircle className="h-20 w-20 text-green-500" />
-            </div>
-            <div className="space-y-3">
-              <h2 className="text-3xl font-bold text-slate-800">Email Verified!</h2>
-              <p className="text-base text-slate-600">Your email has been verified successfully.</p>
-              <p className="text-sm text-slate-500">Redirecting to dashboard...</p>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
+          <CardContent className="pt-6 text-center">
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Email Verified!</h2>
+            <p className="text-slate-600 mb-4">Your email has been verified successfully.</p>
+            <p className="text-sm text-slate-500">Redirecting to dashboard...</p>
           </CardContent>
         </Card>
       </div>
@@ -130,107 +126,100 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-6">
-      <div className="w-full max-w-lg">
-        <Card className="bg-white/90 backdrop-blur-sm border-palette-accent-2/50 shadow-2xl">
-          <CardHeader className="text-center space-y-6 pb-8">
-            <div className="flex justify-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-palette-primary rounded-2xl">
-                <Mail className="h-10 w-10 text-white" />
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Card className="bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
+          <CardHeader className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-palette-primary rounded-xl mb-4">
+              <Mail className="h-8 w-8 text-white" />
             </div>
-            <div className="space-y-3">
-              <CardTitle className="text-3xl font-bold text-slate-800">
-                Verify Your Email
-              </CardTitle>
-              <CardDescription className="text-base text-slate-600">
-                Check your inbox and click the verification link we sent you
-              </CardDescription>
-            </div>
+            <CardTitle className="text-2xl font-bold text-slate-800">
+              Verify Your Email
+            </CardTitle>
+            <CardDescription className="text-slate-600">
+              Please check your email and click the verification link
+            </CardDescription>
           </CardHeader>
-          
-          <CardContent className="space-y-6 px-8 pb-8">
+          <CardContent className="space-y-4">
             {email && (
-              <div className="p-4 bg-slate-50 rounded-lg text-center">
-                <p className="text-base text-slate-700">
-                  Email sent to: <span className="font-semibold">{maskEmail(email)}</span>
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <p className="text-sm text-slate-600 text-center">
+                  Email sent to: <span className="font-medium">{maskEmail(email)}</span>
                 </p>
               </div>
             )}
 
             {success && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center">
-                <p className="text-base text-green-700">
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-600 text-sm text-center">
                   {token ? "Email verified successfully! Redirecting..." : "Verification email sent! Please check your inbox."}
                 </p>
               </div>
             )}
 
             {error && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center justify-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-                  <p className="text-base text-red-700 text-center">{error}</p>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start">
+                  <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 mr-2 flex-shrink-0" />
+                  <p className="text-red-600 text-sm">{error}</p>
                 </div>
               </div>
             )}
 
-            <div className="space-y-4">
-              <div className="text-center space-y-2">
-                <Label htmlFor="token" className="text-lg text-slate-700 font-semibold block text-center">
-                  Verification Code
-                </Label>
-                <p className="text-sm text-slate-500">
-                  Paste your verification code here
-                </p>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="token" className="text-slate-700 font-medium">
+                Verification code (paste if you have it)
+              </Label>
+              <p className="text-xs text-slate-500 mb-2">
+                If you received a code or see one displayed here (dev mode), paste it to verify immediately.
+              </p>
               <Input
                 id="token"
                 type="text"
-                placeholder="Enter verification code"
+                placeholder="Paste verification code here"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                className="bg-white border-2 border-slate-200 focus:border-palette-primary text-center text-lg py-6"
+                className="bg-white/70 border-palette-accent-2/50 focus:border-palette-accent-1"
                 disabled={loading || success}
               />
               {token && !success && (
                 <Button
                   onClick={() => handleVerify()}
                   disabled={loading}
-                  className="w-full bg-palette-primary hover:bg-palette-primary-hover text-white py-6 text-lg font-semibold"
+                  className="w-full bg-palette-primary hover:bg-palette-primary-hover text-white"
                 >
-                  {loading ? "Verifying..." : "Verify Email"}
+                  {loading ? "Verifying..." : "Verify Now"}
                 </Button>
               )}
             </div>
 
-            <div className="pt-6 border-t border-slate-200 space-y-4">
-              <p className="text-base text-slate-600 text-center font-medium">
+            <div className="pt-4 border-t border-slate-200">
+              <p className="text-sm text-slate-600 mb-3 text-center">
                 Didn't receive the email?
               </p>
-              <div className="space-y-3">
-                <Label htmlFor="resend-email" className="text-base text-slate-700 font-medium text-center block">
-                  Enter your email to resend
+              <div className="space-y-2">
+                <Label htmlFor="resend-email" className="text-slate-700 font-medium">
+                  Enter your email to resend:
                 </Label>
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   <Input
                     id="resend-email"
                     type="email"
                     placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="bg-white border-2 border-slate-200 focus:border-palette-primary text-center text-base py-6"
+                    className="bg-white/70 border-palette-accent-2/50 focus:border-palette-accent-1"
                     disabled={resending}
                   />
                   <Button
                     onClick={handleResend}
                     disabled={resending || !email}
                     variant="outline"
-                    className="whitespace-nowrap px-6 py-6 text-base font-semibold border-2"
+                    className="whitespace-nowrap"
                   >
                     {resending ? (
                       <>
-                        <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                         Sending...
                       </>
                     ) : (
@@ -244,9 +233,9 @@ function VerifyEmailContent() {
             <div className="pt-4 text-center">
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center text-slate-600 hover:text-slate-800 text-base font-medium transition-colors gap-2"
+                className="inline-flex items-center text-slate-500 hover:text-slate-700 text-sm transition-colors"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to Login
               </Link>
             </div>
@@ -254,22 +243,6 @@ function VerifyEmailContent() {
         </Card>
       </div>
     </div>
-  );
-}
-
-export default function VerifyEmailPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-6">
-        <Card className="bg-white/90 backdrop-blur-sm border-palette-accent-2/50 shadow-2xl">
-          <CardContent className="pt-12 pb-12 px-8 text-center">
-            <p className="text-base text-slate-600">Loading...</p>
-          </CardContent>
-        </Card>
-      </div>
-    }>
-      <VerifyEmailContent />
-    </Suspense>
   );
 }
 

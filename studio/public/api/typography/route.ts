@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import puppeteer from 'puppeteer'
-import os from 'os'
-import path from 'path'
-import fs from 'fs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,25 +18,8 @@ export async function POST(request: NextRequest) {
     let page
     
     try {
-      // Auto-detect Chrome from Puppeteer cache
-      const cacheDir = path.join(os.homedir(), '.cache', 'puppeteer', 'chrome')
-      let executablePath: string | undefined
-      
-      // Try to find Chrome in cache
-      if (fs.existsSync(cacheDir)) {
-        const chromeDirs = fs.readdirSync(cacheDir)
-        for (const dir of chromeDirs) {
-          const chromePath = path.join(cacheDir, dir, 'chrome-win64', 'chrome.exe')
-          if (fs.existsSync(chromePath)) {
-            executablePath = chromePath
-            break
-          }
-        }
-      }
-      
       browser = await puppeteer.launch({ 
         headless: true,
-        executablePath: executablePath,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
       })
       

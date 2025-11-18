@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, BarChart3, LogIn, LogOut, User, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { getDjangoApiUrl } from "@/lib/api-config";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
 export function TopNavigation() {
   const pathname = usePathname();
@@ -15,36 +15,18 @@ export function TopNavigation() {
 
   // Update loggedIn state on route change and storage events
   useEffect(() => {
-    const checkToken = async () => {
+    const checkToken = () => {
       const token = localStorage.getItem("access_token");
-      if (!token) {
-        setLoggedIn(false);
-        setUser(null);
-        return;
-      }
-      
-      // Validate token by fetching user info
-      try {
-        const res = await fetch(getDjangoApiUrl('/api/user-info/'), {
+      setLoggedIn(!!token);
+      if (token) {
+        // Fetch user info to check roles
+        fetch(`${API_BASE}/api/user-info/`, {
           headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-          setLoggedIn(true);
-        } else {
-          // Token is invalid - clear it
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          setLoggedIn(false);
-          setUser(null);
-        }
-      } catch (error) {
-        // Network error or invalid token
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        setLoggedIn(false);
+        })
+          .then(res => res.json())
+          .then(data => setUser(data))
+          .catch(() => setUser(null));
+      } else {
         setUser(null);
       }
     };
@@ -54,40 +36,18 @@ export function TopNavigation() {
   }, []);
 
   useEffect(() => {
-    const checkToken = async () => {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setLoggedIn(false);
-        setUser(null);
-        return;
-      }
-      
-      // Validate token by fetching user info
-      try {
-        const res = await fetch(getDjangoApiUrl('/api/user-info/'), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-          setLoggedIn(true);
-        } else {
-          // Token is invalid - clear it
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          setLoggedIn(false);
-          setUser(null);
-        }
-      } catch (error) {
-        // Network error or invalid token
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        setLoggedIn(false);
-        setUser(null);
-      }
-    };
-    checkToken();
+    const token = localStorage.getItem("access_token");
+    setLoggedIn(!!token);
+    if (token) {
+      fetch(`${API_BASE}/api/user-info/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => res.json())
+        .then(data => setUser(data))
+        .catch(() => setUser(null));
+    } else {
+      setUser(null);
+    }
   }, [pathname]);
 
   const handleLogout = () => {

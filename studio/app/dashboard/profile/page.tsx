@@ -261,7 +261,8 @@ export default function ProfilePage() {
         if (response.status === 401) {
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
-          window.location.href = `/login?error=${encodeURIComponent('Your session has expired. Please log in again.')}`;
+          setProfileError("Session expired. Please log in again.");
+          window.location.href = "/login";
           return;
         }
         throw new Error(`Failed to fetch user info (${response.status})`);

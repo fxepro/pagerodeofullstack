@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Activity, BarChart3, Zap, Shield, Code, Brain, Link2, MessageCircle, Gauge, Eye, Lock, FileText, Menu, X, Server, Type } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { getDjangoApiUrl } from "@/lib/api-config";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
 export function Navigation() {
   const pathname = usePathname();
@@ -17,36 +18,18 @@ export function Navigation() {
 
   // Update loggedIn state on route change and storage events
   useEffect(() => {
-    const checkToken = async () => {
+    const checkToken = () => {
       const token = localStorage.getItem("access_token");
-      if (!token) {
-        setLoggedIn(false);
-        setUser(null);
-        return;
-      }
-      
-      // Validate token by fetching user info
-      try {
-        const res = await fetch(getDjangoApiUrl('/api/user-info/'), {
+      setLoggedIn(!!token);
+      if (token) {
+        // Fetch user info to check roles
+        fetch(`${API_BASE}/api/user-info/`, {
           headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-          setLoggedIn(true);
-        } else {
-          // Token is invalid - clear it
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          setLoggedIn(false);
-          setUser(null);
-        }
-      } catch (error) {
-        // Network error or invalid token
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        setLoggedIn(false);
+        })
+          .then(res => res.json())
+          .then(data => setUser(data))
+          .catch(() => setUser(null));
+      } else {
         setUser(null);
       }
     };
@@ -56,40 +39,18 @@ export function Navigation() {
   }, []);
 
   useEffect(() => {
-    const checkToken = async () => {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setLoggedIn(false);
-        setUser(null);
-        return;
-      }
-      
-      // Validate token by fetching user info
-      try {
-        const res = await fetch(getDjangoApiUrl('/api/user-info/'), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-          setLoggedIn(true);
-        } else {
-          // Token is invalid - clear it
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          setLoggedIn(false);
-          setUser(null);
-        }
-      } catch (error) {
-        // Network error or invalid token
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        setLoggedIn(false);
-        setUser(null);
-      }
-    };
-    checkToken();
+    const token = localStorage.getItem("access_token");
+    setLoggedIn(!!token);
+    if (token) {
+      fetch(`${API_BASE}/api/user-info/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(res => res.json())
+        .then(data => setUser(data))
+        .catch(() => setUser(null));
+    } else {
+      setUser(null);
+    }
   }, [pathname]);
 
   const handleLogout = () => {
@@ -107,7 +68,7 @@ export function Navigation() {
           <div className="flex items-center flex-shrink-0">
             <Link href="/" className="group">
               <Image 
-                src="/screens/pagerodeo-Logo.png" 
+                src="/pagerodeo-Logo.png" 
                 alt="PageRodeo Logo" 
                 width={160} 
                 height={40}

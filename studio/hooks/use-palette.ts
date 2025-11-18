@@ -1,6 +1,5 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
 import axios from 'axios';
-import { getDjangoApiUrl } from '@/lib/api-config';
 
 export interface Palette {
   id: number;
@@ -43,7 +42,8 @@ export function usePalette() {
   const fetchActivePalette = async () => {
     try {
       // Public endpoint - no auth required
-      const response = await axios.get(getDjangoApiUrl('/api/palettes/active/'));
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
+      const response = await axios.get(`${API_BASE}/api/palettes/active/`);
       setPalette(response.data);
       applyPaletteToDOM(response.data);
       

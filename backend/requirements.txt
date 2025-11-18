@@ -19,11 +19,7 @@ pyotp==2.9.0
 qrcode[pil]==7.4.2
 
 # Environment variable management
-django-environ==0.12.0
-
-# Email providers and AWS SDK
-django-anymail==10.3
-boto3==1.35.32
+python-decouple==3.8
 
 # Testing
 pytest==8.3.3

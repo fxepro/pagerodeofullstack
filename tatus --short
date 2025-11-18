@@ -1,0 +1,73 @@
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/core/posthog_config.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/core/security_config.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/core/settings.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/requirements.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/users/email_verification.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/users/urls.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backend/users/views.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/Oracle-Cloud-Deployment.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/deploy-oracle-cloud.sh', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/setup-nginx.sh', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/test-all-apis.sh', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/admin/themes/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/api/analyze/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/api/typography/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/dashboard/layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/dashboard/monitoring/[id]/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/dashboard/monitoring/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/dashboard/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/dashboard/profile/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/login/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/register/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/app/verify-email/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/components/email-verification-banner.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/components/navigation.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/components/performance-dashboard.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/components/performance-main.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/components/top-navigation.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/hooks/use-palette.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/hooks/use-performance-analysis.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/hooks/use-site-config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/lib/posthog.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/next.config.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'studio/public/api/typography/route.ts', LF will be replaced by CRLF the next time Git touches it
+.gitignore
+backend/core/posthog_config.py
+backend/core/security_config.py
+backend/core/settings.py
+backend/env.example
+backend/requirements.txt
+backend/users/email_verification.py
+backend/users/urls.py
+backend/users/views.py
+docs/Oracle-Cloud-Deployment.md
+scripts/deploy-oracle-cloud.sh
+scripts/setup-nginx.sh
+scripts/test-all-apis.sh
+studio/app/admin/themes/page.tsx
+studio/app/api/analyze/route.ts
+studio/app/api/typography/route.ts
+studio/app/dashboard/layout.tsx
+studio/app/dashboard/monitoring/[id]/page.tsx
+studio/app/dashboard/monitoring/page.tsx
+studio/app/dashboard/page.tsx
+studio/app/dashboard/profile/page.tsx
+studio/app/login/page.tsx
+studio/app/register/page.tsx
+studio/app/verify-email/page.tsx
+studio/components/email-verification-banner.tsx
+studio/components/footer.tsx
+studio/components/main-navigation.tsx
+studio/components/navigation.tsx
+studio/components/performance-dashboard.tsx
+studio/components/performance-main.tsx
+studio/components/top-navigation.tsx
+studio/hooks/use-api-analysis.ts
+studio/hooks/use-palette.ts
+studio/hooks/use-performance-analysis.ts
+studio/hooks/use-site-config.ts
+studio/lib/posthog.tsx
+studio/next.config.mjs
+studio/public/api/typography/route.ts

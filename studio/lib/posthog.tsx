@@ -3,7 +3,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import posthog from 'posthog-js'
 import { PostHogProvider } from 'posthog-js/react'
-import { getDjangoApiUrl } from '@/lib/api-config'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000'
 
 export function PostHogProviderWrapper({ children }: { children: React.ReactNode }) {
   const [enabled, setEnabled] = useState(false)
@@ -13,7 +14,7 @@ export function PostHogProviderWrapper({ children }: { children: React.ReactNode
     if (isDev) return
 
     // Fetch server flag to decide if analytics should run
-    fetch(getDjangoApiUrl('/api/site-config/public/'))
+    fetch(`${API_BASE}/api/site-config/public/`)
       .then(res => res.json())
       .then(data => {
         const allow = !!data?.enable_analytics

@@ -19,7 +19,7 @@ export function Footer() {
           <div className="space-y-4">
             <div className="flex items-center">
               <Image 
-                src="/screens/pagerodeo-Logo.png" 
+                src="/pagerodeo-Logo.png" 
                 alt="PageRodeo Logo" 
                 width={150} 
                 height={36}

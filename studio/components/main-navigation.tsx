@@ -18,7 +18,7 @@ export function MainNavigation() {
           <div className="flex items-center flex-shrink-0">
             <Link href="/" className="group">
               <Image 
-                src="/screens/pagerodeo-Logo.png" 
+                src="/pagerodeo-Logo.png" 
                 alt="PageRodeo Logo" 
                 width={160} 
                 height={40}

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Lock, Mail, UserPlus, ArrowLeft } from "lucide-react";
 
-import { getDjangoApiUrl } from "@/lib/api-config";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -61,7 +61,7 @@ export default function RegisterPage() {
 
     try {
       // Create user via public registration endpoint
-      const res = await axios.post(getDjangoApiUrl('/api/register/'), {
+      const res = await axios.post(`${API_BASE}/api/register/`, {
         username: formData.username,
         email: formData.email,
         password: formData.password,
@@ -71,7 +71,7 @@ export default function RegisterPage() {
       });
 
       // Auto-login after successful registration
-      const loginRes = await axios.post(getDjangoApiUrl('/api/token/'), {
+      const loginRes = await axios.post(`${API_BASE}/api/token/`, {
         username: formData.username,
         password: formData.password,
       });
@@ -80,7 +80,7 @@ export default function RegisterPage() {
       localStorage.setItem("refresh_token", loginRes.data.refresh);
 
       // Redirect to appropriate dashboard
-      const userRes = await axios.get(getDjangoApiUrl('/api/user-info/'), {
+      const userRes = await axios.get(`${API_BASE}/api/user-info/`, {
         headers: { Authorization: `Bearer ${loginRes.data.access}` },
       });
 

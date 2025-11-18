@@ -66,15 +66,6 @@ export default function PerformanceDashboard({ url: initialUrl = "" }: { url?: s
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: data.url }),
       });
-      
-      // Check content type to ensure we got JSON, not HTML
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        console.error("Received non-JSON response:", text.substring(0, 200));
-        return;
-      }
-      
       if (response.ok) {
         const analysisData = await response.json();
         setDetailedData({
@@ -85,14 +76,6 @@ export default function PerformanceDashboard({ url: initialUrl = "" }: { url?: s
           totalRequests: analysisData.resources?.length || 0,
           loadTime: analysisData.loadTime || 0,
         });
-      } else {
-        // Try to parse error response
-        try {
-          const errorData = await response.json();
-          console.error("API error:", errorData.error || errorData);
-        } catch (parseError) {
-          console.error("API returned non-JSON error response");
-        }
       }
     } catch (err) {
       console.error("Failed to fetch detailed data:", err);
