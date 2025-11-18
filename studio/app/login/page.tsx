@@ -50,8 +50,10 @@ export default function LoginPage() {
       
       // Check email verification status
       const emailVerified = res.data.email_verified ?? true; // Default to true for backward compatibility
+      const isAdmin = userRes.data.role === 'admin';
 
-      if (!emailVerified) {
+      // Allow admins to bypass email verification, but require it for regular users
+      if (!emailVerified && !isAdmin) {
         localStorage.setItem("email_verified", "false");
         router.push("/verify-email");
         return;
@@ -60,7 +62,7 @@ export default function LoginPage() {
       }
 
       // Redirect Admin users to admin dashboard, others to regular dashboard
-      if (userRes.data.role === 'admin') {
+      if (isAdmin) {
         router.push("/admin/dashboard");
       } else {
         router.push("/dashboard");

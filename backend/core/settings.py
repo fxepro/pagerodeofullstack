@@ -146,6 +146,10 @@ DEBUG = get_env_bool('DEBUG', default=True)
 # ALLOWED_HOSTS - must be set in production via environment variable
 ALLOWED_HOSTS = get_env_list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
+# CSRF_TRUSTED_ORIGINS - required for Django 4.0+ to allow CSRF from these origins
+# Set via environment variable as comma-separated list: http://129.146.57.158,http://pagerodeo.com
+CSRF_TRUSTED_ORIGINS = get_env_list('CSRF_TRUSTED_ORIGINS', default=['http://localhost:8000', 'http://127.0.0.1:8000'])
+
 # Warn if using insecure defaults
 if DEBUG and SECRET_KEY.startswith('django-insecure-'):
     import warnings
