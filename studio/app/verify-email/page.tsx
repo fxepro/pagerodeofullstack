@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
@@ -11,7 +11,7 @@ import { Mail, CheckCircle, AlertCircle, ArrowLeft, RefreshCw } from "lucide-rea
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const [token, setToken] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,17 +21,7 @@ export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  useEffect(() => {
-    // Extract token from URL if present
-    const tokenFromUrl = searchParams.get('token');
-    if (tokenFromUrl) {
-      setToken(tokenFromUrl);
-      // Auto-verify if token is in URL
-      handleVerify(tokenFromUrl);
-    }
-  }, [searchParams]);
-
-  const handleVerify = async (verifyToken?: string) => {
+  const handleVerify = useCallback(async (verifyToken?: string) => {
     const tokenToVerify = verifyToken || token;
     if (!tokenToVerify) {
       setError("Please enter a verification token");
@@ -68,7 +58,17 @@ export default function VerifyEmailPage() {
       setError(err.response?.data?.error || err.response?.data?.message || "Verification failed. Please try again.");
       setLoading(false);
     }
-  };
+  }, [token, router]);
+
+  useEffect(() => {
+    // Extract token from URL if present
+    const tokenFromUrl = searchParams.get('token');
+    if (tokenFromUrl) {
+      setToken(tokenFromUrl);
+      // Auto-verify if token is in URL
+      handleVerify(tokenFromUrl);
+    }
+  }, [searchParams, handleVerify]);
 
   const handleResend = async () => {
     if (!email) {
@@ -243,6 +243,22 @@ export default function VerifyEmailPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
+          <CardContent className="pt-6 text-center">
+            <p className="text-slate-600">Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
 
