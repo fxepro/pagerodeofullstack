@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Lock, Mail, UserPlus, ArrowLeft } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({

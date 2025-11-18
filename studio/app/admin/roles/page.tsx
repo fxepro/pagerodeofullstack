@@ -10,6 +10,9 @@ import { PermissionsPanel } from "@/components/permissions-panel";
 import { Role, Permission } from "@/lib/types/role";
 import axios from "axios";
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 export default function AdminRolesPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -37,10 +40,10 @@ export default function AdminRolesPage() {
       }
 
       const [rolesResponse, permissionsResponse] = await Promise.all([
-        axios.get("http://localhost:8000/api/roles/", {
+        axios.get(`${API_BASE}/api/roles/`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("http://localhost:8000/api/permissions/", {
+        axios.get(`${API_BASE}/api/permissions/`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

@@ -11,6 +11,9 @@ import { applyTheme } from "@/lib/theme";
 import { Role, Permission } from "@/lib/types/role";
 import axios from "axios";
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 interface PermissionsPanelProps {
   selectedRole: Role | null;
   allPermissions: Permission[];
@@ -54,7 +57,7 @@ export function PermissionsPanel({ selectedRole, allPermissions, onRoleUpdate }:
       if (!token) return;
 
       const response = await axios.put(
-        `http://localhost:8000/api/roles/${selectedRole.id}/permissions/update/`,
+        `${API_BASE}/api/roles/${selectedRole.id}/permissions/update/`,
         { permission_ids: selectedPermissions },
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -13,6 +13,9 @@ import axios from "axios";
 import { toast } from "sonner";
 import { captureEvent } from "@/lib/posthog";
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 interface ThemePalette {
   id: number;
   name: string;
@@ -91,7 +94,7 @@ export default function AdminThemesPage() {
   const fetchPalettes = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://localhost:8000/api/palettes/', {
+      const response = await axios.get(`${API_BASE}/api/palettes/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPalettes(response.data);
@@ -115,7 +118,7 @@ export default function AdminThemesPage() {
   const fetchTypographyPresets = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get('http://localhost:8000/api/typography/', {
+      const response = await axios.get(`${API_BASE}/api/typography/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTypographyPresets(response.data);
@@ -128,7 +131,7 @@ export default function AdminThemesPage() {
   const handleCreate = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      await axios.post('http://localhost:8000/api/palettes/create/', formData, {
+      await axios.post(`${API_BASE}/api/palettes/create/`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Palette created successfully');
@@ -143,7 +146,7 @@ export default function AdminThemesPage() {
   const handleActivate = async (paletteId: number, paletteName: string) => {
     try {
       const token = localStorage.getItem('access_token');
-      await axios.post(`http://localhost:8000/api/palettes/${paletteId}/activate/`, {}, {
+      await axios.post(`${API_BASE}/api/palettes/${paletteId}/activate/`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -168,7 +171,7 @@ export default function AdminThemesPage() {
     
     try {
       const token = localStorage.getItem('access_token');
-      await axios.delete(`http://localhost:8000/api/palettes/${paletteId}/delete/`, {
+      await axios.delete(`${API_BASE}/api/palettes/${paletteId}/delete/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Palette deleted');
@@ -211,7 +214,7 @@ export default function AdminThemesPage() {
   const handleCreateTypography = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      await axios.post('http://localhost:8000/api/typography/create/', typographyFormData, {
+      await axios.post(`${API_BASE}/api/typography/create/`, typographyFormData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Typography preset created successfully');
@@ -226,7 +229,7 @@ export default function AdminThemesPage() {
   const handleActivateTypography = async (presetId: number, presetName: string) => {
     try {
       const token = localStorage.getItem('access_token');
-      await axios.post(`http://localhost:8000/api/typography/${presetId}/activate/`, {}, {
+      await axios.post(`${API_BASE}/api/typography/${presetId}/activate/`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -250,7 +253,7 @@ export default function AdminThemesPage() {
     
     try {
       const token = localStorage.getItem('access_token');
-      await axios.delete(`http://localhost:8000/api/typography/${presetId}/delete/`, {
+      await axios.delete(`${API_BASE}/api/typography/${presetId}/delete/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Typography preset deleted');

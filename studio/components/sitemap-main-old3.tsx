@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 import { Network, Globe, Download, RefreshCw, ExternalLink, ChevronRight, ChevronDown, Zap, TreePine } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -29,7 +32,7 @@ export function SitemapMain() {
   // -----------------------------
   const fetchSitemapXML = async (sitemapUrl: string): Promise<string> => {
     const apiUrl = process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:8000/api/sitemap-xml/' 
+      ? `${API_BASE}/api/sitemap-xml/` 
       : '/api/sitemap-xml/';
     
     const res = await fetch(apiUrl, {

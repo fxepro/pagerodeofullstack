@@ -89,7 +89,8 @@ export default function Reports2Page() {
         return;
       }
       
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
+      // Use relative URL in production (browser), localhost in dev (SSR)
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
       const response = await fetch(`${API_BASE}/api/reports/`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -155,7 +156,8 @@ export default function Reports2Page() {
 
     try {
       const token = localStorage.getItem('access_token');
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
+      // Use relative URL in production (browser), localhost in dev (SSR)
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
       const response = await fetch(`${API_BASE}/api/reports/${id}/`, {
         method: 'DELETE',
         headers: {

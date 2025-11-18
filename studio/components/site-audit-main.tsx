@@ -31,6 +31,9 @@ import {
 } from "lucide-react";
 import { exportToPDF } from "@/lib/pdf-export";
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 // Import existing components to reuse
 import PerformanceMain from "@/components/performance-main";
 import PerformanceDashboard from "@/components/performance-dashboard";
@@ -187,7 +190,7 @@ export function SiteAuditMain() {
           ? orchestrator.state.url
           : `https://${orchestrator.state.url}`;
 
-        const response = await fetch('http://localhost:8000/api/reports/', {
+        const response = await fetch(`${API_BASE}/api/reports/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

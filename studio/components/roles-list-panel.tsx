@@ -10,6 +10,9 @@ import { applyTheme } from "@/lib/theme";
 import { Role, Permission } from "@/lib/types/role";
 import axios from "axios";
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 interface RolesListPanelProps {
   roles: Role[];
   selectedRole: Role | null;
@@ -61,7 +64,7 @@ export function RolesListPanel({ roles, selectedRole, onRoleSelect, onRefresh, o
       if (!token) return;
 
       const response = await axios.post(
-        "http://localhost:8000/api/roles/create/",
+        `${API_BASE}/api/roles/create/`,
         { name: newRoleName.trim() },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -100,7 +103,7 @@ export function RolesListPanel({ roles, selectedRole, onRoleSelect, onRefresh, o
       if (!token) return;
 
       const response = await axios.put(
-        `http://localhost:8000/api/roles/${role.id}/update/`,
+        `${API_BASE}/api/roles/${role.id}/update/`,
         { name: newName.trim() },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -140,7 +143,7 @@ export function RolesListPanel({ roles, selectedRole, onRoleSelect, onRefresh, o
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
-      await axios.delete(`http://localhost:8000/api/roles/${role.id}/delete/`, {
+      await axios.delete(`${API_BASE}/api/roles/${role.id}/delete/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

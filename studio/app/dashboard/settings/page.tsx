@@ -9,7 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Save, RefreshCw } from 'lucide-react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
 interface UserSettings {
   // Monitoring settings

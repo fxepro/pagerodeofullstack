@@ -42,6 +42,8 @@ import {
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 export default function ConsultPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -85,7 +87,7 @@ export default function ConsultPage() {
     
     try {
       // Send to Django backend
-      const response = await fetch('http://localhost:8000/api/consultation/', {
+      const response = await fetch(`${API_BASE}/api/consultation/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

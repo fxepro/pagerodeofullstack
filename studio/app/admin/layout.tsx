@@ -6,6 +6,9 @@ import axios from "axios";
 import AdminSidebar from "@/components/admin-sidebar";
 import AdminHeader from "@/components/admin-header";
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 export default function AdminLayout({
   children,
 }: {
@@ -23,7 +26,7 @@ export default function AdminLayout({
       return;
     }
 
-    axios.get("http://localhost:8000/api/user-info/", {
+    axios.get(`${API_BASE}/api/user-info/`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => {

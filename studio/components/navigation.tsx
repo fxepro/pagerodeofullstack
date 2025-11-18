@@ -7,7 +7,8 @@ import { Activity, BarChart3, Zap, Shield, Code, Brain, Link2, MessageCircle, Ga
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
 export function Navigation() {
   const pathname = usePathname();

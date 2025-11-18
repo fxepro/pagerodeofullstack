@@ -7,6 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Star, Send, Heart, ThumbsUp, AlertTriangle } from "lucide-react";
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 export default function FeedbackMain() {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -41,7 +44,7 @@ export default function FeedbackMain() {
 
     try {
       // Send to Django backend
-      const response = await fetch('http://localhost:8000/api/feedback/', {
+      const response = await fetch(`${API_BASE}/api/feedback/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

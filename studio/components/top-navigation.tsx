@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, BarChart3, LogIn, LogOut, User, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
 export function TopNavigation() {
   const pathname = usePathname();

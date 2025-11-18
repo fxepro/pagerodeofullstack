@@ -22,6 +22,9 @@ import {
   Headphones
 } from "lucide-react"
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 export function ContactMain() {
   const [formData, setFormData] = useState({
     name: "",
@@ -38,7 +41,7 @@ export function ContactMain() {
     
     try {
       // Send to Django backend
-      const response = await fetch('http://localhost:8000/api/contact/', {
+      const response = await fetch(`${API_BASE}/api/contact/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

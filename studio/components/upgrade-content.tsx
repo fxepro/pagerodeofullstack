@@ -30,6 +30,9 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 interface RoleData {
   name: string
   icon: React.ReactNode
@@ -183,7 +186,7 @@ export function UpgradeContent() {
     
     try {
       // Send to Django backend
-      const response = await fetch('http://localhost:8000/api/update-signup/', {
+      const response = await fetch(`${API_BASE}/api/update-signup/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

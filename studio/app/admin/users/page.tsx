@@ -10,6 +10,9 @@ import { applyTheme, LAYOUT } from "@/lib/theme";
 import { EditUserModal } from "@/components/edit-user-modal";
 import axios from "axios";
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 interface User {
   id: number;
   username: string;
@@ -55,10 +58,10 @@ export default function AdminUsersPage() {
       if (!token) return;
 
       const [usersResponse, statsResponse] = await Promise.all([
-        axios.get("http://localhost:8000/api/users/", {
+        axios.get(`${API_BASE}/api/users/`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("http://localhost:8000/api/users/stats/", {
+        axios.get(`${API_BASE}/api/users/stats/`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);

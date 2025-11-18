@@ -19,6 +19,9 @@ import { Role } from "@/lib/types/role";
 import { Loader2, Save, X } from "lucide-react";
 import axios from "axios";
 
+// Use relative URL in production (browser), localhost in dev (SSR)
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
 interface User {
   id: number;
   username: string;
@@ -79,7 +82,7 @@ export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalPr
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
-      const response = await axios.get("http://localhost:8000/api/roles/", {
+      const response = await axios.get(`${API_BASE}/api/roles/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -105,7 +108,7 @@ export function EditUserModal({ user, isOpen, onClose, onSave }: EditUserModalPr
       }
 
       const response = await axios.put(
-        `http://localhost:8000/api/users/${user.id}/update/`,
+        `${API_BASE}/api/users/${user.id}/update/`,
         formData,
         {
           headers: {
