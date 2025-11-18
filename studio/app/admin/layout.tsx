@@ -31,8 +31,9 @@ export default function AdminLayout({
     })
       .then(res => {
         setUser(res.data);
-        // Check if user has Admin role
-        if (res.data.role !== 'admin') {
+        // Normalize role check (handle uppercase or undefined)
+        const normalizedRole = (res.data.role ?? '').toString().toLowerCase();
+        if (normalizedRole !== 'admin') {
           router.push("/dashboard");
         }
       })

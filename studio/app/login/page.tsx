@@ -48,9 +48,12 @@ export default function LoginPage() {
         email: userRes.data.email || '',
       });
       
-      // Check email verification status
+      // Normalize role (handle uppercase from backend or older data)
+      const userRole = (userRes.data.role ?? '').toString().toLowerCase();
+
+      // Check email verification status (allow admins through even if not verified yet)
       const emailVerified = res.data.email_verified ?? true; // Default to true for backward compatibility
-      const isAdmin = userRes.data.role === 'admin';
+      const isAdmin = userRole === 'admin';
 
       // Allow admins to bypass email verification, but require it for regular users
       if (!emailVerified && !isAdmin) {
