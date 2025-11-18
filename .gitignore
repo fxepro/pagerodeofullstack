@@ -124,15 +124,16 @@ oci-config
 # CI/CD
 .github/workflows/*.yml.bak
 
-# Documentation (ignore all docs except deployment folder)
+# Documentation (ignore all docs)
 docs/
 /docs/
-!docs/deployment/
-!docs/deployment/**/*
 
 # Scripts folder (capital S - case-sensitive)
 Scripts/
 /Scripts/
+scripts/
+/scripts/
+
 
 # Studio public folders
 /studio/public/screens/
