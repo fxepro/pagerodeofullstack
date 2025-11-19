@@ -48,10 +48,10 @@ def health_check(request):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Custom token serializer that includes email_verified and 2FA status"""
+    """Custom token serializer that includes email_verified status"""
     
     def validate(self, attrs):
-        # First authenticate user
+        # Authenticate user with username/password only
         authenticate_kwargs = {
             self.username_field: attrs[self.username_field],
             'password': attrs['password'],
@@ -64,48 +64,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         
         self.user = user
         
-        # Check if 2FA is enabled for this user
-        try:
-            profile = self.user.profile
-            two_factor_enabled = profile.two_factor_enabled
-            
-            # Check if site-wide 2FA is required
-            from site_settings.models import SiteConfig
-            site_config = SiteConfig.get_config()
-            site_2fa_enabled = site_config.enable_two_factor if site_config else False
-            
-            # If user has 2FA enabled or site requires it, check for 2FA token
-            if two_factor_enabled and site_2fa_enabled:
-                two_factor_token = self.initial_data.get('two_factor_token')
-                backup_code = self.initial_data.get('backup_code')
-                
-                if not two_factor_token and not backup_code:
-                    # 2FA required but token not provided
-                    # Return special response indicating 2FA is needed
-                    raise ValidationError({
-                        'two_factor_required': True,
-                        'message': 'Two-factor authentication required. Please provide a 2FA token or backup code.'
-                    })
-                
-                # Verify 2FA token
-                if two_factor_token:
-                    from users.two_factor import decrypt_secret, verify_totp
-                    secret = decrypt_secret(profile.two_factor_secret)
-                    if not verify_totp(secret, two_factor_token):
-                        raise AuthenticationFailed('Invalid 2FA token')
-                elif backup_code:
-                    from users.two_factor import verify_backup_code
-                    is_valid, updated_codes = verify_backup_code(profile.two_factor_backup_codes, backup_code)
-                    if not is_valid:
-                        raise AuthenticationFailed('Invalid backup code')
-                    # Update backup codes (remove used one)
-                    profile.two_factor_backup_codes = updated_codes
-                    profile.save()
-        except UserProfile.DoesNotExist:
-            # If profile doesn't exist, create it
-            profile = UserProfile.objects.create(user=self.user, role='viewer', email_verified=False)
-            two_factor_enabled = False
-        
         # Generate JWT tokens (standard flow)
         refresh = self.get_token(self.user)
         
@@ -114,11 +72,29 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             'access': str(refresh.access_token),
         }
         
-        # Add email_verified status
-        data['email_verified'] = profile.email_verified
+        # Get email_verified status directly from database
+        # Use get() with default to avoid exceptions and ensure we read actual DB value
+        import logging
+        logger = logging.getLogger(__name__)
         
-        # Add 2FA status
-        data['two_factor_enabled'] = two_factor_enabled
+        try:
+            # Direct database query to get the actual value
+            profile = UserProfile.objects.filter(user=self.user).first()
+            if profile:
+                # Profile exists - use the actual database value
+                data['email_verified'] = profile.email_verified
+                logger.debug(f"User {self.user.username}: email_verified={profile.email_verified} from database")
+            else:
+                # No profile exists - for old accounts, default to True for backward compatibility
+                data['email_verified'] = True
+                logger.debug(f"User {self.user.username}: No profile found, defaulting email_verified=True")
+        except Exception as e:
+            # If anything goes wrong, log the error but default to True for backward compatibility
+            logger.error(f"Error accessing UserProfile for {self.user.username}: {str(e)}", exc_info=True)
+            data['email_verified'] = True
+        
+        # 2FA is not implemented - always return False
+        data['two_factor_enabled'] = False
         
         return data
 

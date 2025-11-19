@@ -23,12 +23,24 @@ class UserProfile(models.Model):
     # Email verification fields
     email_verified = models.BooleanField(default=False, help_text='Whether the user has verified their email address')
     email_verification_token = models.CharField(max_length=255, null=True, blank=True, help_text='Hashed token for email verification')
+    email_verification_code = models.CharField(max_length=255, null=True, blank=True, help_text='Plain text verification code for fallback retrieval')
     email_verification_sent_at = models.DateTimeField(null=True, blank=True, help_text='When the verification email was sent')
     
     # Two-Factor Authentication fields
     two_factor_enabled = models.BooleanField(default=False, help_text='Whether the user has enabled 2FA')
     two_factor_secret = models.CharField(max_length=255, null=True, blank=True, help_text='Encrypted TOTP secret for 2FA')
     two_factor_backup_codes = models.JSONField(default=list, blank=True, help_text='Encrypted backup codes for 2FA recovery')
+    
+    # User settings (stored as JSON for flexibility)
+    user_settings = models.JSONField(default=dict, blank=True, help_text='User preferences and settings')
+    
+    # Personal information fields
+    phone = models.CharField(max_length=50, blank=True, help_text='Personal phone number')
+    bio = models.TextField(blank=True, help_text='User biography or description')
+    avatar_url = models.URLField(blank=True, help_text='URL to user avatar image')
+    date_of_birth = models.DateField(null=True, blank=True, help_text='Date of birth')
+    timezone = models.CharField(max_length=50, default='UTC', help_text='User timezone')
+    locale = models.CharField(max_length=10, default='en-US', help_text='User locale preference')
     
     def __str__(self):
         return f"{self.user.username} - {self.role}"
@@ -37,7 +49,9 @@ class UserProfile(models.Model):
         """Generate a new verification token"""
         from django.contrib.auth.hashers import make_password
         token = str(uuid.uuid4())
+        # Store both hashed token (for verification) and plain code (for retrieval fallback)
         self.email_verification_token = make_password(token)
+        self.email_verification_code = token  # Store plain text for fallback retrieval
         self.email_verification_sent_at = timezone.now()
         self.save()
         return token
@@ -113,13 +127,35 @@ class PaymentMethod(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payment_methods')
     nickname = models.CharField(max_length=100, blank=True)
     method_type = models.CharField(max_length=10, choices=METHOD_CHOICES)
-    brand = models.CharField(max_length=50, blank=True)
-    last4 = models.CharField(max_length=4, blank=True)
+    
+    # Card fields
+    cardholder_name = models.CharField(max_length=255, blank=True, help_text='Cardholder name for credit/debit cards')
+    card_number = models.CharField(max_length=16, blank=True, help_text='Full 16-digit card number (encrypted in production)')
+    brand = models.CharField(max_length=50, blank=True, help_text='Card brand (Visa, Mastercard, etc.)')
+    last4 = models.CharField(max_length=4, blank=True, help_text='Last 4 digits for display purposes')
     exp_month = models.PositiveSmallIntegerField(null=True, blank=True)
     exp_year = models.PositiveSmallIntegerField(null=True, blank=True)
+    # Billing address for card
+    billing_address_line1 = models.CharField(max_length=255, blank=True)
+    billing_address_line2 = models.CharField(max_length=255, blank=True)
+    billing_city = models.CharField(max_length=100, blank=True)
+    billing_state = models.CharField(max_length=100, blank=True)
+    billing_postal_code = models.CharField(max_length=20, blank=True)
+    billing_country = models.CharField(max_length=100, blank=True)
+    
+    # ACH fields
     bank_name = models.CharField(max_length=100, blank=True)
     account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPE_CHOICES, blank=True)
-    routing_last4 = models.CharField(max_length=4, blank=True)
+    account_number = models.CharField(max_length=50, blank=True, help_text='Full account number (encrypted in production)')
+    routing_number = models.CharField(max_length=9, blank=True, help_text='Full 9-digit routing number')
+    # Bank address for ACH
+    bank_address_line1 = models.CharField(max_length=255, blank=True)
+    bank_address_line2 = models.CharField(max_length=255, blank=True)
+    bank_city = models.CharField(max_length=100, blank=True)
+    bank_state = models.CharField(max_length=100, blank=True)
+    bank_postal_code = models.CharField(max_length=20, blank=True)
+    bank_country = models.CharField(max_length=100, blank=True)
+    
     is_default = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -138,9 +174,18 @@ class UserSubscription(models.Model):
         ('expired', 'Expired'),
     )
 
+    BILLING_PERIOD_CHOICES = (
+        ('monthly', 'Monthly'),
+        ('annual', 'Annual'),
+    )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
     plan_name = models.CharField(max_length=100)
     role = models.CharField(max_length=100, blank=True)
+    price_monthly = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Monthly price in USD')
+    price_yearly = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Yearly price in USD')
+    billing_period = models.CharField(max_length=10, choices=BILLING_PERIOD_CHOICES, default='monthly', help_text='Monthly or Annual billing')
+    discount_code = models.CharField(max_length=20, blank=True, help_text='Promotional discount code applied to this subscription')
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
     is_recurring = models.BooleanField(default=True)

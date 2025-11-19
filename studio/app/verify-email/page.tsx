@@ -22,6 +22,7 @@ function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+
   const handleVerify = useCallback(async (verifyToken?: string) => {
     const tokenToVerify = verifyToken || token;
     if (!tokenToVerify) {
@@ -62,11 +63,17 @@ function VerifyEmailContent() {
   }, [token, router]);
 
   useEffect(() => {
-    // Extract token from URL if present
+    // Extract token and email from URL if present
     const tokenFromUrl = searchParams.get('token');
+    const emailFromUrl = searchParams.get('email');
+    
+    if (emailFromUrl) {
+      setEmail(emailFromUrl);
+    }
+    
     if (tokenFromUrl) {
       setToken(tokenFromUrl);
-      // Auto-verify if token is in URL
+      // Auto-verify if token is in URL (from email link)
       handleVerify(tokenFromUrl);
     }
   }, [searchParams, handleVerify]);
@@ -84,9 +91,20 @@ function VerifyEmailContent() {
       const resp = await axios.post(`${API_BASE}/api/auth/send-verification/`, {
         email: email,
       });
+      
       // In DEBUG mode, backend may include token and verification_link to unblock local testing
       const dbgToken = resp.data?.token as string | undefined;
       const dbgLink = resp.data?.verification_link as string | undefined;
+      
+      // Log response for debugging (only in development)
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Resend verification response:", resp.data);
+        if (dbgToken) {
+          console.log("DEBUG MODE: Verification token:", dbgToken);
+          console.log("DEBUG MODE: Verification link:", dbgLink);
+        }
+      }
+      
       if (dbgToken) {
         setToken(dbgToken);
         // Optionally auto-verify to streamline testing flow
@@ -96,6 +114,7 @@ function VerifyEmailContent() {
       setSuccess(true);
       setError("");
     } catch (err: any) {
+      console.error("Resend verification error:", err);
       const apiMsg = err.response?.data?.error || err.message || "Failed to resend verification email. Please try again.";
       setError(apiMsg);
     } finally {
@@ -147,8 +166,14 @@ function VerifyEmailContent() {
                 <p className="text-sm text-slate-600 text-center">
                   Email sent to: <span className="font-medium">{maskEmail(email)}</span>
                 </p>
+                {process.env.NODE_ENV === 'development' && (
+                  <p className="text-xs text-slate-500 text-center mt-1">
+                    (DEBUG: {email})
+                  </p>
+                )}
               </div>
             )}
+            
 
             {success && (
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">

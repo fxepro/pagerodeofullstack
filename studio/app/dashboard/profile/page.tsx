@@ -27,6 +27,10 @@ import {
   Repeat,
   ShieldCheck,
   AlertCircle,
+  Phone,
+  FileText,
+  Image,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,6 +44,10 @@ interface UserInfo {
   last_name: string;
   role: string;
   is_active: boolean;
+  phone?: string;
+  bio?: string;
+  avatar_url?: string;
+  timezone?: string;
 }
 
 interface CorporateInfo {
@@ -61,13 +69,32 @@ interface PaymentMethod {
   id: number;
   nickname: string;
   method_type: "card" | "ach";
+  // Card fields
+  cardholder_name?: string;
+  card_number?: string; // Full 16 digits
   brand?: string;
-  last4?: string;
+  last4?: string; // Last 4 digits for display
   exp_month?: number | null;
   exp_year?: number | null;
+  // Billing address for card
+  billing_address_line1?: string;
+  billing_address_line2?: string;
+  billing_city?: string;
+  billing_state?: string;
+  billing_postal_code?: string;
+  billing_country?: string;
+  // ACH fields
   bank_name?: string;
   account_type?: string;
-  routing_last4?: string;
+  account_number?: string; // Full account number
+  routing_number?: string; // Full routing number
+  // Bank address for ACH
+  bank_address_line1?: string;
+  bank_address_line2?: string;
+  bank_city?: string;
+  bank_state?: string;
+  bank_postal_code?: string;
+  bank_country?: string;
   is_default: boolean;
   created_at: string;
 }
@@ -76,6 +103,10 @@ interface Subscription {
   id: number;
   plan_name: string;
   role: string;
+  price_monthly?: number | string;
+  price_yearly?: number | string;
+  billing_period?: 'monthly' | 'annual';
+  discount_code?: string;
   start_date: string;
   end_date: string | null;
   is_recurring: boolean;
@@ -123,15 +154,21 @@ export default function ProfilePage() {
   const [addingPayment, setAddingPayment] = useState(false);
   const [paymentsRefreshing, setPaymentsRefreshing] = useState(false);
   const [addingSubscription, setAddingSubscription] = useState(false);
-  const [addingTransaction, setAddingTransaction] = useState(false);
 
-  const [editMode, setEditMode] = useState(false);
+  const [editPersonalInfo, setEditPersonalInfo] = useState(false);
+  const [editCorporateInfo, setEditCorporateInfo] = useState(false);
   const [passwordMode, setPasswordMode] = useState(false);
 
   // Personal info fields
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [timezone, setTimezone] = useState("UTC");
 
   // Password fields
   const [oldPassword, setOldPassword] = useState("");
@@ -142,33 +179,56 @@ export default function ProfilePage() {
   const [newPayment, setNewPayment] = useState({
     method_type: "card" as "card" | "ach",
     nickname: "",
+    // Card fields
+    cardholder_name: "",
+    card_number: "",
     brand: "",
-    last4: "",
     exp_month: "",
     exp_year: "",
+    billing_address_line1: "",
+    billing_address_line2: "",
+    billing_city: "",
+    billing_state: "",
+    billing_postal_code: "",
+    billing_country: "",
+    // ACH fields
     bank_name: "",
     account_type: "checking",
-    routing_last4: "",
+    account_number: "",
+    routing_number: "",
+    bank_address_line1: "",
+    bank_address_line2: "",
+    bank_city: "",
+    bank_state: "",
+    bank_postal_code: "",
+    bank_country: "",
     is_default: false,
   });
 
+  // Plan pricing structure
+  const planPricing: Record<string, { monthly: number; yearly: number }> = {
+    "Trial": { monthly: 0, yearly: 0 },
+    "Viewer": { monthly: 9.99, yearly: 99.99 },
+    "Auditor": { monthly: 29.99, yearly: 299.99 },
+    "Analyst": { monthly: 109.99, yearly: 1099.99 },
+    "Manager": { monthly: 249.99, yearly: 2499.99 },
+    "Director": { monthly: 499.99, yearly: 4999.99 },
+  };
+
   // Subscription form state
   const [newSubscription, setNewSubscription] = useState({
-    plan_name: "Auditor",
-    role: "Auditor",
+    plan_name: "Trial",
+    role: "viewer",
+    price_monthly: "0",
+    price_yearly: "0",
+    billing_period: "monthly" as "monthly" | "annual",
+    discount_code: "",
     start_date: new Date().toISOString().slice(0, 10),
     end_date: "",
     is_recurring: true,
     notes: "",
   });
 
-  // Manual transaction form
-  const [newTransaction, setNewTransaction] = useState({
-    amount: "",
-    currency: "USD",
-    description: "",
-    invoice_id: "",
-  });
 
   // Error buckets
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -274,6 +334,12 @@ export default function ProfilePage() {
       setEmail(data.email || "");
       setFirstName(data.first_name || "");
       setLastName(data.last_name || "");
+      setPhone(data.phone || "");
+      setBio(data.bio || "");
+      setAvatarUrl(data.avatar_url || "");
+      setAvatarPreview(null);
+      setAvatarFile(null);
+      setTimezone(data.timezone || "UTC");
     } catch (error: any) {
       console.error("Error fetching user info:", error);
       setProfileError(error.message || "Failed to load profile information");
@@ -337,7 +403,11 @@ export default function ProfilePage() {
         throw new Error(`Failed to load billing history (${response.status})`);
       }
       const data = await response.json();
-      setBillingHistory(data);
+      // Sort by created_at descending (newest first) - backend should already do this, but ensure it
+      const sortedData = [...data].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setBillingHistory(sortedData);
     } catch (error: any) {
       console.error("Error loading billing history:", error);
       setBillingError(error.message || "Unable to load billing history");
@@ -356,6 +426,18 @@ export default function ProfilePage() {
         return;
       }
 
+      // If avatar file is selected, convert to base64 data URL
+      let finalAvatarUrl = avatarUrl;
+      if (avatarFile) {
+        const reader = new FileReader();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(avatarFile);
+        });
+        finalAvatarUrl = dataUrl;
+      }
+
       const response = await fetch(`${API_BASE}/api/profile/update/`, {
         method: "PUT",
         headers: {
@@ -366,6 +448,10 @@ export default function ProfilePage() {
           email,
           first_name: firstName,
           last_name: lastName,
+          phone,
+          bio,
+          avatar_url: finalAvatarUrl,
+          timezone,
         }),
       });
 
@@ -376,7 +462,17 @@ export default function ProfilePage() {
 
       const updatedData = await response.json();
       setUser(updatedData);
-      setEditMode(false);
+      // Update local state from response
+      setEmail(updatedData.email || "");
+      setFirstName(updatedData.first_name || "");
+      setLastName(updatedData.last_name || "");
+      setPhone(updatedData.phone || "");
+      setBio(updatedData.bio || "");
+      setAvatarUrl(updatedData.avatar_url || "");
+      setAvatarPreview(null);
+      setAvatarFile(null);
+      setTimezone(updatedData.timezone || "UTC");
+      setEditPersonalInfo(false);
       toast.success("Profile updated successfully");
     } catch (error: any) {
       console.error("Error updating profile:", error);
@@ -474,6 +570,8 @@ export default function ProfilePage() {
 
       const data = await response.json();
       setCorporateInfo({ ...emptyCorporate, ...data });
+      setCorporateError(null);
+      setEditCorporateInfo(false);
       toast.success("Corporate information updated");
     } catch (error: any) {
       console.error("Error saving corporate info:", error);
@@ -488,17 +586,36 @@ export default function ProfilePage() {
     setPaymentsError(null);
 
     if (newPayment.method_type === "card") {
-      if (!newPayment.brand || !newPayment.last4 || !newPayment.exp_month || !newPayment.exp_year) {
-        setPaymentsError("Please complete all card details");
+      if (!newPayment.cardholder_name || !newPayment.card_number || !newPayment.exp_month || !newPayment.exp_year) {
+        setPaymentsError("Please complete all card details (cardholder name, card number, expiration)");
         return;
       }
-      if (newPayment.last4.length !== 4) {
-        setPaymentsError("Enter last 4 digits of the card");
+      // Validate card number (16 digits)
+      const cardNumber = newPayment.card_number.replace(/\s/g, "");
+      if (cardNumber.length !== 16 || !/^\d+$/.test(cardNumber)) {
+        setPaymentsError("Card number must be 16 digits");
+        return;
+      }
+      // Validate expiration
+      const expMonth = parseInt(newPayment.exp_month);
+      const expYear = parseInt(newPayment.exp_year);
+      if (isNaN(expMonth) || expMonth < 1 || expMonth > 12) {
+        setPaymentsError("Expiration month must be between 1 and 12");
+        return;
+      }
+      if (isNaN(expYear) || expYear < new Date().getFullYear()) {
+        setPaymentsError("Expiration year must be current or future year");
         return;
       }
     } else {
-      if (!newPayment.bank_name || !newPayment.last4) {
-        setPaymentsError("Please provide bank name and last 4 digits");
+      if (!newPayment.bank_name || !newPayment.account_number || !newPayment.routing_number) {
+        setPaymentsError("Please provide bank name, account number, and routing number");
+        return;
+      }
+      // Validate routing number (9 digits)
+      const routingNumber = newPayment.routing_number.replace(/\s/g, "");
+      if (routingNumber.length !== 9 || !/^\d+$/.test(routingNumber)) {
+        setPaymentsError("Routing number must be 9 digits");
         return;
       }
     }
@@ -533,13 +650,27 @@ export default function ProfilePage() {
       setNewPayment({
         method_type: "card",
         nickname: "",
+        cardholder_name: "",
+        card_number: "",
         brand: "",
-        last4: "",
         exp_month: "",
         exp_year: "",
+        billing_address_line1: "",
+        billing_address_line2: "",
+        billing_city: "",
+        billing_state: "",
+        billing_postal_code: "",
+        billing_country: "",
         bank_name: "",
         account_type: "checking",
-        routing_last4: "",
+        account_number: "",
+        routing_number: "",
+        bank_address_line1: "",
+        bank_address_line2: "",
+        bank_city: "",
+        bank_state: "",
+        bank_postal_code: "",
+        bank_country: "",
         is_default: false,
       });
     } catch (error: any) {
@@ -614,8 +745,18 @@ export default function ProfilePage() {
   async function handleAddSubscription() {
     setSubscriptionError(null);
 
-    if (!newSubscription.plan_name || !newSubscription.start_date) {
-      setSubscriptionError("Plan name and start date are required");
+    if (!newSubscription.plan_name) {
+      setSubscriptionError("Plan name is required");
+      return;
+    }
+
+    // Validate pricing if provided
+    if (newSubscription.price_monthly && (isNaN(parseFloat(newSubscription.price_monthly as string)) || parseFloat(newSubscription.price_monthly as string) < 0)) {
+      setSubscriptionError("Price/month must be a valid positive number");
+      return;
+    }
+    if (newSubscription.price_yearly && (isNaN(parseFloat(newSubscription.price_yearly as string)) || parseFloat(newSubscription.price_yearly as string) < 0)) {
+      setSubscriptionError("Price/year must be a valid positive number");
       return;
     }
 
@@ -647,8 +788,12 @@ export default function ProfilePage() {
       setSubscriptions(prev => [created, ...prev]);
       toast.success("Subscription added");
       setNewSubscription({
-        plan_name: "Auditor",
-        role: "Auditor",
+        plan_name: "Trial",
+        role: "viewer",
+        price_monthly: "0",
+        price_yearly: "0",
+        billing_period: "monthly",
+        discount_code: "",
         start_date: new Date().toISOString().slice(0, 10),
         end_date: "",
         is_recurring: true,
@@ -714,50 +859,6 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleAddTransaction() {
-    setBillingError(null);
-
-    if (!newTransaction.amount) {
-      setBillingError("Amount is required");
-      return;
-    }
-
-    setAddingTransaction(true);
-
-    try {
-      const headers = authHeaders();
-      if (!headers) {
-        setBillingError("Not authenticated. Please log in.");
-        setAddingTransaction(false);
-        return;
-      }
-
-      const response = await fetch(`${API_BASE}/api/profile/billing-history/`, {
-        method: "POST",
-        headers: {
-          ...headers,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newTransaction),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to record transaction (${response.status})`);
-      }
-
-      const created = await response.json();
-      setBillingHistory(prev => [created, ...prev]);
-      toast.success("Transaction recorded");
-      setNewTransaction({ amount: "", currency: "USD", description: "", invoice_id: "" });
-    } catch (error: any) {
-      console.error("Error adding transaction:", error);
-      setBillingError(error.message || "Failed to record transaction");
-      toast.error(error.message || "Failed to record transaction");
-    } finally {
-      setAddingTransaction(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -797,94 +898,258 @@ export default function ProfilePage() {
                   </CardTitle>
                   <CardDescription>Update your basic account information</CardDescription>
                 </div>
-                {!editMode && (
+                {!editPersonalInfo && (
                   <Button
-                    onClick={() => setEditMode(true)}
+                    onClick={() => setEditPersonalInfo(true)}
                     variant="outline"
                     className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                   >
                     <Edit className="h-4 w-4 mr-2" />
-                    Edit Profile
+                    Edit
                   </Button>
                 )}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {profileError && !editMode && (
+              {profileError && !editPersonalInfo && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-red-600" />
                   <span className="text-red-800 text-sm">{profileError}</span>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="username">Username</Label>
-                  <Input id="username" value={user.username} disabled className="bg-slate-50" />
-                  <p className="text-xs text-slate-500 mt-1">Username cannot be changed</p>
-                </div>
+              <div className="space-y-6">
+                {/* Username and Role - Read-only */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="username">Username</Label>
+                    <Input id="username" value={user.username} disabled className="bg-slate-100 border-slate-400 mt-1" />
+                    <p className="text-xs text-slate-500 mt-1">Username cannot be changed</p>
+                  </div>
 
-                <div>
-                  <Label htmlFor="role">Role</Label>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Badge className="bg-palette-primary text-white capitalize">{user.role}</Badge>
-                    {user.is_active && (
-                      <Badge className="bg-green-100 text-green-700 border border-green-200">
-                        <ShieldCheck className="h-3 w-3 mr-1" />
-                        Active
-                      </Badge>
-                    )}
+                  <div>
+                    <Label htmlFor="role">Role</Label>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge className="bg-palette-primary text-white capitalize">{user.role}</Badge>
+                      {user.is_active && (
+                        <Badge className="bg-green-100 text-green-700 border border-green-200">
+                          <ShieldCheck className="h-3 w-3 mr-1" />
+                          Active
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
 
+                {/* Email */}
                 <div>
                   <Label htmlFor="email" className="flex items-center gap-1">
                     <Mail className="h-3 w-3" />
                     Email
                   </Label>
-                  {editMode ? (
+                  {editPersonalInfo ? (
                     <Input
                       id="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="mt-1"
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
                     />
                   ) : (
                     <p className="mt-2 text-slate-800">{user.email || "Not set"}</p>
                   )}
                 </div>
 
+                {/* First Name and Last Name - Same Line */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name</Label>
+                    {editPersonalInfo ? (
+                      <Input
+                        id="firstName"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                      />
+                    ) : (
+                      <p className="mt-2 text-slate-800">{user.first_name || "Not set"}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    {editPersonalInfo ? (
+                      <Input
+                        id="lastName"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                      />
+                    ) : (
+                      <p className="mt-2 text-slate-800">{user.last_name || "Not set"}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Phone and Timezone */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone" className="flex items-center gap-1">
+                      <Phone className="h-3 w-3" />
+                      Phone
+                    </Label>
+                    {editPersonalInfo ? (
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                        placeholder="+1 (555) 123-4567"
+                      />
+                    ) : (
+                      <p className="mt-2 text-slate-800">{user.phone || "Not set"}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="timezone" className="flex items-center gap-1">
+                      <Globe className="h-3 w-3" />
+                      Timezone
+                    </Label>
+                    {editPersonalInfo ? (
+                      <Select value={timezone} onValueChange={setTimezone}>
+                        <SelectTrigger className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600">
+                          <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 25 }, (_, i) => {
+                            const offset = i - 12; // UTC-12 to UTC+12
+                            const sign = offset >= 0 ? '+' : '';
+                            const label = offset === 0 ? 'UTC (UTC+0)' : `UTC${sign}${offset}`;
+                            const value = offset === 0 ? 'UTC' : `UTC${sign}${offset}`;
+                            return (
+                              <SelectItem key={value} value={value}>
+                                {label}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="mt-2 text-slate-800">{user.timezone || "UTC"}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Avatar - Photo Upload */}
                 <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  {editMode ? (
-                    <Input
-                      id="firstName"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      className="mt-1"
-                    />
+                  <Label htmlFor="avatar" className="flex items-center gap-1">
+                    <Image className="h-3 w-3" />
+                    Avatar Photo
+                  </Label>
+                  {editPersonalInfo ? (
+                    <div className="mt-1 space-y-3">
+                      <div className="flex items-center gap-4">
+                        {(avatarPreview || user.avatar_url) && (
+                          <div className="relative">
+                            <img
+                              src={avatarPreview || user.avatar_url || ''}
+                              alt="Avatar preview"
+                              className="h-20 w-20 rounded-full object-cover border-2 border-slate-200"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <Input
+                            id="avatar"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                // Validate file size (max 5MB)
+                                if (file.size > 5 * 1024 * 1024) {
+                                  toast.error("Image size must be less than 5MB");
+                                  return;
+                                }
+                                // Validate file type
+                                if (!file.type.startsWith('image/')) {
+                                  toast.error("Please select an image file");
+                                  return;
+                                }
+                                setAvatarFile(file);
+                                // Create preview
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setAvatarPreview(reader.result as string);
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="cursor-pointer bg-slate-100 border-slate-400 focus:border-slate-600"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">
+                            Upload a profile picture (JPG, PNG, max 5MB)
+                          </p>
+                        </div>
+                      </div>
+                      {avatarFile && (
+                        <p className="text-sm text-slate-600">
+                          Selected: {avatarFile.name}
+                        </p>
+                      )}
+                    </div>
                   ) : (
-                    <p className="mt-2 text-slate-800">{user.first_name || "Not set"}</p>
+                    <div className="mt-2 flex items-center gap-3">
+                      {user.avatar_url ? (
+                        <>
+                          <img
+                            src={user.avatar_url}
+                            alt="Avatar"
+                            className="h-20 w-20 rounded-full object-cover border-2 border-slate-200"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <p className="text-slate-800 text-sm break-all">{user.avatar_url}</p>
+                        </>
+                      ) : (
+                        <div className="h-20 w-20 rounded-full bg-slate-100 border-2 border-slate-200 flex items-center justify-center">
+                          <User className="h-8 w-8 text-slate-400" />
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
 
+                {/* Bio - Text Box */}
                 <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  {editMode ? (
-                    <Input
-                      id="lastName"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      className="mt-1"
+                  <Label htmlFor="bio" className="flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    Bio
+                  </Label>
+                  {editPersonalInfo ? (
+                    <Textarea
+                      id="bio"
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                      placeholder="Tell us about yourself..."
+                      rows={5}
                     />
                   ) : (
-                    <p className="mt-2 text-slate-800">{user.last_name || "Not set"}</p>
+                    <div className="mt-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <p className="text-slate-800 whitespace-pre-wrap">{user.bio || "Not set"}</p>
+                    </div>
                   )}
                 </div>
               </div>
 
-              {editMode && (
+              {editPersonalInfo && (
                 <div className="flex items-center gap-3 pt-4 border-t">
                   <Button
                     onClick={handleSaveProfile}
@@ -905,10 +1170,16 @@ export default function ProfilePage() {
                   </Button>
                   <Button
                     onClick={() => {
-                      setEditMode(false);
+                      setEditPersonalInfo(false);
                       setEmail(user.email || "");
                       setFirstName(user.first_name || "");
                       setLastName(user.last_name || "");
+                      setPhone(user.phone || "");
+                      setBio(user.bio || "");
+                      setAvatarUrl(user.avatar_url || "");
+                      setAvatarPreview(null);
+                      setAvatarFile(null);
+                      setTimezone(user.timezone || "UTC");
                       setProfileError(null);
                     }}
                     variant="outline"
@@ -923,14 +1194,28 @@ export default function ProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-palette-primary" />
-                Corporate Information
-              </CardTitle>
-              <CardDescription>Keep your organisation details current</CardDescription>
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-palette-primary" />
+                    Corporate Information
+                  </CardTitle>
+                  <CardDescription>Keep your organisation details current</CardDescription>
+                </div>
+                {!editCorporateInfo && (
+                  <Button
+                    onClick={() => setEditCorporateInfo(true)}
+                    variant="outline"
+                    className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {corporateError && (
+              {corporateError && !editCorporateInfo && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 text-red-600" />
                   <span className="text-red-800 text-sm">{corporateError}</span>
@@ -940,132 +1225,183 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="company_name">Company Name</Label>
-                  <Input
-                    id="company_name"
-                    value={corporateInfo.company_name}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, company_name: e.target.value }))}
-                    className="mt-1"
-                    placeholder="Company or organisation"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="company_name"
+                      value={corporateInfo.company_name}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, company_name: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                      placeholder="Company or organisation"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.company_name || "Not set"}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="job_title">Title / Department</Label>
-                  <Input
-                    id="job_title"
-                    value={corporateInfo.job_title}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, job_title: e.target.value }))}
-                    className="mt-1"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="job_title"
+                      value={corporateInfo.job_title}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, job_title: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.job_title || "Not set"}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={corporateInfo.phone}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, phone: e.target.value }))}
-                    className="mt-1"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="phone"
+                      value={corporateInfo.phone}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, phone: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.phone || "Not set"}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="website">Website</Label>
-                  <Input
-                    id="website"
-                    value={corporateInfo.website}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, website: e.target.value }))}
-                    className="mt-1"
-                    placeholder="https://"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="website"
+                      value={corporateInfo.website}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, website: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                      placeholder="https://"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.website || "Not set"}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="tax_id">Tax ID / VAT</Label>
-                  <Input
-                    id="tax_id"
-                    value={corporateInfo.tax_id}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, tax_id: e.target.value }))}
-                    className="mt-1"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="tax_id"
+                      value={corporateInfo.tax_id}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, tax_id: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.tax_id || "Not set"}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="country">Country</Label>
-                  <Input
-                    id="country"
-                    value={corporateInfo.country}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, country: e.target.value }))}
-                    className="mt-1"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="country"
+                      value={corporateInfo.country}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, country: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.country || "Not set"}</p>
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="address_line1">Address Line 1</Label>
-                  <Input
-                    id="address_line1"
-                    value={corporateInfo.address_line1}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, address_line1: e.target.value }))}
-                    className="mt-1"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="address_line1"
+                      value={corporateInfo.address_line1}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, address_line1: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.address_line1 || "Not set"}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="address_line2">Address Line 2</Label>
-                  <Input
-                    id="address_line2"
-                    value={corporateInfo.address_line2}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, address_line2: e.target.value }))}
-                    className="mt-1"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="address_line2"
+                      value={corporateInfo.address_line2}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, address_line2: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.address_line2 || "Not set"}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={corporateInfo.city}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, city: e.target.value }))}
-                    className="mt-1"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="city"
+                      value={corporateInfo.city}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, city: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.city || "Not set"}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="state">State / Province</Label>
-                  <Input
-                    id="state"
-                    value={corporateInfo.state}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, state: e.target.value }))}
-                    className="mt-1"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="state"
+                      value={corporateInfo.state}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, state: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.state || "Not set"}</p>
+                  )}
                 </div>
 
                 <div>
                   <Label htmlFor="postal_code">Postal Code</Label>
-                  <Input
-                    id="postal_code"
-                    value={corporateInfo.postal_code}
-                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, postal_code: e.target.value }))}
-                    className="mt-1"
-                  />
+                  {editCorporateInfo ? (
+                    <Input
+                      id="postal_code"
+                      value={corporateInfo.postal_code}
+                      onChange={(e) => setCorporateInfo(prev => ({ ...prev, postal_code: e.target.value }))}
+                      className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                    />
+                  ) : (
+                    <p className="mt-2 text-slate-800">{corporateInfo.postal_code || "Not set"}</p>
+                  )}
                 </div>
               </div>
 
               <div>
                 <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={corporateInfo.notes}
-                  onChange={(e) => setCorporateInfo(prev => ({ ...prev, notes: e.target.value }))}
-                  className="mt-1"
-                  placeholder="Internal notes or billing instructions"
-                  rows={3}
-                />
+                {editCorporateInfo ? (
+                  <Textarea
+                    id="notes"
+                    value={corporateInfo.notes}
+                    onChange={(e) => setCorporateInfo(prev => ({ ...prev, notes: e.target.value }))}
+                    className="mt-1 bg-slate-100 border-slate-400 focus:border-slate-600"
+                    placeholder="Internal notes or billing instructions"
+                    rows={3}
+                  />
+                ) : (
+                  <div className="mt-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <p className="text-slate-800 whitespace-pre-wrap">{corporateInfo.notes || "Not set"}</p>
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-3 pt-4 border-t">
+              {editCorporateInfo && (
+                <div className="flex items-center gap-3 pt-4 border-t">
                 <Button
                   onClick={handleSaveCorporateInfo}
                   disabled={savingCorporate}
@@ -1079,24 +1415,27 @@ export default function ProfilePage() {
                   ) : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
-                      Save Corporate Info
+                      Save Changes
                     </>
                   )}
                 </Button>
                 <Button
                   onClick={() => {
-                    setCorporateInfo(emptyCorporate);
+                    setEditCorporateInfo(false);
+                    // Reset to original values
                     const headers = authHeaders();
                     if (headers) {
                       fetchCorporateInfo(headers);
                     }
+                    setCorporateError(null);
                   }}
                   variant="outline"
                   disabled={savingCorporate}
                 >
-                  Reset
+                  Cancel
                 </Button>
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -1269,16 +1608,31 @@ export default function ProfilePage() {
                       value={newPayment.method_type}
                       onValueChange={(value: "card" | "ach") =>
                         setNewPayment(prev => ({
+                          ...prev,
                           method_type: value,
-                          nickname: prev.nickname,
+                          // Reset card fields
+                          cardholder_name: "",
+                          card_number: "",
                           brand: "",
-                          last4: "",
                           exp_month: "",
                           exp_year: "",
+                          billing_address_line1: "",
+                          billing_address_line2: "",
+                          billing_city: "",
+                          billing_state: "",
+                          billing_postal_code: "",
+                          billing_country: "",
+                          // Reset ACH fields
                           bank_name: "",
                           account_type: "checking",
-                          routing_last4: "",
-                          is_default: prev.is_default,
+                          account_number: "",
+                          routing_number: "",
+                          bank_address_line1: "",
+                          bank_address_line2: "",
+                          bank_city: "",
+                          bank_state: "",
+                          bank_postal_code: "",
+                          bank_country: "",
                         }))
                       }
                     >
@@ -1317,6 +1671,30 @@ export default function ProfilePage() {
 
                   {newPayment.method_type === "card" ? (
                     <>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="cardholder_name">Cardholder Name *</Label>
+                        <Input
+                          id="cardholder_name"
+                          value={newPayment.cardholder_name}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, cardholder_name: e.target.value }))}
+                          className="mt-1"
+                          placeholder="John Doe"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="card_number">Card Number (16 digits) *</Label>
+                        <Input
+                          id="card_number"
+                          value={newPayment.card_number}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\s/g, "").replace(/[^0-9]/g, "").slice(0, 16);
+                            setNewPayment(prev => ({ ...prev, card_number: value }));
+                          }}
+                          className="mt-1"
+                          placeholder="1234567890123456"
+                          maxLength={19}
+                        />
+                      </div>
                       <div>
                         <Label htmlFor="brand">Card Brand</Label>
                         <Input
@@ -1324,49 +1702,105 @@ export default function ProfilePage() {
                           value={newPayment.brand}
                           onChange={(e) => setNewPayment(prev => ({ ...prev, brand: e.target.value }))}
                           className="mt-1"
-                          placeholder="Visa, Mastercard"
+                          placeholder="Visa, Mastercard, Amex"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="card_last4">Last 4 digits</Label>
-                        <Input
-                          id="card_last4"
-                          value={newPayment.last4}
-                          onChange={(e) => setNewPayment(prev => ({ ...prev, last4: e.target.value.replace(/[^0-9]/g, "").slice(0, 4) }))}
-                          className="mt-1"
-                          maxLength={4}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="exp_month">Expiry Month</Label>
+                        <Label htmlFor="exp_month">Expiry Month *</Label>
                         <Input
                           id="exp_month"
                           value={newPayment.exp_month}
                           onChange={(e) => setNewPayment(prev => ({ ...prev, exp_month: e.target.value.replace(/[^0-9]/g, "").slice(0, 2) }))}
                           className="mt-1"
                           placeholder="MM"
+                          maxLength={2}
                         />
                       </div>
                       <div>
-                        <Label htmlFor="exp_year">Expiry Year</Label>
+                        <Label htmlFor="exp_year">Expiry Year *</Label>
                         <Input
                           id="exp_year"
                           value={newPayment.exp_year}
                           onChange={(e) => setNewPayment(prev => ({ ...prev, exp_year: e.target.value.replace(/[^0-9]/g, "").slice(0, 4) }))}
                           className="mt-1"
                           placeholder="YYYY"
+                          maxLength={4}
+                        />
+                      </div>
+                      <div className="md:col-span-2 border-t pt-4 mt-2">
+                        <h4 className="text-sm font-semibold mb-3">Billing Address (Optional)</h4>
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="billing_address_line1">Address Line 1</Label>
+                        <Input
+                          id="billing_address_line1"
+                          value={newPayment.billing_address_line1}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, billing_address_line1: e.target.value }))}
+                          className="mt-1"
+                          placeholder="123 Main St"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="billing_address_line2">Address Line 2</Label>
+                        <Input
+                          id="billing_address_line2"
+                          value={newPayment.billing_address_line2}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, billing_address_line2: e.target.value }))}
+                          className="mt-1"
+                          placeholder="Apt 4B"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="billing_city">City</Label>
+                        <Input
+                          id="billing_city"
+                          value={newPayment.billing_city}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, billing_city: e.target.value }))}
+                          className="mt-1"
+                          placeholder="New York"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="billing_state">State</Label>
+                        <Input
+                          id="billing_state"
+                          value={newPayment.billing_state}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, billing_state: e.target.value }))}
+                          className="mt-1"
+                          placeholder="NY"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="billing_postal_code">Postal Code</Label>
+                        <Input
+                          id="billing_postal_code"
+                          value={newPayment.billing_postal_code}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, billing_postal_code: e.target.value }))}
+                          className="mt-1"
+                          placeholder="10001"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="billing_country">Country</Label>
+                        <Input
+                          id="billing_country"
+                          value={newPayment.billing_country}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, billing_country: e.target.value }))}
+                          className="mt-1"
+                          placeholder="USA"
                         />
                       </div>
                     </>
                   ) : (
                     <>
-                      <div>
-                        <Label htmlFor="bank_name">Bank Name</Label>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="bank_name">Bank Name *</Label>
                         <Input
                           id="bank_name"
                           value={newPayment.bank_name}
                           onChange={(e) => setNewPayment(prev => ({ ...prev, bank_name: e.target.value }))}
                           className="mt-1"
+                          placeholder="Chase Bank"
                         />
                       </div>
                       <div>
@@ -1386,23 +1820,94 @@ export default function ProfilePage() {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="ach_last4">Account Last 4</Label>
+                        <Label htmlFor="account_number">Account Number *</Label>
                         <Input
-                          id="ach_last4"
-                          value={newPayment.last4}
-                          onChange={(e) => setNewPayment(prev => ({ ...prev, last4: e.target.value.replace(/[^0-9]/g, "").slice(0, 4) }))}
+                          id="account_number"
+                          value={newPayment.account_number}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\s/g, "").replace(/[^0-9]/g, "");
+                            setNewPayment(prev => ({ ...prev, account_number: value }));
+                          }}
                           className="mt-1"
-                          maxLength={4}
+                          placeholder="Full account number"
+                          type="password"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="routing_last4">Routing Last 4</Label>
+                        <Label htmlFor="routing_number">Routing Number (9 digits) *</Label>
                         <Input
-                          id="routing_last4"
-                          value={newPayment.routing_last4}
-                          onChange={(e) => setNewPayment(prev => ({ ...prev, routing_last4: e.target.value.replace(/[^0-9]/g, "").slice(0, 4) }))}
+                          id="routing_number"
+                          value={newPayment.routing_number}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\s/g, "").replace(/[^0-9]/g, "").slice(0, 9);
+                            setNewPayment(prev => ({ ...prev, routing_number: value }));
+                          }}
                           className="mt-1"
-                          maxLength={4}
+                          placeholder="123456789"
+                          maxLength={9}
+                        />
+                      </div>
+                      <div className="md:col-span-2 border-t pt-4 mt-2">
+                        <h4 className="text-sm font-semibold mb-3">Bank Address (Optional)</h4>
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="bank_address_line1">Address Line 1</Label>
+                        <Input
+                          id="bank_address_line1"
+                          value={newPayment.bank_address_line1}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, bank_address_line1: e.target.value }))}
+                          className="mt-1"
+                          placeholder="123 Bank St"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="bank_address_line2">Address Line 2</Label>
+                        <Input
+                          id="bank_address_line2"
+                          value={newPayment.bank_address_line2}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, bank_address_line2: e.target.value }))}
+                          className="mt-1"
+                          placeholder="Suite 100"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="bank_city">City</Label>
+                        <Input
+                          id="bank_city"
+                          value={newPayment.bank_city}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, bank_city: e.target.value }))}
+                          className="mt-1"
+                          placeholder="New York"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="bank_state">State</Label>
+                        <Input
+                          id="bank_state"
+                          value={newPayment.bank_state}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, bank_state: e.target.value }))}
+                          className="mt-1"
+                          placeholder="NY"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="bank_postal_code">Postal Code</Label>
+                        <Input
+                          id="bank_postal_code"
+                          value={newPayment.bank_postal_code}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, bank_postal_code: e.target.value }))}
+                          className="mt-1"
+                          placeholder="10001"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="bank_country">Country</Label>
+                        <Input
+                          id="bank_country"
+                          value={newPayment.bank_country}
+                          onChange={(e) => setNewPayment(prev => ({ ...prev, bank_country: e.target.value }))}
+                          className="mt-1"
+                          placeholder="USA"
                         />
                       </div>
                     </>
@@ -1432,13 +1937,27 @@ export default function ProfilePage() {
                     onClick={() => setNewPayment({
                       method_type: "card",
                       nickname: "",
+                      cardholder_name: "",
+                      card_number: "",
                       brand: "",
-                      last4: "",
                       exp_month: "",
                       exp_year: "",
+                      billing_address_line1: "",
+                      billing_address_line2: "",
+                      billing_city: "",
+                      billing_state: "",
+                      billing_postal_code: "",
+                      billing_country: "",
                       bank_name: "",
                       account_type: "checking",
-                      routing_last4: "",
+                      account_number: "",
+                      routing_number: "",
+                      bank_address_line1: "",
+                      bank_address_line2: "",
+                      bank_city: "",
+                      bank_state: "",
+                      bank_postal_code: "",
+                      bank_country: "",
                       is_default: paymentMethods.length === 0,
                     })}
                     disabled={addingPayment}
@@ -1537,15 +2056,34 @@ export default function ProfilePage() {
               <div className="border border-dashed border-slate-200 rounded-lg p-4 bg-slate-50/60">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="plan_name">Plan</Label>
+                    <Label htmlFor="plan_name">Plan *</Label>
                     <Select
                       value={newSubscription.plan_name}
-                      onValueChange={(value) => setNewSubscription(prev => ({ ...prev, plan_name: value, role: value }))}
+                      onValueChange={(value) => {
+                        const roleMap: Record<string, string> = {
+                          'Trial': 'viewer',
+                          'Viewer': 'viewer',
+                          'Auditor': 'analyst',
+                          'Analyst': 'analyst',
+                          'Manager': 'manager',
+                          'Director': 'director',
+                        };
+                        const pricing = planPricing[value] || { monthly: 0, yearly: 0 };
+                        setNewSubscription(prev => ({ 
+                          ...prev, 
+                          plan_name: value, 
+                          role: roleMap[value] || 'viewer',
+                          price_monthly: pricing.monthly.toString(),
+                          price_yearly: pricing.yearly.toString(),
+                        }));
+                      }}
                     >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Select plan" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="Trial">Trial</SelectItem>
+                        <SelectItem value="Viewer">Viewer</SelectItem>
                         <SelectItem value="Auditor">Auditor</SelectItem>
                         <SelectItem value="Analyst">Analyst</SelectItem>
                         <SelectItem value="Manager">Manager</SelectItem>
@@ -1555,14 +2093,80 @@ export default function ProfilePage() {
                   </div>
 
                   <div>
+                    <Label htmlFor="billing_period">Billing Period</Label>
+                    <Select
+                      value={newSubscription.billing_period}
+                      onValueChange={(value: "monthly" | "annual") => 
+                        setNewSubscription(prev => ({ ...prev, billing_period: value }))
+                      }
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select period" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                        <SelectItem value="annual">Annual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="price_monthly">Price/Month ($)</Label>
+                    <Input
+                      id="price_monthly"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newSubscription.price_monthly}
+                      readOnly
+                      disabled
+                      className="mt-1 bg-slate-100 cursor-not-allowed"
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Set by plan selection</p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="price_yearly">Price/Year ($)</Label>
+                    <Input
+                      id="price_yearly"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newSubscription.price_yearly}
+                      readOnly
+                      disabled
+                      className="mt-1 bg-slate-100 cursor-not-allowed"
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Set by plan selection</p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="discount_code">Discount Code</Label>
+                    <Input
+                      id="discount_code"
+                      type="text"
+                      value={newSubscription.discount_code}
+                      onChange={(e) => setNewSubscription(prev => ({ ...prev, discount_code: e.target.value.toUpperCase() }))}
+                      className="mt-1"
+                      placeholder="Enter discount code"
+                      maxLength={20}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Optional promotional code</p>
+                  </div>
+
+                  <div>
                     <Label htmlFor="start_date">Start Date</Label>
                     <Input
                       id="start_date"
                       type="date"
                       value={newSubscription.start_date}
-                      onChange={(e) => setNewSubscription(prev => ({ ...prev, start_date: e.target.value }))}
-                      className="mt-1"
+                      readOnly
+                      disabled
+                      className="mt-1 bg-slate-100 cursor-not-allowed"
                     />
+                    <p className="text-xs text-slate-500 mt-1">Auto-set to today</p>
                   </div>
 
                   <div>
@@ -1570,10 +2174,12 @@ export default function ProfilePage() {
                     <Input
                       id="end_date"
                       type="date"
-                      value={newSubscription.end_date}
-                      onChange={(e) => setNewSubscription(prev => ({ ...prev, end_date: e.target.value }))}
-                      className="mt-1"
+                      value={newSubscription.end_date || ""}
+                      readOnly
+                      disabled
+                      className="mt-1 bg-slate-100 cursor-not-allowed"
                     />
+                    <p className="text-xs text-slate-500 mt-1">Calculated automatically</p>
                   </div>
 
                   <div>
@@ -1623,8 +2229,12 @@ export default function ProfilePage() {
                     variant="outline"
                     disabled={addingSubscription}
                     onClick={() => setNewSubscription({
-                      plan_name: "Auditor",
-                      role: "Auditor",
+                      plan_name: "Trial",
+                      role: "viewer",
+                      price_monthly: "0",
+                      price_yearly: "0",
+                      billing_period: "monthly",
+                      discount_code: "",
                       start_date: new Date().toISOString().slice(0, 10),
                       end_date: "",
                       is_recurring: true,
@@ -1649,8 +2259,26 @@ export default function ProfilePage() {
                           <p className="font-semibold text-slate-900">
                             {sub.plan_name}
                             <span className="ml-2 text-sm text-slate-500">Role: {sub.role}</span>
+                            {sub.billing_period && (
+                              <span className="ml-2 text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded capitalize">
+                                {sub.billing_period}
+                              </span>
+                            )}
                           </p>
                           <div className="text-xs text-slate-500 flex flex-wrap gap-3 mt-2">
+                            {(sub.price_monthly || sub.price_yearly) && (
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="h-3 w-3" />
+                                {sub.price_monthly && `$${sub.price_monthly}/mo`}
+                                {sub.price_monthly && sub.price_yearly && " • "}
+                                {sub.price_yearly && `$${sub.price_yearly}/yr`}
+                              </span>
+                            )}
+                            {sub.discount_code && (
+                              <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
+                                Code: {sub.discount_code}
+                              </span>
+                            )}
                             <span className="flex items-center gap-1">
                               <CalendarRange className="h-3 w-3" />
                               {sub.start_date} {sub.end_date ? `→ ${sub.end_date}` : ""}
@@ -1695,116 +2323,68 @@ export default function ProfilePage() {
                     <DollarSign className="h-5 w-5 text-palette-primary" />
                     Billing History
                   </CardTitle>
-                  <CardDescription>Track invoices and payment outcomes</CardDescription>
+                  <CardDescription>View all invoices and payment transactions</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent>
               {billingError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 mb-4">
                   <AlertCircle className="h-5 w-5 text-red-600" />
                   <span className="text-red-800 text-sm">{billingError}</span>
                 </div>
               )}
 
-              <div className="border border-dashed border-slate-200 rounded-lg p-4 bg-slate-50/60">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label htmlFor="amount">Amount</Label>
-                    <Input
-                      id="amount"
-                      value={newTransaction.amount}
-                      onChange={(e) => setNewTransaction(prev => ({ ...prev, amount: e.target.value }))}
-                      className="mt-1"
-                      placeholder="e.g. 199.00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="currency">Currency</Label>
-                    <Input
-                      id="currency"
-                      value={newTransaction.currency}
-                      onChange={(e) => setNewTransaction(prev => ({ ...prev, currency: e.target.value.toUpperCase() }))}
-                      className="mt-1"
-                      maxLength={3}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="invoice_id">Invoice ID</Label>
-                    <Input
-                      id="invoice_id"
-                      value={newTransaction.invoice_id}
-                      onChange={(e) => setNewTransaction(prev => ({ ...prev, invoice_id: e.target.value }))}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Input
-                      id="description"
-                      value={newTransaction.description}
-                      onChange={(e) => setNewTransaction(prev => ({ ...prev, description: e.target.value }))}
-                      className="mt-1"
-                      placeholder="Optional"
-                    />
-                  </div>
+              {billingHistory.length === 0 ? (
+                <div className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
+                  No billing history recorded yet.
                 </div>
-
-                <div className="flex items-center gap-3 pt-4 border-t">
-                  <Button
-                    onClick={handleAddTransaction}
-                    disabled={addingTransaction}
-                    className="bg-palette-primary hover:bg-palette-primary-hover"
-                  >
-                    {addingTransaction ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Recording...
-                      </>
-                    ) : (
-                      <>
-                        <Banknote className="h-4 w-4 mr-2" />
-                        Add Entry
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    disabled={addingTransaction}
-                    onClick={() => setNewTransaction({ amount: "", currency: "USD", description: "", invoice_id: "" })}
-                  >
-                    Clear
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {billingHistory.length === 0 ? (
-                  <div className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-6 text-center">
-                    No billing history recorded yet.
-                  </div>
-                ) : (
-                  billingHistory.map(entry => (
-                    <div key={entry.id} className="border border-slate-200 rounded-lg p-4 bg-white shadow-sm">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div>
-                          <p className="font-semibold text-slate-900">
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Date</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Amount</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Description</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Invoice ID</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {billingHistory.map(entry => (
+                        <tr key={entry.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                          <td className="py-3 px-4 text-sm text-slate-600">
+                            {formatDateTime(entry.created_at)}
+                          </td>
+                          <td className="py-3 px-4 text-sm font-medium text-slate-900">
                             {formatCurrency(entry.amount, entry.currency)}
-                          </p>
-                          <p className="text-xs text-slate-500">{entry.description || "Manual entry"}</p>
-                          <div className="text-xs text-slate-500 flex flex-wrap gap-3 mt-2">
-                            {entry.invoice_id && <span>Invoice: {entry.invoice_id}</span>}
-                            <span>Status: {entry.status}</span>
-                          </div>
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          {formatDateTime(entry.created_at)}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-slate-600">
+                            {entry.description || "—"}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-slate-600 font-mono">
+                            {entry.invoice_id || "—"}
+                          </td>
+                          <td className="py-3 px-4">
+                            <Badge 
+                              className={
+                                entry.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                entry.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                entry.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                entry.status === 'refunded' ? 'bg-blue-100 text-blue-800' :
+                                'bg-slate-100 text-slate-800'
+                              }
+                            >
+                              {entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

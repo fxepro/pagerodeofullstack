@@ -1,3 +1,6 @@
+# Production requirements - excludes testing dependencies
+# Use this for production deployments
+
 Django==5.2.6
 djangorestframework==3.15.2
 django-cors-headers==4.4.0
@@ -19,17 +22,15 @@ pyotp==2.9.0
 qrcode[pil]==7.4.2
 
 # Environment variable management
-python-decouple==3.8
+django-environ==0.12.0
 
-# Testing
-pytest==8.3.3
-pytest-django==4.8.0
-pytest-cov==5.0.0
-pytest-mock==3.14.0
-factory-boy==3.3.0
+# Email providers and AWS SDK
+django-anymail==10.3
+boto3==1.35.32
 
 # Production Server
 gunicorn==21.2.0
 
 # Security (optional - for CSP support)
 # django-csp==3.8
+

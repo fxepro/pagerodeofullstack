@@ -55,6 +55,9 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
 
+    // Define API_BASE at function scope so it's available throughout
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+
     try {
       const token = localStorage.getItem('access_token');
       
@@ -62,7 +65,6 @@ export default function DashboardPage() {
       let reportsData: AuditReport[] = [];
       if (token) {
         try {
-          const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
           const reportsResponse = await fetch(`${API_BASE}/api/reports/`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
@@ -75,16 +77,26 @@ export default function DashboardPage() {
         }
       }
 
-      // Fetch monitored sites from localStorage
+      // Fetch monitored sites from backend API
       let sitesData: MonitoredSite[] = [];
-      try {
-        const stored = localStorage.getItem('monitoredSites');
-        if (stored) {
-          sitesData = JSON.parse(stored);
-          setMonitoredSites(sitesData);
+      if (token) {
+        try {
+          const sitesResponse = await fetch(`${API_BASE}/api/monitor/sites/`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (sitesResponse.ok) {
+            const apiSites = await sitesResponse.json();
+            // Map API response to MonitoredSite interface
+            sitesData = apiSites.map((site: any) => ({
+              id: site.id.toString(),
+              url: site.url,
+              status: site.status || 'checking'
+            }));
+            setMonitoredSites(sitesData);
+          }
+        } catch (err) {
+          console.error('Error fetching monitored sites:', err);
         }
-      } catch (err) {
-        console.error('Error loading monitored sites:', err);
       }
 
       // Calculate stats

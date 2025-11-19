@@ -4,7 +4,8 @@ from .views import (
     update_user, delete_user, assign_role, user_stats, register_user,
     update_own_profile, change_password, corporate_profile,
     payment_methods, payment_method_detail, user_subscriptions,
-    subscription_detail, billing_history, monitored_site_list,
+    subscription_detail, billing_history, billing_summary, billing_transaction_detail,
+    user_settings, monitored_site_list,
     monitored_site_detail
 )
 from .role_views import (
@@ -14,7 +15,7 @@ from .role_views import (
 from .sitemap_views import generate_sitemap, fetch_sitemap_xml
 from .views import (
     send_verification_email_endpoint, verify_email, 
-    resend_verification_email, verification_status,
+    resend_verification_email, verification_status, get_user_verification_code,
     setup_2fa, verify_and_enable_2fa, disable_2fa,
     generate_backup_codes_2fa, verify_2fa_login, get_2fa_status
 )
@@ -28,6 +29,7 @@ urlpatterns = [
     path('api/auth/verify-email/', verify_email, name='verify_email'),
     path('api/auth/resend-verification/', resend_verification_email, name='resend_verification'),
     path('api/auth/verification-status/', verification_status, name='verification_status'),
+    path('api/users/<int:user_id>/verification-code/', get_user_verification_code, name='get_user_verification_code'),
     # Two-factor authentication endpoints
     path('api/auth/2fa/setup/', setup_2fa, name='setup_2fa'),
     path('api/auth/2fa/verify-enable/', verify_and_enable_2fa, name='verify_and_enable_2fa'),
@@ -43,6 +45,9 @@ urlpatterns = [
     path('api/profile/subscriptions/', user_subscriptions, name='user_subscriptions'),
     path('api/profile/subscriptions/<int:subscription_id>/', subscription_detail, name='subscription_detail'),
     path('api/profile/billing-history/', billing_history, name='billing_history'),
+    path('api/profile/billing-history/<int:transaction_id>/', billing_transaction_detail, name='billing_transaction_detail'),
+    path('api/profile/billing-summary/', billing_summary, name='billing_summary'),
+    path('api/user/settings/', user_settings, name='user_settings'),
     path('api/monitor/sites/', monitored_site_list, name='monitored_site_list'),
     path('api/monitor/sites/<int:site_id>/', monitored_site_detail, name='monitored_site_detail'),
     path('api/sitemap/', generate_sitemap, name='generate_sitemap'),

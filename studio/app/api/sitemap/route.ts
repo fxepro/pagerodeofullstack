@@ -72,9 +72,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward to Django backend
-    const backendUrl = process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:8000/api/sitemap/' 
-      : '/api/sitemap/'
+    // In production, use absolute URL to avoid routing loops
+    const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 
+                     (process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'http://127.0.0.1:8000')
+    const backendUrl = `${API_BASE}/api/sitemap/`
 
     const response = await fetch(backendUrl, {
       method: 'POST',
@@ -108,11 +109,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 
+                   (process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'http://127.0.0.1:8000')
   return NextResponse.json({
     message: 'Sitemap API is running',
-    backend: process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:8000/api/sitemap/' 
-      : '/api/sitemap/',
+    backend: `${API_BASE}/api/sitemap/`,
     timestamp: new Date().toISOString()
   })
 }

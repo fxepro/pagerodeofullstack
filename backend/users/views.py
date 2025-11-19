@@ -46,35 +46,69 @@ from rest_framework_simplejwt.tokens import RefreshToken
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def user_info(request):
-    user = request.user
-    
-    # Use is_superuser as the primary role check for admin
-    if user.is_superuser:
-        role = 'admin'
-        # Get or create profile for admin users too
+    try:
+        user = request.user
+        
+        # Get user profile if it exists - don't create during login/info fetch
+        # Profiles are only created during registration
+        profile = None
         try:
             profile = user.profile
         except UserProfile.DoesNotExist:
-            profile = UserProfile.objects.create(user=user, role='admin')
-    else:
-        # Get role from UserProfile for non-superusers
-        try:
-            profile = user.profile
-            role = profile.role
-        except UserProfile.DoesNotExist:
-            # Create profile with viewer role for new users
-            profile = UserProfile.objects.create(user=user, role='viewer')
-            role = 'viewer'
-    
-    return Response({
-        'username': user.username,
-        'email': user.email or '',  # Return empty string if email is None
-        'first_name': user.first_name or '',
-        'last_name': user.last_name or '',
-        'role': role,
-        'is_active': profile.is_active,
-        'roles': [role],  # Keep for compatibility
-    })
+            # No profile exists - that's okay, use defaults
+            profile = None
+        except Exception as e:
+            # If anything goes wrong accessing profile, log and continue
+            logger.warning(f"Error accessing UserProfile for {user.username}: {str(e)}", exc_info=True)
+            profile = None
+        
+        # Use is_superuser as the primary role check for admin
+        if user.is_superuser:
+            role = 'admin'
+        else:
+            # Get role from UserProfile for non-superusers, default to viewer
+            role = profile.role if profile else 'viewer'
+        
+        response_data = {
+            'username': user.username,
+            'email': user.email or '',  # Return empty string if email is None
+            'first_name': user.first_name or '',
+            'last_name': user.last_name or '',
+            'role': role,
+            'is_active': profile.is_active if profile else user.is_active,
+            'roles': [role],  # Keep for compatibility
+        }
+        
+        # Add profile personal info if profile exists
+        if profile:
+            response_data.update({
+                'phone': profile.phone or '',
+                'bio': profile.bio or '',
+                'avatar_url': profile.avatar_url or '',
+                'date_of_birth': profile.date_of_birth.isoformat() if profile.date_of_birth else None,
+                'timezone': profile.timezone or 'UTC',
+                'locale': profile.locale or 'en-US',
+            })
+        else:
+            # Default values if no profile
+            response_data.update({
+                'phone': '',
+                'bio': '',
+                'avatar_url': '',
+                'date_of_birth': None,
+                'timezone': 'UTC',
+                'locale': 'en-US',
+            })
+        
+        return Response(response_data)
+    except Exception as e:
+        # Log the full error with stack trace
+        logger.error(f"Error in user_info endpoint: {str(e)}", exc_info=True)
+        # Return a safe error response
+        return Response({
+            'error': 'Failed to retrieve user information',
+            'detail': str(e) if settings.DEBUG else 'Internal server error'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -170,9 +204,11 @@ def register_user(request):
         email_verification_enabled = site_config.enable_email_verification if site_config else False
         
         # If email verification is enabled, send verification email
+        verification_token = None
         if email_verification_enabled:
             try:
                 token = profile.generate_verification_token()
+                verification_token = token  # Store for response
                 email_sent = send_verification_email(user, token)
                 if not email_sent:
                     logger.warning(f"Failed to send verification email to {user.email}, but user was created")
@@ -184,6 +220,8 @@ def register_user(request):
         serializer = UserSerializer(user)
         response_data = serializer.data
         response_data['email_verified'] = profile.email_verified
+        # Code is stored in database - admin can retrieve it for customer support
+        # DO NOT return code in registration response
         return Response(response_data, status=status.HTTP_201_CREATED)
         
     except Exception as e:
@@ -282,21 +320,112 @@ def user_stats(request):
 @permission_classes([IsAuthenticated])
 def update_own_profile(request):
     """Update current user's own profile information"""
-    user = request.user
-    
-    # Update user fields
-    if 'email' in request.data:
-        user.email = request.data['email']
-    if 'first_name' in request.data:
-        user.first_name = request.data['first_name']
-    if 'last_name' in request.data:
-        user.last_name = request.data['last_name']
-    
-    user.save()
-    
-    # Return updated user info
-    serializer = UserSerializer(user)
-    return Response(serializer.data)
+    try:
+        user = request.user
+        
+        # Get or create user profile
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        
+        # Update user fields
+        if 'email' in request.data:
+            user.email = request.data['email']
+        if 'first_name' in request.data:
+            user.first_name = request.data['first_name']
+        if 'last_name' in request.data:
+            user.last_name = request.data['last_name']
+        
+        user.save()
+        
+        # Update profile fields - handle cases where fields might not exist yet (before migration)
+        profile_fields = ['phone', 'bio', 'avatar_url', 'date_of_birth', 'timezone', 'locale']
+        updated_profile_fields = []
+        
+        for field in profile_fields:
+            if field in request.data:
+                try:
+                    # Check if field exists in the model
+                    if not hasattr(profile, field):
+                        # Field doesn't exist yet (migration not run), skip it
+                        logger.warning(f"Field {field} does not exist in UserProfile model yet. Skipping update.")
+                        continue
+                    
+                    if field == 'date_of_birth':
+                        # Handle date field
+                        date_value = request.data[field]
+                        if date_value:
+                            from django.utils.dateparse import parse_date
+                            parsed_date = parse_date(date_value) if isinstance(date_value, str) else date_value
+                            if parsed_date:
+                                setattr(profile, field, parsed_date)
+                            else:
+                                setattr(profile, field, None)
+                        else:
+                            setattr(profile, field, None)
+                    else:
+                        setattr(profile, field, request.data[field] or '')
+                    updated_profile_fields.append(field)
+                except Exception as e:
+                    logger.warning(f"Error updating field {field}: {str(e)}", exc_info=True)
+                    # Continue with other fields even if one fails
+        
+        if updated_profile_fields:
+            try:
+                profile.save(update_fields=updated_profile_fields)
+            except Exception as e:
+                logger.error(f"Error saving profile: {str(e)}", exc_info=True)
+                # Try saving without update_fields as fallback
+                profile.save()
+        
+        # Return updated user info in the same format as user_info endpoint
+        role = 'admin' if user.is_superuser else (profile.role if profile else 'viewer')
+        response_data = {
+            'username': user.username,
+            'email': user.email or '',
+            'first_name': user.first_name or '',
+            'last_name': user.last_name or '',
+            'role': role,
+            'is_active': profile.is_active if profile else user.is_active,
+        }
+        
+        # Add profile personal info if profile exists and fields are available
+        if profile:
+            try:
+                response_data.update({
+                    'phone': getattr(profile, 'phone', '') or '',
+                    'bio': getattr(profile, 'bio', '') or '',
+                    'avatar_url': getattr(profile, 'avatar_url', '') or '',
+                    'date_of_birth': profile.date_of_birth.isoformat() if hasattr(profile, 'date_of_birth') and profile.date_of_birth else None,
+                    'timezone': getattr(profile, 'timezone', 'UTC') or 'UTC',
+                    'locale': getattr(profile, 'locale', 'en-US') or 'en-US',
+                })
+            except Exception as e:
+                logger.warning(f"Error getting profile fields: {str(e)}", exc_info=True)
+                # Use defaults if there's an error
+                response_data.update({
+                    'phone': '',
+                    'bio': '',
+                    'avatar_url': '',
+                    'date_of_birth': None,
+                    'timezone': 'UTC',
+                    'locale': 'en-US',
+                })
+        else:
+            response_data.update({
+                'phone': '',
+                'bio': '',
+                'avatar_url': '',
+                'date_of_birth': None,
+                'timezone': 'UTC',
+                'locale': 'en-US',
+            })
+        
+        return Response(response_data)
+    except Exception as e:
+        logger.error(f"Error in update_own_profile: {str(e)}", exc_info=True)
+        return Response({
+            'error': 'Failed to update profile',
+            'detail': str(e) if settings.DEBUG else 'Internal server error'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -355,9 +484,27 @@ def corporate_profile(request):
 def payment_methods(request):
     """List or create payment methods for the authenticated user"""
     if request.method == 'GET':
-        methods = PaymentMethod.objects.filter(user=request.user).order_by('-is_default', '-created_at')
-        serializer = PaymentMethodSerializer(methods, many=True)
-        return Response(serializer.data)
+        try:
+            methods = PaymentMethod.objects.filter(user=request.user).order_by('-is_default', '-created_at')
+            serializer = PaymentMethodSerializer(methods, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            # Handle case where new fields don't exist in database yet (migration not run)
+            # Try to query only existing fields
+            try:
+                from django.db import connection
+                # Get only basic fields that definitely exist
+                methods = PaymentMethod.objects.filter(user=request.user).only(
+                    'id', 'nickname', 'method_type', 'brand', 'last4', 
+                    'exp_month', 'exp_year', 'bank_name', 'account_type', 
+                    'is_default', 'created_at'
+                ).order_by('-is_default', '-created_at')
+                serializer = PaymentMethodSerializer(methods, many=True)
+                return Response(serializer.data)
+            except Exception as inner_e:
+                # If that also fails, return empty list
+                logger.error(f"Error loading payment methods: {str(inner_e)}", exc_info=True)
+                return Response([], status=status.HTTP_200_OK)
 
     data = request.data.copy()
     method_type = data.get('method_type')
@@ -366,28 +513,57 @@ def payment_methods(request):
         return Response({'error': 'Invalid payment method type'}, status=status.HTTP_400_BAD_REQUEST)
 
     if method_type == 'card':
-        required_fields = ['brand', 'last4', 'exp_month', 'exp_year']
-    else:
-        required_fields = ['bank_name', 'account_type', 'last4']
-
-    for field in required_fields:
-        if not data.get(field):
-            return Response({'error': f'{field} is required for {method_type} payment method'}, status=status.HTTP_400_BAD_REQUEST)
-
-    exp_month = data.get('exp_month')
-    exp_year = data.get('exp_year')
-
-    if method_type == 'card':
+        required_fields = ['cardholder_name', 'card_number', 'exp_month', 'exp_year']
+        for field in required_fields:
+            if not data.get(field):
+                return Response({'error': f'{field} is required for card payment method'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate card number (16 digits)
+        card_number = data.get('card_number', '').replace(' ', '').replace('-', '')
+        if len(card_number) != 16 or not card_number.isdigit():
+            return Response({'error': 'Card number must be exactly 16 digits'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Extract last4 from card number
+        last4 = card_number[-4:]
+        
+        # Validate expiration
         try:
-            exp_month = int(exp_month)
-            exp_year = int(exp_year)
+            exp_month = int(data.get('exp_month'))
+            exp_year = int(data.get('exp_year'))
         except (TypeError, ValueError):
             return Response({'error': 'exp_month and exp_year must be numbers'}, status=status.HTTP_400_BAD_REQUEST)
         if exp_month < 1 or exp_month > 12:
             return Response({'error': 'exp_month must be between 1 and 12'}, status=status.HTTP_400_BAD_REQUEST)
         if exp_year < 2000:
             return Response({'error': 'exp_year must be a valid year'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Set ACH fields to empty
+        account_number = ''
+        routing_number = ''
+        bank_name = ''
+        account_type = ''
     else:
+        # ACH validation
+        required_fields = ['bank_name', 'account_number', 'routing_number']
+        for field in required_fields:
+            if not data.get(field):
+                return Response({'error': f'{field} is required for ACH payment method'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate routing number (9 digits)
+        routing_number = data.get('routing_number', '').replace(' ', '').replace('-', '')
+        if len(routing_number) != 9 or not routing_number.isdigit():
+            return Response({'error': 'Routing number must be exactly 9 digits'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        account_number = data.get('account_number', '').replace(' ', '').replace('-', '')
+        bank_name = data.get('bank_name', '')
+        account_type = data.get('account_type', '')
+        
+        # Extract last4 from account number for display
+        last4 = account_number[-4:] if len(account_number) >= 4 else ''
+        
+        # Set card fields to empty
+        cardholder_name = ''
+        card_number = ''
         exp_month = None
         exp_year = None
 
@@ -395,13 +571,30 @@ def payment_methods(request):
         user=request.user,
         nickname=data.get('nickname', ''),
         method_type=method_type,
+        # Card fields
+        cardholder_name=data.get('cardholder_name', ''),
+        card_number=card_number,
         brand=data.get('brand', ''),
-        last4=data.get('last4', '')[-4:],
+        last4=last4,
         exp_month=exp_month,
         exp_year=exp_year,
-        bank_name=data.get('bank_name', ''),
-        account_type=data.get('account_type', ''),
-        routing_last4=data.get('routing_last4', '')[-4:],
+        billing_address_line1=data.get('billing_address_line1', ''),
+        billing_address_line2=data.get('billing_address_line2', ''),
+        billing_city=data.get('billing_city', ''),
+        billing_state=data.get('billing_state', ''),
+        billing_postal_code=data.get('billing_postal_code', ''),
+        billing_country=data.get('billing_country', ''),
+        # ACH fields
+        bank_name=bank_name,
+        account_type=account_type,
+        account_number=account_number,
+        routing_number=routing_number,
+        bank_address_line1=data.get('bank_address_line1', ''),
+        bank_address_line2=data.get('bank_address_line2', ''),
+        bank_city=data.get('bank_city', ''),
+        bank_state=data.get('bank_state', ''),
+        bank_postal_code=data.get('bank_postal_code', ''),
+        bank_country=data.get('bank_country', ''),
         is_default=bool(data.get('is_default')),    
     )
 
@@ -455,9 +648,24 @@ def payment_method_detail(request, method_id):
 @permission_classes([IsAuthenticated])
 def user_subscriptions(request):
     if request.method == 'GET':
-        subs = UserSubscription.objects.filter(user=request.user).order_by('-created_at')
-        serializer = UserSubscriptionSerializer(subs, many=True)
-        return Response(serializer.data)
+        try:
+            subs = UserSubscription.objects.filter(user=request.user).order_by('-created_at')
+            serializer = UserSubscriptionSerializer(subs, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            # Handle case where new fields don't exist in database yet (migration not run)
+            # Try to query only existing fields
+            try:
+                subs = UserSubscription.objects.filter(user=request.user).only(
+                    'id', 'plan_name', 'role', 'start_date', 'end_date',
+                    'is_recurring', 'status', 'notes', 'created_at', 'updated_at'
+                ).order_by('-created_at')
+                serializer = UserSubscriptionSerializer(subs, many=True)
+                return Response(serializer.data)
+            except Exception as inner_e:
+                # If that also fails, return empty list
+                logger.error(f"Error loading subscriptions: {str(inner_e)}", exc_info=True)
+                return Response([], status=status.HTTP_200_OK)
 
     serializer = UserSubscriptionSerializer(data=request.data)
     if serializer.is_valid():
@@ -491,16 +699,200 @@ def subscription_detail(request, subscription_id):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def billing_history(request):
+    """List or create billing transactions for the authenticated user"""
     if request.method == 'GET':
-        transactions = BillingTransaction.objects.filter(user=request.user).order_by('-created_at')
+        # Support filtering by status and date range
+        transactions = BillingTransaction.objects.filter(user=request.user)
+        
+        # Filter by status if provided
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            transactions = transactions.filter(status=status_filter)
+        
+        # Filter by date range if provided
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        if start_date:
+            from django.utils.dateparse import parse_date
+            parsed_start = parse_date(start_date)
+            if parsed_start:
+                transactions = transactions.filter(created_at__gte=parsed_start)
+        if end_date:
+            from django.utils.dateparse import parse_date
+            parsed_end = parse_date(end_date)
+            if parsed_end:
+                transactions = transactions.filter(created_at__lte=parsed_end)
+        
+        transactions = transactions.order_by('-created_at')
         serializer = BillingTransactionSerializer(transactions, many=True)
         return Response(serializer.data)
 
-    serializer = BillingTransactionSerializer(data=request.data)
+    # POST - Create new transaction
+    data = request.data.copy()
+    # Allow status to be set, default to 'pending' if not provided
+    if 'status' not in data:
+        data['status'] = 'pending'
+    
+    serializer = BillingTransactionSerializer(data=data)
     if serializer.is_valid():
-        transaction = serializer.save(user=request.user, status='paid')
+        transaction = serializer.save(user=request.user)
         return Response(BillingTransactionSerializer(transaction).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def billing_summary(request):
+    """Get financial summary for the authenticated user"""
+    from django.db.models import Sum, Count, Q
+    from decimal import Decimal
+    
+    user = request.user
+    
+    # Get all transactions
+    transactions = BillingTransaction.objects.filter(user=user)
+    
+    # Calculate totals by status
+    total_paid = transactions.filter(status='paid').aggregate(
+        total=Sum('amount')
+    )['total'] or Decimal('0.00')
+    
+    total_pending = transactions.filter(status='pending').aggregate(
+        total=Sum('amount')
+    )['total'] or Decimal('0.00')
+    
+    total_failed = transactions.filter(status='failed').aggregate(
+        total=Sum('amount')
+    )['total'] or Decimal('0.00')
+    
+    total_refunded = transactions.filter(status='refunded').aggregate(
+        total=Sum('amount')
+    )['total'] or Decimal('0.00')
+    
+    # Count transactions by status
+    transaction_counts = transactions.values('status').annotate(count=Count('id'))
+    status_counts = {item['status']: item['count'] for item in transaction_counts}
+    
+    # Get active subscriptions
+    active_subs = UserSubscription.objects.filter(
+        user=user,
+        status='active'
+    ).count()
+    
+    # Get default payment method
+    default_payment = PaymentMethod.objects.filter(
+        user=user,
+        is_default=True
+    ).first()
+    
+    default_payment_data = None
+    if default_payment:
+        default_payment_data = PaymentMethodSerializer(default_payment).data
+    
+    return Response({
+        'total_paid': str(total_paid),
+        'total_pending': str(total_pending),
+        'total_failed': str(total_failed),
+        'total_refunded': str(total_refunded),
+        'net_revenue': str(total_paid - total_refunded),
+        'transaction_counts': status_counts,
+        'total_transactions': transactions.count(),
+        'active_subscriptions': active_subs,
+        'default_payment_method': default_payment_data,
+    })
+
+
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def billing_transaction_detail(request, transaction_id):
+    """Update or delete a specific billing transaction"""
+    transaction = get_object_or_404(BillingTransaction, id=transaction_id, user=request.user)
+    
+    if request.method == 'DELETE':
+        transaction.delete()
+        return Response({'message': 'Transaction deleted'}, status=status.HTTP_200_OK)
+    
+    # PATCH - Update transaction
+    data = request.data
+    updated_fields = []
+    
+    # Only allow updating certain fields
+    allowed_fields = ['status', 'description', 'invoice_id', 'metadata']
+    for field in allowed_fields:
+        if field in data:
+            if field == 'metadata' and isinstance(data[field], dict):
+                # Merge metadata if it's a dict
+                current_metadata = transaction.metadata or {}
+                transaction.metadata = {**current_metadata, **data[field]}
+            else:
+                setattr(transaction, field, data[field])
+            updated_fields.append(field)
+    
+    if updated_fields:
+        transaction.save(update_fields=updated_fields)
+    
+    serializer = BillingTransactionSerializer(transaction)
+    return Response(serializer.data)
+
+
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def user_settings(request):
+    """Get or update user settings"""
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'GET':
+        # Return user settings with defaults
+        default_settings = {
+            'homepageCheckInterval': 5,
+            'internalPagesCheckInterval': 1,
+            'enableEmailNotifications': True,
+            'enableSmsNotifications': False,
+            'autoRunAudit': False,
+            'auditDepth': 3,
+            'timezone': 'UTC',
+            'dateFormat': 'YYYY-MM-DD',
+            'itemsPerPage': 25,
+        }
+        user_settings = profile.user_settings if profile.user_settings else {}
+        # Merge defaults with user settings
+        merged_settings = {**default_settings, **user_settings}
+        return Response(merged_settings, status=status.HTTP_200_OK)
+    
+    # PUT - Update user settings
+    if not isinstance(request.data, dict):
+        return Response({'error': 'Settings must be a JSON object'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Merge existing settings with new settings
+    current_settings = profile.user_settings if profile.user_settings else {}
+    updated_settings = {**current_settings, **request.data}
+    
+    # Validate settings values
+    if 'homepageCheckInterval' in updated_settings:
+        interval = updated_settings['homepageCheckInterval']
+        if not isinstance(interval, int) or interval < 1 or interval > 60:
+            return Response({'error': 'homepageCheckInterval must be between 1 and 60'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if 'internalPagesCheckInterval' in updated_settings:
+        interval = updated_settings['internalPagesCheckInterval']
+        if not isinstance(interval, int) or interval < 1 or interval > 24:
+            return Response({'error': 'internalPagesCheckInterval must be between 1 and 24'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if 'auditDepth' in updated_settings:
+        depth = updated_settings['auditDepth']
+        if not isinstance(depth, int) or depth < 1 or depth > 10:
+            return Response({'error': 'auditDepth must be between 1 and 10'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if 'itemsPerPage' in updated_settings:
+        items = updated_settings['itemsPerPage']
+        if not isinstance(items, int) or items < 10 or items > 100:
+            return Response({'error': 'itemsPerPage must be between 10 and 100'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Save settings
+    profile.user_settings = updated_settings
+    profile.save()
+    
+    return Response(updated_settings, status=status.HTTP_200_OK)
 
 
 def _normalize_url(raw_url: str) -> str:
@@ -647,9 +1039,10 @@ def verify_email(request):
     if not verified_profile:
         return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Mark as verified and clear token
+    # Mark as verified and clear token and code
     verified_profile.email_verified = True
     verified_profile.email_verification_token = None
+    verified_profile.email_verification_code = None
     verified_profile.email_verification_sent_at = None
     verified_profile.save()
     
@@ -740,6 +1133,57 @@ def verification_status(request):
             'email_verified': False,
             'email': request.user.email
         }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_user_verification_code(request, user_id):
+    """Get verification code for a specific user (Admin only - for customer support)"""
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    try:
+        profile = user.profile
+    except UserProfile.DoesNotExist:
+        return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if already verified
+    if profile.email_verified:
+        return Response({
+            'message': 'Email is already verified', 
+            'email_verified': True,
+            'email': user.email
+        }, status=status.HTTP_200_OK)
+    
+    # Check if verification code exists
+    if not profile.email_verification_code:
+        return Response({
+            'error': 'No verification code found. User should request a new verification email.',
+            'code': None,
+            'email': user.email
+        }, status=status.HTTP_404_NOT_FOUND)
+    
+    # Check if token is expired
+    if profile.is_token_expired():
+        return Response({
+            'error': 'Verification code has expired. User should request a new verification email.',
+            'code': None,
+            'expired': True,
+            'email': user.email,
+            'sent_at': profile.email_verification_sent_at
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Return the code (admin only - for customer support)
+    from datetime import timedelta
+    return Response({
+        'code': profile.email_verification_code,
+        'email': user.email,
+        'username': user.username,
+        'sent_at': profile.email_verification_sent_at,
+        'expires_at': profile.email_verification_sent_at + timedelta(hours=24) if profile.email_verification_sent_at else None
+    }, status=status.HTTP_200_OK)
 
 
 # ==================== TWO-FACTOR AUTHENTICATION ENDPOINTS ====================

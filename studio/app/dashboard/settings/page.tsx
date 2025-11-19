@@ -56,30 +56,60 @@ export default function SettingsPage() {
     }
 
     try {
-      // TODO: Replace with actual API endpoint when backend is ready
-      // const response = await fetch(`${API_BASE}/api/user/settings/`, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
-      // if (response.ok) {
-      //   const data = await response.json();
-      //   setSettings(data);
-      // }
+      const response = await fetch(`${API_BASE}/api/user/settings/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       
-      // For now, load from localStorage
-      const saved = localStorage.getItem('user_settings');
-      if (saved) {
-        const savedSettings = JSON.parse(saved);
-        // Migrate old defaultCheckInterval to new fields if needed
-        if (savedSettings.defaultCheckInterval && !savedSettings.homepageCheckInterval) {
-          savedSettings.homepageCheckInterval = savedSettings.defaultCheckInterval;
-          savedSettings.internalPagesCheckInterval = 1; // default to 1 hour
-          delete savedSettings.defaultCheckInterval;
+      if (response.ok) {
+        const data = await response.json();
+        // Migrate old defaultCheckInterval to new fields if needed (if coming from localStorage fallback)
+        if (data.defaultCheckInterval && !data.homepageCheckInterval) {
+          data.homepageCheckInterval = data.defaultCheckInterval;
+          data.internalPagesCheckInterval = 1; // default to 1 hour
+          delete data.defaultCheckInterval;
         }
-        setSettings({ ...settings, ...savedSettings });
+        setSettings({ ...settings, ...data });
+      } else if (response.status === 401) {
+        // Token expired - redirect to login
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = `/login?error=${encodeURIComponent('Your session has expired. Please log in again.')}`;
+        return;
+      } else {
+        // If API fails, try localStorage as fallback (for migration)
+        const saved = localStorage.getItem('user_settings');
+        if (saved) {
+          try {
+            const savedSettings = JSON.parse(saved);
+            // Migrate old defaultCheckInterval to new fields if needed
+            if (savedSettings.defaultCheckInterval && !savedSettings.homepageCheckInterval) {
+              savedSettings.homepageCheckInterval = savedSettings.defaultCheckInterval;
+              savedSettings.internalPagesCheckInterval = 1;
+              delete savedSettings.defaultCheckInterval;
+            }
+            setSettings({ ...settings, ...savedSettings });
+          } catch (parseErr) {
+            console.error('Error parsing localStorage settings:', parseErr);
+          }
+        }
       }
     } catch (err) {
       console.error('Error loading settings:', err);
-      toast.error('Failed to load settings');
+      // Fallback to localStorage if network error
+      try {
+        const saved = localStorage.getItem('user_settings');
+        if (saved) {
+          const savedSettings = JSON.parse(saved);
+          if (savedSettings.defaultCheckInterval && !savedSettings.homepageCheckInterval) {
+            savedSettings.homepageCheckInterval = savedSettings.defaultCheckInterval;
+            savedSettings.internalPagesCheckInterval = 1;
+            delete savedSettings.defaultCheckInterval;
+          }
+          setSettings({ ...settings, ...savedSettings });
+        }
+      } catch (fallbackErr) {
+        console.error('Error loading from localStorage:', fallbackErr);
+      }
     } finally {
       setLoading(false);
     }
@@ -94,23 +124,33 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      // TODO: Replace with actual API endpoint when backend is ready
-      // const response = await fetch(`${API_BASE}/api/user/settings/`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify(settings),
-      // });
-      // if (!response.ok) {
-      //   throw new Error('Failed to save settings');
-      // }
+      const response = await fetch(`${API_BASE}/api/user/settings/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(settings),
+      });
       
-      // For now, save to localStorage
-      localStorage.setItem('user_settings', JSON.stringify(settings));
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          toast.error('Your session has expired. Please log in again.');
+          window.location.href = '/login';
+          return;
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to save settings');
+      }
       
+      const data = await response.json();
+      setSettings(data);
       toast.success('Settings saved successfully');
+      
+      // Also save to localStorage as backup
+      localStorage.setItem('user_settings', JSON.stringify(data));
     } catch (err: any) {
       console.error('Error saving settings:', err);
       toast.error(err.message || 'Failed to save settings');

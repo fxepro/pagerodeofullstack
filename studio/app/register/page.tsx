@@ -89,8 +89,8 @@ export default function RegisterPage() {
       const emailVerified = res.data.email_verified ?? false;
       
       if (!emailVerified) {
-        // Redirect to verification page
-        router.push("/verify-email");
+        // Redirect to verification page with email in URL
+        router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
       } else if (userRes.data.role === 'admin') {
         router.push("/admin/dashboard");
       } else {
