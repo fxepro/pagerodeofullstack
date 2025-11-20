@@ -141,3 +141,7 @@ scripts/
 studio/public/screens/
 studio/public/pages/
 
+# Accidental terminal output files
+tatus*
+tudio
+
