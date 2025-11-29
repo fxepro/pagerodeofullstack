@@ -13,18 +13,29 @@
 export function getApiBaseUrl(): string {
   // Always check env var first
   const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  
+  // Check if we're in the browser
+  if (typeof window !== 'undefined') {
+    // In browser context (production)
+    if (envUrl) {
+      // If env var is set, ensure it uses HTTPS in production (not localhost)
+      // Convert HTTP to HTTPS if we're on HTTPS page
+      if (window.location.protocol === 'https:' && envUrl.startsWith('http://') && !envUrl.includes('localhost')) {
+        console.warn('Converting HTTP API URL to HTTPS to avoid mixed content errors');
+        return envUrl.replace('http://', 'https://');
+      }
+      return envUrl;
+    }
+    // No env var: use same origin (relative URLs - automatic HTTPS)
+    return '';
+  }
+  
+  // Server-side rendering
   if (envUrl) {
     return envUrl;
   }
   
-  // Check if we're in the browser
-  if (typeof window !== 'undefined') {
-    // In browser, use the same origin (production setup with reverse proxy)
-    // The Django backend is served at the same origin via reverse proxy
-    return window.location.origin;
-  }
-  
-  // Server-side: default to localhost for development
+  // Default to localhost for development
   return 'http://localhost:8000';
 }
 
