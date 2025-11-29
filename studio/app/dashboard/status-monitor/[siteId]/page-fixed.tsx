@@ -543,7 +543,7 @@ export default function StatusMonitorPage() {
       </Card>
 
       {/* Device Performance Testing Component */}
-      <DevicePerformanceTesting siteId={site.id} />
+      <DevicePerformanceTesting url={site.url} />
     </div>
   );
 }
