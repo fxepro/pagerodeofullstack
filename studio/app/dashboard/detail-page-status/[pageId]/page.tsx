@@ -155,7 +155,7 @@ export default function DetailPageStatusPage() {
         statusText: latest.status >= 200 && latest.status < 300 ? 'OK' : 'Error',
         responseTime: latest.responseTime,
         lastChecked: latest.timestamp,
-        screenshot: null, // Would come from API
+        screenshot: undefined, // Would come from API
         responseHistory,
         uptime,
         incidents,
