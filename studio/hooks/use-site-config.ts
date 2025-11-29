@@ -61,9 +61,12 @@ export function useSiteConfig() {
   const fetchSiteConfig = async () => {
     try {
       // Fetch active typography preset (public endpoint, no auth)
-      // Use relative URL in production, localhost in dev
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000')
-      const typographyResponse = await axios.get(`${API_BASE}/api/typography/active/`);
+      // Always use relative URL in browser to match page protocol (HTTPS automatically)
+      // Server-side rendering: use env var or default
+      const apiUrl = typeof window !== 'undefined' 
+        ? '/api/typography/active/'  // Relative URL - automatically uses HTTPS if page is HTTPS
+        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/typography/active/`;
+      const typographyResponse = await axios.get(apiUrl);
       
       // Apply typography from the active preset
       if (typographyResponse.data) {
