@@ -18,6 +18,8 @@ export default function UserNavigation({ user, pageTitle, pageDescription, sideb
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    // Clear orchestrator state to prevent old reports from running
+    localStorage.removeItem("pagerodeo_analysis_state");
     router.push("/login");
   };
 

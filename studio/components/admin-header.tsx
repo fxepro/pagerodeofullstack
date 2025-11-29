@@ -32,11 +32,13 @@ export default function AdminHeader({ user }: AdminHeaderProps) {
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    // Clear orchestrator state to prevent old reports from running
+    localStorage.removeItem("pagerodeo_analysis_state");
     router.push("/login");
   };
 
   return (
-    <header className="bg-gradient-to-r from-slate-100 to-slate-200/80 backdrop-blur-sm border-b border-slate-300/50 px-6 py-4 ml-64">
+    <header className="sticky top-0 z-50 bg-gradient-to-r from-slate-100 to-slate-200/80 backdrop-blur-sm border-b border-slate-300/50 px-6 py-4 ml-64">
       <div className="flex items-center justify-between">
         {/* Left side - Logo and Mobile Menu */}
         <div className="flex items-center space-x-4">

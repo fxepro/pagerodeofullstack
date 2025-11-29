@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { applyTheme } from "@/lib/theme";
 import axios from "axios";
 import {
   Activity,
@@ -190,19 +191,7 @@ export default function AdminMonitoringPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Monitoring & Logs</h1>
-          <p className="text-slate-600 mt-1">System health, jobs, and log files</p>
-        </div>
-        <Button onClick={refreshData} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
-
+    <div className={applyTheme.page()}>
       {/* System Status Cards */}
       {systemStatus && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

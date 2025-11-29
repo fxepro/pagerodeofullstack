@@ -1,11 +1,11 @@
 "use client";
 import React, { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Zap, Clock, FileText, TrendingUp, Shield, BarChart3, Globe, Sparkles, ArrowRight, CheckCircle, Star, Play, Users, Award, Target, Rocket, Activity, Eye, Monitor } from "lucide-react"
-import { UrlInputForm } from "@/components/url-input-form"
+import { Zap, Clock, FileText, TrendingUp, Shield, BarChart3, Globe, Sparkles, ArrowRight, CheckCircle, Star, Play, Users, Award, Target, Rocket, Activity, Eye, Monitor, Server, Lock, Network, Code, Link2, Type, Tag, Percent, Calendar, X } from "lucide-react"
 import { getDjangoApiUrl } from "@/lib/api-config";
 
 export default function HomePage() {
@@ -91,16 +91,12 @@ export default function HomePage() {
             </div>
       </div>
 
-          <div className="max-w-3xl mx-auto mb-12">
-            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 border border-white/30 shadow-xl">
-        <UrlInputForm />
-      </div>
-          </div>
-          
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-12">
-            <Button size="lg" className="bg-palette-primary hover:bg-palette-primary-hover text-white border-0 px-8 py-4 text-lg font-semibold rounded-xl shadow-xl transform hover:scale-105 transition-all duration-300">
-              <Play className="mr-2 h-5 w-5" />
-              Analyze Now - It's Free
+            <Button size="lg" className="bg-palette-primary hover:bg-palette-primary-hover text-white border-0 px-8 py-4 text-lg font-semibold rounded-xl shadow-xl transform hover:scale-105 transition-all duration-300" asChild>
+              <Link href="/performance">
+                <Play className="mr-2 h-5 w-5" />
+                Analyze Now - It's Free
+              </Link>
             </Button>
             <Button size="lg" className="bg-white/20 text-white border border-white/30 hover:bg-white/30 px-8 py-4 text-lg rounded-xl backdrop-blur-sm font-semibold">
               <Eye className="mr-2 h-5 w-5" />
@@ -132,6 +128,107 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Marketing Banner - Limited Time Deal */}
+      <section className="py-12 px-4" style={{ backgroundColor: 'var(--theme-bg-tertiary)' }}>
+        <div className="container mx-auto max-w-7xl">
+          <div className="bg-white rounded-xl shadow-lg border-2 border-palette-primary/20 p-8 md:p-12">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              {/* Left Side - Badge and Title */}
+              <div className="flex items-center gap-4 flex-1">
+                <div className="flex items-center gap-2 bg-gradient-to-r from-palette-primary to-palette-secondary text-white px-4 py-2 rounded-full shadow-md">
+                  <Tag className="h-5 w-5" />
+                  <span className="font-bold text-sm md:text-base">LIMITED TIME DEAL</span>
+                </div>
+                <div className="hidden md:block h-8 w-px bg-palette-accent-2"></div>
+                <div>
+                  <h3 className="text-lg md:text-xl font-bold" style={{ color: 'var(--theme-text-primary)' }}>
+                    Analyst Package - Annual Plan
+                  </h3>
+                  <p className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>
+                    Dec 01, 2025 - Dec 31, 2025
+                  </p>
+                </div>
+              </div>
+
+              {/* Center - Pricing */}
+              <div className="flex items-center gap-4 flex-wrap justify-center">
+                <div className="text-center">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-2xl md:text-3xl font-bold line-through opacity-50" style={{ color: 'var(--theme-text-secondary)' }}>
+                      $359.88
+                    </span>
+                    <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-semibold">
+                      $29.99/mo × 12
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl md:text-4xl font-bold" style={{ color: 'var(--color-primary)' }}>
+                      $199
+                    </span>
+                    <span className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>
+                      /year
+                    </span>
+                  </div>
+                </div>
+                <div className="hidden md:block h-12 w-px bg-palette-accent-2"></div>
+                <div className="text-center">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Percent className="h-5 w-5 text-green-600" />
+                    <span className="text-2xl md:text-3xl font-bold text-green-600">
+                      44%
+                    </span>
+                  </div>
+                  <p className="text-xs font-semibold text-green-600">SAVINGS</p>
+                </div>
+              </div>
+
+              {/* Right Side - CTA Button */}
+              <div className="flex-shrink-0">
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-palette-primary to-palette-secondary hover:from-palette-primary-hover hover:to-palette-secondary-hover text-white px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                  asChild
+                >
+                  <Link href="/upgrade">
+                    Claim Deal Now
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Additional Info Bar */}
+            <div className="mt-6 pt-6 border-t border-palette-accent-2/50">
+              <div className="flex flex-wrap items-center justify-center gap-4 text-sm mb-4" style={{ color: 'var(--theme-text-secondary)' }}>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>Valid: Dec 01 - Dec 31, 2025</span>
+                </div>
+                <div className="hidden md:block">•</div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span>Cancel anytime</span>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-3 max-w-2xl mx-auto">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>All 8 analysis tools included</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>Test all tools in one click</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>Monitor and track 100 websites, all at once with historical data</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section - Premium Design */}
       <section className="py-32 px-4 bg-gradient-to-br from-slate-50 to-white relative overflow-hidden">
         {/* Background pattern */}
@@ -146,11 +243,11 @@ export default function HomePage() {
             <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
               Everything You Need to
               <br className="hidden md:block" />
-              <span className="bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">Dominate Performance</span>
+              <span className="bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">Optimize Your Website</span>
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              From deep technical analysis to actionable business insights, we've built the most comprehensive 
-              performance testing platform for modern websites.
+              From performance analysis to security audits, we've built the most comprehensive 
+              website testing platform with 8 powerful tools: Performance, Monitor, SSL, DNS, Sitemap, API, Links, and Typography.
             </p>
           </div>
 
@@ -163,22 +260,22 @@ export default function HomePage() {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Activity className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Lightning Analysis</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Performance & Monitoring</h3>
                   <p className="text-slate-600 mb-4">
-                    Get comprehensive Core Web Vitals, performance metrics, and optimization insights in under 30 seconds.
+                    Comprehensive performance analysis, uptime monitoring, and real-time health checks for your website.
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Sub-second analysis time
+                      Performance & Core Web Vitals
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Real lighthouse scores
+                      Uptime & Response Monitoring
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Mobile & desktop testing
+                      Real-time Status Tracking
                     </li>
                   </ul>
                 </div>
@@ -193,22 +290,22 @@ export default function HomePage() {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Sparkles className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">AI-Powered Insights</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Security & Infrastructure</h3>
                   <p className="text-slate-600 mb-4">
-                    Advanced machine learning algorithms provide personalized optimization recommendations that actually work.
+                    Complete security audits, SSL certificate validation, DNS configuration analysis, and API health monitoring.
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Smart priority ranking
+                      SSL Certificate Analysis
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Code-level suggestions
+                      DNS Configuration Review
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Impact predictions
+                      API Endpoint Testing
                     </li>
                   </ul>
                 </div>
@@ -223,23 +320,23 @@ export default function HomePage() {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Monitor className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Visual Waterfalls</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Content & Structure</h3>
                   <p className="text-slate-600 mb-4">
-                    Interactive waterfall charts reveal exactly where your site slows down with pixel-perfect precision.
+                    Analyze your website's structure, detect broken links, validate sitemaps, and optimize typography for better readability.
                   </p>
                   
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Resource timeline view
+                      Sitemap Validation & Analysis
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Bottleneck identification
+                      Broken Link Detection
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Download & share reports
+                      Typography & Font Analysis
                     </li>
                   </ul>
                 </div>
@@ -420,37 +517,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-24 px-4 bg-gradient-to-r from-palette-primary to-palette-secondary text-white">
+      <section className="py-24 px-4 mb-8 bg-white">
         <div className="container mx-auto max-w-4xl text-center px-4">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6" style={{ color: 'var(--theme-text-primary)' }}>
             Ready to Wrangle Your Website's Performance?
           </h2>
-          <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+          <p className="text-xl mb-8 max-w-2xl mx-auto" style={{ color: 'var(--theme-text-secondary)' }}>
             Join thousands of developers and businesses optimizing their websites with PageRodeo's AI-powered analysis.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
-              Start Free Analysis
-              <ArrowRight className="ml-2 h-5 w-5" />
+            <Button size="lg" variant="secondary" className="text-lg px-8 py-3" asChild>
+              <Link href="/performance">
+                Start Free Analysis
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-3 text-white border-white hover:bg-white hover:text-palette-primary">
+            <Button size="lg" variant="outline" className="text-lg px-8 py-3 border-palette-primary text-palette-primary hover:bg-palette-primary hover:text-white">
               View Sample Report
             </Button>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
-              <div className="text-3xl font-bold mb-2">50K+</div>
-              <div className="text-sm opacity-80">Websites Analyzed</div>
+              <div className="text-3xl font-bold mb-2" style={{ color: 'var(--color-primary)' }}>50K+</div>
+              <div className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>Websites Analyzed</div>
             </div>
             <div>
-              <div className="text-3xl font-bold mb-2">99.9%</div>
-              <div className="text-sm opacity-80">Uptime Guarantee</div>
+              <div className="text-3xl font-bold mb-2" style={{ color: 'var(--color-primary)' }}>99.9%</div>
+              <div className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>Uptime Guarantee</div>
             </div>
             <div>
-              <div className="text-3xl font-bold mb-2">&lt; 30s</div>
-              <div className="text-sm opacity-80">Average Analysis Time</div>
+              <div className="text-3xl font-bold mb-2" style={{ color: 'var(--color-primary)' }}>&lt; 30s</div>
+              <div className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>Average Analysis Time</div>
             </div>
         </div>
       </div>

@@ -76,5 +76,16 @@ urlpatterns += [
     # Note: When accessing /api/reports/, Django will skip the health_check pattern
     # because it requires an exact match for /api/, and will match this include instead
     path('api/', include('audit_reports.urls')),
+    path('api/admin-tools/', include('api_monitoring.urls')),  # Admin API Monitoring
+    # Analysis endpoints - each app has its own URLs
+    path('', include('performance_analysis.urls')),
+    path('', include('ssl_analysis.urls')),
+    path('', include('dns_analysis.urls')),
+    path('', include('sitemap_analysis.urls')),
+    path('', include('api_analysis.urls')),
+    path('', include('links_analysis.urls')),
+    path('', include('typography_analysis.urls')),
+    path('', include('monitor_analysis.urls')),
+    path('', include('monitoring.urls')),  # Monitoring API endpoints
     path('favicon.ico', favicon_view, name='favicon'),  # Prevent 404s in logs
 ]

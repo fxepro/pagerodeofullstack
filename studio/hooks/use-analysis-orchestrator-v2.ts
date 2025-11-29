@@ -148,7 +148,9 @@ export function useAnalysisOrchestrator() {
           const restoredState: OrchestratorState = {
             ...parsed.state,
             isRunning: false,  // Never restore as running
-            currentAnalysis: null
+            currentAnalysis: null,
+            // Clear URL to prevent auto-running old reports
+            url: ''
           };
           return {
             ...restoredState,
@@ -188,6 +190,8 @@ export function useAnalysisOrchestrator() {
 
   // Ref to track if user requested to stop analysis
   const stopRequested = useRef(false);
+  // Ref to store auditReportId so it's always available when saving
+  const auditReportIdRef = useRef<string | null>(null);
 
   // Watch for logout (access_token removal) and clear data
   useEffect(() => {
@@ -386,7 +390,13 @@ export function useAnalysisOrchestrator() {
   };
 
   // Start sequential analysis
-  const startAnalysis = useCallback(async (url: string, selectedServices?: string[]) => {
+  const startAnalysis = useCallback(async (url: string, selectedServices?: string[], auditReportId?: string | null) => {
+    // Store auditReportId in ref so it's available when saving
+    if (auditReportId) {
+      auditReportIdRef.current = auditReportId;
+      console.log(`[Orchestrator] Stored auditReportId in ref: ${auditReportId}`);
+    }
+    
     // Clean URL
     const cleanUrl = url.trim()
       .replace(/^https?:\/\//, '')
@@ -519,6 +529,11 @@ export function useAnalysisOrchestrator() {
       lastCompletedRunId: prev.currentRunId ?? prev.lastCompletedRunId ?? null,
       currentRunId: null
     }));
+
+    // Analysis results are stored in orchestrator state and localStorage
+    // Background save to database is triggered by site-audit-main.tsx useEffect
+    // This allows UI to display results immediately while data saves in background
+    console.log(`[Orchestrator] All analyses complete. Results stored in state/localStorage. Background save will be triggered.`);
   }, []);
 
   // Stop analysis

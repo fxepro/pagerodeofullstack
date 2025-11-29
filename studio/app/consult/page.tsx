@@ -185,7 +185,7 @@ export default function ConsultPage() {
 
           <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
             {/* Performance Analysis */}
-            <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-slate-50 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+            <Card className="group relative overflow-hidden border-0 shadow-xl hover:shadow-2xl bg-gradient-to-br from-white to-slate-50 transition-all duration-500 transform hover:-translate-y-2" style={{ boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <CardContent className="p-8 relative z-10">
                 <div className="mb-6">
@@ -219,7 +219,7 @@ export default function ConsultPage() {
             </Card>
 
             {/* Optimization Strategy */}
-            <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-slate-50 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+            <Card className="group relative overflow-hidden border-0 shadow-xl hover:shadow-2xl bg-gradient-to-br from-white to-slate-50 transition-all duration-500 transform hover:-translate-y-2" style={{ boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <CardContent className="p-8 relative z-10">
                 <div className="mb-6">
@@ -253,7 +253,7 @@ export default function ConsultPage() {
             </Card>
 
             {/* Technical Consultation */}
-            <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-slate-50 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+            <Card className="group relative overflow-hidden border-0 shadow-xl hover:shadow-2xl bg-gradient-to-br from-white to-slate-50 transition-all duration-500 transform hover:-translate-y-2" style={{ boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-palette-accent-1/5 to-palette-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <CardContent className="p-8 relative z-10">
                 <div className="mb-6">
@@ -287,7 +287,7 @@ export default function ConsultPage() {
             </Card>
 
             {/* Training Sessions */}
-            <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-slate-50 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+            <Card className="group relative overflow-hidden border-0 shadow-xl hover:shadow-2xl bg-gradient-to-br from-white to-slate-50 transition-all duration-500 transform hover:-translate-y-2" style={{ boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-orange-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <CardContent className="p-8 relative z-10">
                 <div className="mb-6">
@@ -321,7 +321,7 @@ export default function ConsultPage() {
             </Card>
 
             {/* Ongoing Support */}
-            <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-slate-50 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+            <Card className="group relative overflow-hidden border-0 shadow-xl hover:shadow-2xl bg-gradient-to-br from-white to-slate-50 transition-all duration-500 transform hover:-translate-y-2" style={{ boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <CardContent className="p-8 relative z-10">
                 <div className="mb-6">
@@ -355,7 +355,7 @@ export default function ConsultPage() {
             </Card>
 
             {/* Performance Audit */}
-            <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-slate-50 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
+            <Card className="group relative overflow-hidden border-0 shadow-xl hover:shadow-2xl bg-gradient-to-br from-white to-slate-50 transition-all duration-500 transform hover:-translate-y-2" style={{ boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}>
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <CardContent className="p-8 relative z-10">
                 <div className="mb-6">

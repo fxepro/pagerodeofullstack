@@ -48,7 +48,17 @@ def generate_sitemap(request):
         })
         
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"[Sitemap] ========================================")
+        print(f"[Sitemap] ERROR: {str(e)}")
+        print(f"[Sitemap] ========================================")
+        print(f"[Sitemap] Traceback: {error_trace}")
+        print(f"[Sitemap] ========================================")
+        return JsonResponse({
+            'error': str(e),
+            'traceback': error_trace
+        }, status=500)
 
 @csrf_exempt
 @require_http_methods(["POST"])

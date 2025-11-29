@@ -178,11 +178,22 @@ INSTALLED_APPS = [
     'actstream',
     'auditlog',
     'drf_spectacular',
+    'core.apps.CoreConfig',  # For management commands
     'users',
     'emails',
     'dns',
     'site_settings.apps.SettingsConfig',
     'audit_reports',
+    'monitoring',
+    'performance_analysis',
+    'monitor_analysis',
+    'dns_analysis',
+    'sitemap_analysis',
+    'typography_analysis',
+    'ssl_analysis',
+    'api_analysis',
+    'links_analysis',
+    'api_monitoring',
 ]
 
 MIDDLEWARE = [
@@ -321,6 +332,22 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
+# JWT Token Configuration
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # 30 minutes
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # 7 days
+    'ROTATE_REFRESH_TOKENS': True,  # Automatically rotate refresh tokens
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old tokens after rotation
+    'UPDATE_LAST_LOGIN': True,  # Update last login timestamp
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
 # API Documentation
 SPECTACULAR_SETTINGS = {
     'TITLE': 'PageRodeo API',
@@ -457,3 +484,24 @@ except ImportError:
     CSP_FONT_SRC = ["'self'", 'data:']
     CSP_CONNECT_SRC = ["'self'"]
     CSP_FRAME_SRC = ["'self'"]
+
+# Celery Configuration
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_ENABLE_UTC = True
+
+# Celery Task Settings
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # 25 minutes
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
+
+# Windows-specific: Use 'solo' pool instead of 'prefork' (multiprocessing doesn't work well on Windows)
+import sys
+if sys.platform == 'win32':
+    CELERY_WORKER_POOL = 'solo'  # Single-process pool for Windows compatibility

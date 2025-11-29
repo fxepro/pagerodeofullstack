@@ -30,9 +30,9 @@ import {
   StopCircle
 } from "lucide-react";
 import { exportToPDF } from "@/lib/pdf-export";
+import { triggerBackgroundSave } from "@/lib/save-audit-to-db";
 
-// Use relative URL in production (browser), localhost in dev (SSR)
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+import { getApiBaseUrl } from '@/lib/api-config';
 
 // Import existing components to reuse
 import PerformanceMain from "@/components/performance-main";
@@ -82,6 +82,7 @@ export function SiteAuditMain() {
   const [url, setUrl] = useState(orchestrator.state.url || "");
   const [selectedServices, setSelectedServices] = useState<string[]>(["performance", "monitor", "ssl", "dns", "sitemap", "links", "typography"]);
   const [activeTab, setActiveTab] = useState<string>("");
+  const auditReportIdRef = useRef<string | null>(null);
 
   const services = [
     {
@@ -154,11 +155,33 @@ export function SiteAuditMain() {
   
   useEffect(() => {
     const run = async () => {
+      // Debug logging
+      console.log('[SiteAudit] useEffect triggered:', {
+        lastCompletedRunId: orchestrator.state.lastCompletedRunId,
+        isRunning: orchestrator.state.isRunning,
+        endTime: orchestrator.state.endTime,
+        url: orchestrator.state.url,
+        lastSavedRun: lastSavedRunRef.current,
+        hasAnalyses: !!orchestrator.state.analyses
+      });
+      
       const completedRunId = orchestrator.state.lastCompletedRunId;
-      if (!completedRunId) return;
-      if (lastSavedRunRef.current === completedRunId) return;
-      if (orchestrator.state.isRunning) return;
-      if (!orchestrator.state.url) return;
+      if (!completedRunId) {
+        console.log('[SiteAudit] No completedRunId, skipping save');
+        return;
+      }
+      if (lastSavedRunRef.current === completedRunId) {
+        console.log('[SiteAudit] Already saved this runId, skipping');
+        return;
+      }
+      if (orchestrator.state.isRunning) {
+        console.log('[SiteAudit] Still running, skipping save');
+        return;
+      }
+      if (!orchestrator.state.url) {
+        console.log('[SiteAudit] No URL, skipping save');
+        return;
+      }
 
       const analyses = orchestrator.state.analyses;
       const successfulTools = Object.entries(analyses)
@@ -169,13 +192,21 @@ export function SiteAuditMain() {
         .map(([type]) => type);
 
       if (successfulTools.length === 0 && failedTools.length === 0) {
+        console.log('[SiteAudit] No successful or failed tools, skipping save');
         return;
       }
+      
+      console.log('[SiteAudit] Conditions met, proceeding with save:', {
+        successfulTools,
+        failedTools,
+        completedRunId
+      });
 
+      // Note: Backend supports anonymous saves (AllowAny permission)
+      // Token is optional - will save as anonymous if not provided
       const token = localStorage.getItem('access_token');
       if (!token) {
-        console.log('No auth token - skipping auto-save');
-        return;
+        console.log('No auth token - will save as anonymous');
       }
 
       try {
@@ -190,48 +221,18 @@ export function SiteAuditMain() {
           ? orchestrator.state.url
           : `https://${orchestrator.state.url}`;
 
-        const response = await fetch(`${API_BASE}/api/reports/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            url: fullUrl,
-            tools_selected: selectedServices,
-            audit_data: {
-              successful: successfulTools,
-              failed: failedTools,
-              totalDuration: orchestrator.state.endTime && orchestrator.state.startTime
-                ? orchestrator.state.endTime - orchestrator.state.startTime
-                : null
-            }
-          })
-        });
-
-        if (response.ok) {
-          const savedData = await response.json();
-          console.log('✅ Audit record saved successfully:', savedData);
-          toast({
-            title: "Audit Saved",
-            description: `Analysis for ${orchestrator.state.url} has been logged. View it in Reports.`,
-          });
-          lastSavedRunRef.current = completedRunId;
-          try {
-            localStorage.setItem(LAST_SAVED_RUN_KEY, JSON.stringify({ runId: completedRunId, timestamp: Date.now() }));
-          } catch (error) {
-            console.warn('Failed to persist last saved run id:', error);
-          }
-        } else {
-          if (response.status === 401) {
-            console.log('⚠️ Audit not saved - authentication required. Log in to save audit history.');
-          } else if (response.status === 400) {
-            const errorData = await response.json().catch(() => ({}));
-            console.log('⚠️ Audit not saved - validation error:', errorData);
-          } else {
-            const errorText = await response.text();
-            console.error('Failed to save audit record:', response.status, errorText);
-          }
+        // Trigger background save - runs async, doesn't block UI
+        // User can view from localStorage while data saves to database
+        triggerBackgroundSave();
+        
+        console.log('✅ [SiteAudit] Analysis complete. Results stored in orchestrator state. Background save triggered.');
+        
+        // Store completion info in localStorage for reference
+        lastSavedRunRef.current = completedRunId;
+        try {
+          localStorage.setItem(LAST_SAVED_RUN_KEY, JSON.stringify({ runId: completedRunId, timestamp: Date.now() }));
+        } catch (error) {
+          console.warn('Failed to persist last saved run id:', error);
         }
       } catch (error) {
         console.error('Failed to save audit record:', error);
@@ -239,7 +240,28 @@ export function SiteAuditMain() {
     };
 
     run();
-  }, [orchestrator.state.isRunning, orchestrator.state.endTime, orchestrator.state.url, orchestrator.state.lastCompletedRunId, orchestrator.state.analyses, selectedServices]);
+  }, [
+    orchestrator.state.isRunning, 
+    orchestrator.state.endTime, 
+    orchestrator.state.url, 
+    orchestrator.state.lastCompletedRunId, 
+    orchestrator.state.analyses, 
+    selectedServices
+  ]);
+  
+  // Also trigger save immediately when endTime changes and isRunning becomes false
+  // This is a backup trigger to ensure save happens even if the main useEffect doesn't fire
+  useEffect(() => {
+    if (!orchestrator.state.isRunning && 
+        orchestrator.state.endTime && 
+        orchestrator.state.lastCompletedRunId &&
+        orchestrator.state.url &&
+        lastSavedRunRef.current !== orchestrator.state.lastCompletedRunId) {
+      console.log('[SiteAudit] Direct trigger: endTime set and not running, triggering save');
+      triggerBackgroundSave();
+      lastSavedRunRef.current = orchestrator.state.lastCompletedRunId;
+    }
+  }, [orchestrator.state.isRunning, orchestrator.state.endTime, orchestrator.state.lastCompletedRunId, orchestrator.state.url]);
 
   const handleAnalyze = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -312,8 +334,13 @@ export function SiteAuditMain() {
     // Set Results tab as active when analysis starts
     setActiveTab("results");
     
-    // Start sequential analysis via orchestrator with selected services
-    orchestrator.startAnalysis(cleanUrl, selectedServices);
+    // DECOUPLED: Site audit now runs independently
+    // No longer creating AuditReport or saving to separate analysis apps
+    // Results are stored in orchestrator state and localStorage only
+    
+    // Start sequential analysis via orchestrator (no database integration)
+    console.log(`[SiteAudit] Starting independent analysis for: ${cleanUrl}`);
+    orchestrator.startAnalysis(cleanUrl, selectedServices, null);
     
     toast({
       title: "Analysis Started",

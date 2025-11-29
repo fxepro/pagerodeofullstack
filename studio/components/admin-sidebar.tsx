@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -12,7 +13,10 @@ import {
   BarChart3,
   ChevronRight,
   Palette,
-  Monitor
+  Monitor,
+  Network,
+  Wrench,
+  CreditCard
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -20,7 +24,8 @@ interface AdminSidebarProps {
 }
 
 export default function AdminSidebar({ currentPath }: AdminSidebarProps) {
-  const sidebarItems = [
+  // Admin Panel items (core admin functions)
+  const adminPanelItems = [
     {
       title: "Overview",
       href: "/admin/dashboard",
@@ -50,7 +55,11 @@ export default function AdminSidebar({ currentPath }: AdminSidebarProps) {
       href: "/admin/feedback",
       icon: MessageSquare,
       description: "View and manage user feedback"
-    },
+    }
+  ];
+
+  // Platform Panel items (platform integrations and financials)
+  const platformPanelItems = [
     {
       title: "Analytics",
       href: "/admin/analytics",
@@ -62,6 +71,24 @@ export default function AdminSidebar({ currentPath }: AdminSidebarProps) {
       href: "/admin/monitoring",
       icon: Monitor,
       description: "System health, jobs, and logs"
+    },
+    {
+      title: "API Monitoring",
+      href: "/admin/api-monitoring",
+      icon: Network,
+      description: "Monitor and test API endpoints"
+    },
+    {
+      title: "Tools Management",
+      href: "/admin/tools-management",
+      icon: Wrench,
+      description: "Track and manage tool integrations"
+    },
+    {
+      title: "Financials",
+      href: "/admin/financials",
+      icon: CreditCard,
+      description: "Payment integrations and financial management"
     },
     {
       title: "System Settings",
@@ -77,22 +104,55 @@ export default function AdminSidebar({ currentPath }: AdminSidebarProps) {
       <div className="p-6 space-y-8">
         {/* Logo */}
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center">
-            <Shield className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold text-slate-800">PageRodeo</h2>
-            <p className="text-xs text-slate-600">Admin Panel</p>
-          </div>
+          <Image
+            src="/Pagerodeo-Logo-Black.png"
+            alt="PageRodeo Logo"
+            width={120}
+            height={30}
+            className="object-contain"
+          />
         </div>
 
-        {/* Admin Navigation */}
+        {/* Admin Panel Navigation */}
         <div>
           <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-4">
             Admin Panel
           </h3>
           <nav className="space-y-2">
-            {sidebarItems.map((item) => {
+            {adminPanelItems.map((item) => {
+              const isActive = currentPath === item.href;
+              const Icon = item.icon;
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 group",
+                    isActive
+                      ? "bg-slate-600 text-white"
+                      : "text-slate-700 hover:text-slate-800 hover:bg-slate-200/50"
+                  )}
+                >
+                  <Icon className="h-5 w-5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{item.title}</p>
+                    <p className="text-xs text-slate-500 truncate">{item.description}</p>
+                  </div>
+                  {isActive && <ChevronRight className="h-4 w-4 flex-shrink-0" />}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Platform Panel Navigation */}
+        <div>
+          <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-4">
+            Platform Panel
+          </h3>
+          <nav className="space-y-2">
+            {platformPanelItems.map((item) => {
               const isActive = currentPath === item.href;
               const Icon = item.icon;
               

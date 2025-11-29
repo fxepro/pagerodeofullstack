@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,11 +29,12 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import { captureEvent } from '@/lib/posthog';
 
-// Use relative URL in production (browser), localhost in dev (SSR)
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+// Use environment variable if set, otherwise default to localhost:8000 in development
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
 interface ApiMonitoredSite {
   id: number;
@@ -102,6 +104,7 @@ const applyStatusToSite = (site: MonitoredSite, status: SiteStatusData): Monitor
 });
 
 export default function MonitoringPage() {
+  const router = useRouter();
   const [sites, setSites] = useState<MonitoredSite[]>([]);
   const [newUrl, setNewUrl] = useState('');
   const [adding, setAdding] = useState(false);
@@ -123,7 +126,8 @@ export default function MonitoringPage() {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/api/monitor/sites/`, {
+      const url = `${API_BASE}/api/monitor/sites/`;
+      const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -144,7 +148,12 @@ export default function MonitoringPage() {
       setError(null);
     } catch (err: any) {
       console.error('Error loading monitored sites:', err);
-      setError(err.message || 'Failed to load monitored sites.');
+      // Handle network errors (Failed to fetch)
+      if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+        setError('Unable to connect to the server. Please ensure the backend is running on ' + API_BASE);
+      } else {
+        setError(err.message || 'Failed to load monitored sites.');
+      }
     } finally {
       setInitialLoading(false);
     }
@@ -302,11 +311,19 @@ export default function MonitoringPage() {
     const site = sites.find((s) => s.id === id);
     if (!site) return;
 
+    // Confirm deletion
+    if (!confirm(`Are you sure you want to stop monitoring ${site.url}?`)) {
+      return;
+    }
+
     try {
+      console.log(`[DeleteSite] Attempting to delete site ${id} (${site.url})`);
       const response = await fetch(`${API_BASE}/api/monitor/sites/${id}/`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log(`[DeleteSite] Response status: ${response.status} ${response.statusText}`);
 
       if (response.status === 401) {
         localStorage.removeItem('access_token');
@@ -315,22 +332,72 @@ export default function MonitoringPage() {
         return;
       }
 
-      if (!response.ok && response.status !== 404) {
-        throw new Error(`Failed to delete site (${response.status})`);
+      // 204 No Content is success, 404 means already deleted (also success)
+      if (response.status === 204 || response.status === 404) {
+        console.log(`[DeleteSite] Successfully deleted site ${id}`);
+        // Remove from state immediately
+        setSites((prev) => prev.filter((s) => s.id !== id));
+        toast.success(`Stopped monitoring ${site.url}`);
+        
+        // Refresh from server to ensure consistency
+        await fetchSites();
+        
+        // Track monitoring site deleted
+        captureEvent('monitoring_site_deleted', {
+          site_id: id,
+          url: site.url,
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        // Get error message from response
+        let errorMessage = `Failed to delete site (${response.status} ${response.statusText})`;
+        let errorDetails: any = {};
+        
+        try {
+          // Clone response to read it multiple times
+          const responseClone = response.clone();
+          const contentType = response.headers.get('content-type');
+          
+          if (contentType && contentType.includes('application/json')) {
+            errorDetails = await response.json();
+            errorMessage = errorDetails.error || errorDetails.detail || errorMessage;
+            if (errorDetails.traceback) {
+              console.error('[DeleteSite] Backend traceback:', errorDetails.traceback);
+            }
+          } else {
+            const errorText = await responseClone.text();
+            if (errorText) {
+              try {
+                errorDetails = JSON.parse(errorText);
+                errorMessage = errorDetails.error || errorDetails.detail || errorMessage;
+              } catch {
+                errorMessage = errorText || errorMessage;
+              }
+            }
+          }
+        } catch (parseError) {
+          console.error('[DeleteSite] Failed to parse error response:', parseError);
+          // errorMessage already set above
+        }
+        
+        console.error(`[DeleteSite] Delete failed:`, {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorMessage,
+          details: errorDetails,
+          detail: errorDetails.detail,
+          exception_type: errorDetails.exception_type,
+          traceback: errorDetails.traceback
+        });
+        console.error(`[DeleteSite] Full error response:`, JSON.stringify(errorDetails, null, 2));
+        
+        // Show more detailed error message to user
+        const userMessage = errorDetails.detail || errorDetails.error || errorMessage;
+        throw new Error(userMessage);
       }
-
-      setSites((prev) => prev.filter((s) => s.id !== id));
-      toast.success(`Stopped monitoring ${site.url}`);
-      
-      // Track monitoring site deleted
-      captureEvent('monitoring_site_deleted', {
-        site_id: id,
-        url: site.url,
-        timestamp: new Date().toISOString(),
-      });
     } catch (err: any) {
-      console.error('Error deleting site:', err);
-      toast.error(err.message || 'Failed to delete site');
+      console.error('[DeleteSite] Error deleting site:', err);
+      toast.error(err.message || 'Failed to delete site. Please try again.');
     }
   };
 
@@ -509,6 +576,7 @@ export default function MonitoringPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Screenshot</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Website</TableHead>
                   <TableHead>Uptime</TableHead>
@@ -524,7 +592,27 @@ export default function MonitoringPage() {
                   .slice()
                   .sort((a, b) => (a.status === 'down' ? -1 : 1))
                   .map((site) => (
-                    <TableRow key={site.id} className={site.status === 'down' ? 'bg-red-50' : site.status === 'checking' ? 'bg-blue-50' : ''}>
+                    <TableRow 
+                      key={site.id} 
+                      className={`${site.status === 'down' ? 'bg-red-50' : site.status === 'checking' ? 'bg-blue-50' : ''} cursor-pointer hover:bg-slate-50 transition-colors`}
+                      onClick={() => router.push(`/dashboard/status-monitor/${site.id}`)}
+                    >
+                      <TableCell>
+                        <div className="relative w-24 h-16 bg-slate-100 rounded border border-slate-200 overflow-hidden">
+                          {/* Placeholder for homepage screenshot */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+                            <Globe className="h-6 w-6 text-slate-400" />
+                          </div>
+                          {/* TODO: Replace with actual screenshot when available */}
+                          {/* <Image
+                            src={`/api/screenshots/${site.id}`}
+                            alt={`${site.url} screenshot`}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          /> */}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {site.status === 'checking' ? (
@@ -550,6 +638,7 @@ export default function MonitoringPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-palette-primary hover:underline flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             {site.url}
                             <ExternalLink className="h-3 w-3" />
@@ -609,7 +698,10 @@ export default function MonitoringPage() {
                         {site.lastCheck ? new Date(site.lastCheck).toLocaleTimeString() : 'Never'}
                       </TableCell>
                       <TableCell className="text-center">
-                        <Link href={`/dashboard/monitoring/${encodeURIComponent(site.id)}`}>
+                        <Link 
+                          href={`/dashboard/status-monitor/${encodeURIComponent(site.id)}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Button
                             size="sm"
                             variant="outline"
@@ -620,7 +712,7 @@ export default function MonitoringPage() {
                         </Link>
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                           <Button
                             size="sm"
                             variant="outline"

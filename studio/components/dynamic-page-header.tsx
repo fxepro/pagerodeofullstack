@@ -9,6 +9,11 @@ import {
   Settings, 
   MessageSquare,
   Activity,
+  Monitor,
+  Network,
+  Wrench,
+  Palette,
+  CreditCard,
   Plus,
   Edit,
   Trash2,
@@ -65,6 +70,31 @@ const pageConfig: Record<string, {
     title: "System Status",
     description: "Monitor system health and performance metrics",
     icon: Activity
+  },
+  "/admin/monitoring": {
+    title: "Monitoring & Logs",
+    description: "System health, jobs, and log files",
+    icon: Monitor
+  },
+  "/admin/api-monitoring": {
+    title: "API Monitoring",
+    description: "Monitor and test API endpoints",
+    icon: Network
+  },
+  "/admin/tools-management": {
+    title: "Tools Management",
+    description: "Track and manage tool integrations",
+    icon: Wrench
+  },
+  "/admin/financials": {
+    title: "Financials",
+    description: "Payment integrations and financial management",
+    icon: CreditCard
+  },
+  "/admin/themes": {
+    title: "Theme Manager",
+    description: "Manage color palettes and typography presets",
+    icon: Palette
   }
 };
 

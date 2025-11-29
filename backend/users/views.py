@@ -926,11 +926,18 @@ def monitored_site_list(request):
     if MonitoredSite.objects.filter(user=request.user, url=normalized_url).exists():
         return Response({'error': 'This site is already being monitored.'}, status=status.HTTP_400_BAD_REQUEST)
 
+    # Get user's check interval from settings (default: 5 minutes)
+    from users.models import UserProfile
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    user_settings = profile.user_settings if profile.user_settings else {}
+    check_interval = user_settings.get('homepageCheckInterval', 5)
+
     site = MonitoredSite.objects.create(
         user=request.user,
         url=normalized_url,
         status='checking',
-        status_duration='Just added'
+        status_duration='Just added',
+        check_interval=check_interval
     )
 
     serializer = MonitoredSiteSerializer(site)
@@ -947,7 +954,17 @@ def monitored_site_detail(request, site_id):
         return Response(serializer.data)
 
     if request.method == 'DELETE':
-        site.delete()
+        # Simple delete - get_object_or_404 already verified ownership
+        try:
+            site.delete()
+        except Exception as e:
+            # If cascade delete fails due to missing related tables, delete directly via SQL
+            from django.db import connection
+            if 'does not exist' in str(e) or 'relation' in str(e).lower():
+                with connection.cursor() as cursor:
+                    cursor.execute("DELETE FROM users_monitoredsite WHERE id = %s", [site.id])
+            else:
+                raise
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     serializer = MonitoredSiteUpdateSerializer(site, data=request.data, partial=True)

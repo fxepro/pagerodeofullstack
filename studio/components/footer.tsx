@@ -17,16 +17,16 @@ export function Footer() {
         <div className="grid md:grid-cols-2 gap-8 items-start">
           {/* Brand Section */}
           <div className="space-y-4">
-            <div className="flex items-center">
+            <div className="flex items-center mb-8">
               <Image 
-                src="/pagerodeo-Logo.png" 
+                src="/Pagerodeo-Logo-White.png" 
                 alt="PageRodeo Logo" 
-                width={150} 
-                height={36}
+                width={300} 
+                height={72}
                 className="object-contain"
               />
             </div>
-            <p className="text-white/80 max-w-xs leading-relaxed">
+            <p className="text-white/80 max-w-xs leading-relaxed mt-4">
               Professional website performance testing and monitoring tool with detailed analytics and AI-powered recommendations.
             </p>
           </div>

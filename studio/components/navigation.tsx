@@ -56,6 +56,8 @@ export function Navigation() {
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
+    // Clear orchestrator state to prevent old reports from running
+    localStorage.removeItem("pagerodeo_analysis_state");
     localStorage.removeItem("refresh_token");
     setLoggedIn(false);
     router.push("/login");
@@ -69,7 +71,7 @@ export function Navigation() {
           <div className="flex items-center flex-shrink-0">
             <Link href="/" className="group">
               <Image 
-                src="/pagerodeo-Logo.png" 
+                src="/Pagerodeo-Logo-Black.png" 
                 alt="PageRodeo Logo" 
                 width={160} 
                 height={40}
@@ -82,10 +84,10 @@ export function Navigation() {
           <div className="hidden lg:flex items-center justify-center flex-1 mx-12">
             <div className="flex items-center space-x-8">
                 <Link
-                  href="/"
+                  href="/performance"
                   className={cn(
                     "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap",
-                    pathname === "/"
+                    pathname === "/performance"
                       ? "text-palette-primary after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full"
                       : "text-slate-600 hover:text-palette-primary",
                   )}
@@ -251,10 +253,10 @@ export function Navigation() {
               {/* Mobile Navigation Links */}
               <div className="grid grid-cols-2 gap-4">
                 <Link
-                  href="/"
+                  href="/performance"
                   className={cn(
                     "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname === "/"
+                    pathname === "/performance"
                       ? "bg-palette-accent-3 text-palette-primary"
                       : "text-slate-600 hover:bg-palette-accent-3 hover:text-palette-primary"
                   )}

@@ -10,7 +10,9 @@ import {
   Clock,
   CheckCircle,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Package,
+  Search
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -318,6 +320,40 @@ export default function DashboardPage() {
                 </div>
               </div>
             </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Coming Soon Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Coming Soon</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer opacity-75">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Package className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Wordpress Integration</h3>
+                  <p className="text-sm text-white/90">Connect your WordPress site</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer opacity-75">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Search className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">SEO Monitoring</h3>
+                  <p className="text-sm text-white/90">Track rankings and keywords</p>
+                </div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

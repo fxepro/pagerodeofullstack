@@ -107,6 +107,7 @@ export default function DashboardLayout({
     }
     if (pathname.includes('/monitoring')) return 'Website Monitoring';
     if (pathname.includes('/site-audit')) return 'Site Audit';
+    if (pathname.includes('/performance')) return 'Performance';
     if (pathname.includes('/reports')) return 'Audit Reports';
     if (pathname.includes('/profile')) return 'Profile';
     return 'Overview';
@@ -118,6 +119,7 @@ export default function DashboardLayout({
     }
     if (pathname.includes('/monitoring')) return 'Monitor uptime and performance of your websites';
     if (pathname.includes('/site-audit')) return 'Comprehensive website analysis';
+    if (pathname.includes('/performance')) return 'Performance metrics and analysis';
     if (pathname.includes('/reports')) return 'View and download your audit reports';
     if (pathname.includes('/profile')) return 'Manage your account settings';
     return 'Your main workspace';

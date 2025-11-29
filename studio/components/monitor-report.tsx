@@ -106,27 +106,43 @@ export function MonitorReport({ url, minimal = false }: MonitorReportProps) {
     setIsTestingLinks(true)
 
     try {
+      // Ensure URL has protocol
+      const urlToTest = url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`
+      
       const response = await fetch("/api/monitor/links", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          url,
+          url: urlToTest,
           includeExternal: false,
           maxLinks: 25,
         }),
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Link testing failed")
+        const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }))
+        throw new Error(errorData.error || errorData.message || "Link testing failed")
       }
 
       const result = await response.json()
       setLinkResults(result)
     } catch (error) {
       console.error("Link testing failed:", error)
+      // Set error state so user can see what went wrong
+      setLinkResults({
+        baseUrl: url,
+        totalLinks: 0,
+        testedLinks: 0,
+        results: [],
+        summary: {
+          success: 0,
+          errors: 1,
+          redirects: 0,
+          avgResponseTime: 0
+        }
+      })
     } finally {
       setIsTestingLinks(false)
     }

@@ -16,13 +16,19 @@ export function MainNavigation() {
         <div className="flex h-16 items-center justify-between max-w-[1600px] mx-auto">
           {/* Left side - Logo */}
           <div className="flex items-center flex-shrink-0">
-            <Link href="/" className="group">
+            <Link href="/" className={cn(
+              "group relative",
+              pathname === "/" && "after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full after:animate-pulse"
+            )}>
               <Image 
-                src="/pagerodeo-Logo.png" 
+                src="/Pagerodeo-Logo-Black.png" 
                 alt="PageRodeo Logo" 
                 width={160} 
                 height={40}
-                className="object-contain group-hover:opacity-90 transition-opacity duration-300"
+                className={cn(
+                  "object-contain transition-all duration-300",
+                  pathname === "/" ? "opacity-100" : "group-hover:opacity-90"
+                )}
               />
             </Link>
           </div>
@@ -31,99 +37,123 @@ export function MainNavigation() {
           <div className="hidden lg:flex items-center justify-center flex-1 mx-12">
             <div className="flex items-center space-x-8">
               <Link
-                href="/"
+                href="/performance"
                 className={cn(
-                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap",
-                  pathname === "/"
-                    ? "text-palette-primary after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full"
+                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap group",
+                  pathname === "/performance" || pathname.startsWith("/performance")
+                    ? "text-palette-primary font-bold after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full after:animate-pulse"
                     : "text-slate-600 hover:text-palette-primary",
                 )}
               >
-                <Gauge className="h-4 w-4 mr-1.5" />
+                <Gauge className={cn(
+                  "h-4 w-4 mr-1.5 transition-transform duration-300",
+                  pathname === "/performance" || pathname.startsWith("/performance") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 Performance
               </Link>
               <Link
                 href="/monitor"
                 className={cn(
-                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap",
-                  pathname === "/monitor"
-                    ? "text-palette-primary after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full"
+                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap group",
+                  pathname === "/monitor" || pathname.startsWith("/monitor")
+                    ? "text-palette-primary font-bold after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full after:animate-pulse"
                     : "text-slate-600 hover:text-palette-primary",
                 )}
               >
-                <Eye className="h-4 w-4 mr-1.5" />
+                <Eye className={cn(
+                  "h-4 w-4 mr-1.5 transition-transform duration-300",
+                  pathname === "/monitor" || pathname.startsWith("/monitor") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 Monitor
               </Link>
               <Link
                 href="/ssl"
                 className={cn(
-                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap",
-                  pathname === "/ssl"
-                    ? "text-palette-primary after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full"
+                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap group",
+                  pathname === "/ssl" || pathname.startsWith("/ssl")
+                    ? "text-palette-primary font-bold after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full after:animate-pulse"
                     : "text-slate-600 hover:text-palette-primary",
                 )}
               >
-                <Lock className="h-4 w-4 mr-1.5" />
+                <Lock className={cn(
+                  "h-4 w-4 mr-1.5 transition-transform duration-300",
+                  pathname === "/ssl" || pathname.startsWith("/ssl") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 SSL
               </Link>
               <Link
                 href="/dns"
                 className={cn(
-                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap",
-                  pathname === "/dns"
-                    ? "text-palette-primary after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full"
+                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap group",
+                  pathname === "/dns" || pathname.startsWith("/dns")
+                    ? "text-palette-primary font-bold after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full after:animate-pulse"
                     : "text-slate-600 hover:text-palette-primary",
                 )}
               >
-                <Server className="h-4 w-4 mr-1.5" />
+                <Server className={cn(
+                  "h-4 w-4 mr-1.5 transition-transform duration-300",
+                  pathname === "/dns" || pathname.startsWith("/dns") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 DNS
               </Link>
               <Link
                 href="/sitemap"
                 className={cn(
-                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap",
-                  pathname === "/sitemap"
-                    ? "text-palette-primary after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full"
+                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap group",
+                  pathname === "/sitemap" || pathname.startsWith("/sitemap")
+                    ? "text-palette-primary font-bold after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full after:animate-pulse"
                     : "text-slate-600 hover:text-palette-primary",
                 )}
               >
-                <FileText className="h-4 w-4 mr-1.5" />
+                <FileText className={cn(
+                  "h-4 w-4 mr-1.5 transition-transform duration-300",
+                  pathname === "/sitemap" || pathname.startsWith("/sitemap") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 Sitemap
               </Link>
               <Link
                 href="/api"
                 className={cn(
-                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap",
-                  pathname === "/api"
-                    ? "text-palette-primary after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full"
+                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap group",
+                  pathname === "/api" || pathname.startsWith("/api")
+                    ? "text-palette-primary font-bold after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full after:animate-pulse"
                     : "text-slate-600 hover:text-palette-primary",
                 )}
               >
-                <Code className="h-4 w-4 mr-1.5" />
+                <Code className={cn(
+                  "h-4 w-4 mr-1.5 transition-transform duration-300",
+                  pathname === "/api" || pathname.startsWith("/api") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 API
               </Link>
               <Link
                 href="/links"
                 className={cn(
-                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap",
-                  pathname === "/links"
-                    ? "text-palette-primary after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full"
+                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap group",
+                  pathname === "/links" || pathname.startsWith("/links")
+                    ? "text-palette-primary font-bold after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full after:animate-pulse"
                     : "text-slate-600 hover:text-palette-primary",
                 )}
               >
-                <Link2 className="h-4 w-4 mr-1.5" />
+                <Link2 className={cn(
+                  "h-4 w-4 mr-1.5 transition-transform duration-300",
+                  pathname === "/links" || pathname.startsWith("/links") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 Links
               </Link>
               <Link
                 href="/typography"
                 className={cn(
-                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap",
-                  pathname === "/typography"
-                    ? "text-palette-primary after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full"
+                  "text-sm font-semibold transition-all duration-300 hover:text-palette-primary relative py-2 px-2 flex items-center whitespace-nowrap group",
+                  pathname === "/typography" || pathname.startsWith("/typography")
+                    ? "text-palette-primary font-bold after:absolute after:bottom-[-10px] after:left-0 after:right-0 after:h-1 after:bg-palette-primary after:rounded-full after:animate-pulse"
                     : "text-slate-600 hover:text-palette-primary",
                 )}
               >
-                <Type className="h-4 w-4 mr-1.5" />
+                <Type className={cn(
+                  "h-4 w-4 mr-1.5 transition-transform duration-300",
+                  pathname === "/typography" || pathname.startsWith("/typography") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 Typography
               </Link>
             </div>
@@ -143,111 +173,135 @@ export function MainNavigation() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-palette-accent-2/20 bg-white/95 backdrop-blur-md">
-            <div className="px-6 py-4 space-y-4">
+          <div className="px-6 py-4 space-y-4">
               {/* Mobile Navigation Links */}
               <div className="grid grid-cols-2 gap-4">
                 <Link
-                  href="/"
+                  href="/performance"
                   className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname === "/"
-                      ? "bg-palette-accent-3 text-palette-primary"
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300",
+                    pathname === "/performance" || pathname.startsWith("/performance")
+                      ? "bg-palette-accent-3 text-palette-primary font-semibold shadow-sm"
                       : "text-slate-600 hover:bg-palette-accent-3 hover:text-palette-primary"
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Gauge className="h-4 w-4" />
+                  <Gauge className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    pathname === "/performance" || pathname.startsWith("/performance") ? "scale-110" : ""
+                  )} />
                   <span>Performance</span>
                 </Link>
                 <Link
                   href="/monitor"
                   className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname === "/monitor"
-                      ? "bg-palette-accent-3 text-palette-primary"
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300",
+                    pathname === "/monitor" || pathname.startsWith("/monitor")
+                      ? "bg-palette-accent-3 text-palette-primary font-semibold shadow-sm"
                       : "text-slate-600 hover:bg-palette-accent-3 hover:text-palette-primary"
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Eye className="h-4 w-4" />
+                  <Eye className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    pathname === "/monitor" || pathname.startsWith("/monitor") ? "scale-110" : ""
+                  )} />
                   <span>Monitor</span>
                 </Link>
                 <Link
                   href="/ssl"
                   className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname === "/ssl"
-                      ? "bg-palette-accent-3 text-palette-primary"
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300",
+                    pathname === "/ssl" || pathname.startsWith("/ssl")
+                      ? "bg-palette-accent-3 text-palette-primary font-semibold shadow-sm"
                       : "text-slate-600 hover:bg-palette-accent-3 hover:text-palette-primary"
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Lock className="h-4 w-4" />
+                  <Lock className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    pathname === "/ssl" || pathname.startsWith("/ssl") ? "scale-110" : ""
+                  )} />
                   <span>SSL Check</span>
                 </Link>
                 <Link
                   href="/dns"
                   className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname === "/dns"
-                      ? "bg-palette-accent-3 text-palette-primary"
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300",
+                    pathname === "/dns" || pathname.startsWith("/dns")
+                      ? "bg-palette-accent-3 text-palette-primary font-semibold shadow-sm"
                       : "text-slate-600 hover:bg-palette-accent-3 hover:text-palette-primary"
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Server className="h-4 w-4" />
+                  <Server className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    pathname === "/dns" || pathname.startsWith("/dns") ? "scale-110" : ""
+                  )} />
                   <span>DNS Check</span>
                 </Link>
                 <Link
                   href="/sitemap"
                   className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname === "/sitemap"
-                      ? "bg-palette-accent-3 text-palette-primary"
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300",
+                    pathname === "/sitemap" || pathname.startsWith("/sitemap")
+                      ? "bg-palette-accent-3 text-palette-primary font-semibold shadow-sm"
                       : "text-slate-600 hover:bg-palette-accent-3 hover:text-palette-primary"
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileText className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    pathname === "/sitemap" || pathname.startsWith("/sitemap") ? "scale-110" : ""
+                  )} />
                   <span>Sitemap</span>
                 </Link>
                 <Link
                   href="/api"
                   className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname === "/api"
-                      ? "bg-palette-accent-3 text-palette-primary"
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300",
+                    pathname === "/api" || pathname.startsWith("/api")
+                      ? "bg-palette-accent-3 text-palette-primary font-semibold shadow-sm"
                       : "text-slate-600 hover:bg-palette-accent-3 hover:text-palette-primary"
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Code className="h-4 w-4" />
+                  <Code className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    pathname === "/api" || pathname.startsWith("/api") ? "scale-110" : ""
+                  )} />
                   <span>API</span>
                 </Link>
                 <Link
                   href="/links"
                   className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname === "/links"
-                      ? "bg-palette-accent-3 text-palette-primary"
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300",
+                    pathname === "/links" || pathname.startsWith("/links")
+                      ? "bg-palette-accent-3 text-palette-primary font-semibold shadow-sm"
                       : "text-slate-600 hover:bg-palette-accent-3 hover:text-palette-primary"
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Link2 className="h-4 w-4" />
+                  <Link2 className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    pathname === "/links" || pathname.startsWith("/links") ? "scale-110" : ""
+                  )} />
                   <span>Links</span>
                 </Link>
                 <Link
                   href="/typography"
                   className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname === "/typography"
-                      ? "bg-palette-accent-3 text-palette-primary"
+                    "flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300",
+                    pathname === "/typography" || pathname.startsWith("/typography")
+                      ? "bg-palette-accent-3 text-palette-primary font-semibold shadow-sm"
                       : "text-slate-600 hover:bg-palette-accent-3 hover:text-palette-primary"
                   )}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Type className="h-4 w-4" />
+                  <Type className={cn(
+                    "h-4 w-4 transition-transform duration-300",
+                    pathname === "/typography" || pathname.startsWith("/typography") ? "scale-110" : ""
+                  )} />
                   <span>Typography</span>
                 </Link>
               </div>

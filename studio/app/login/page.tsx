@@ -30,6 +30,10 @@ export default function LoginPage() {
       localStorage.setItem("access_token", res.data.access);
       localStorage.setItem("refresh_token", res.data.refresh);
       
+      // Clear orchestrator state on login to ensure fresh start
+      // This prevents old reports from running when user logs back in
+      localStorage.removeItem("pagerodeo_analysis_state");
+      
       // Fetch user info to check roles
       const userRes = await axios.get(`${API_BASE}/api/user-info/`, {
         headers: { Authorization: `Bearer ${res.data.access}` },

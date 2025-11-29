@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, BarChart3, LogIn, LogOut, User, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 // Use relative URL in production (browser), localhost in dev (SSR)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
@@ -54,6 +55,8 @@ export function TopNavigation() {
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    // Clear orchestrator state to prevent old reports from running
+    localStorage.removeItem("pagerodeo_analysis_state");
     setLoggedIn(false);
     router.push("/login");
   };
@@ -67,48 +70,92 @@ export function TopNavigation() {
             <Button 
               variant="ghost"
               size="sm"
-              className="text-slate-700 hover:text-palette-primary hover:bg-palette-200/50 transition-all duration-300 px-2 py-1 text-xs"
+              className={cn(
+                "relative transition-all duration-300 px-2 py-1 text-xs group",
+                pathname === "/blog" || pathname.startsWith("/blog")
+                  ? "text-palette-primary bg-palette-accent-3/50 font-semibold"
+                  : "text-slate-700 hover:text-palette-primary hover:bg-palette-accent-3/30"
+              )}
               asChild
             >
               <Link href="/blog">
-                <FileText className="h-3.5 w-3.5 mr-1" />
+                <FileText className={cn(
+                  "h-3.5 w-3.5 mr-1 transition-transform duration-300",
+                  pathname === "/blog" || pathname.startsWith("/blog") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 Blog
+                {(pathname === "/blog" || pathname.startsWith("/blog")) && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
+                )}
               </Link>
             </Button>
             
             <Button 
               variant="ghost"
               size="sm"
-              className="text-slate-700 hover:text-palette-primary hover:bg-palette-200/50 transition-all duration-300 px-2 py-1 text-xs"
+              className={cn(
+                "relative transition-all duration-300 px-2 py-1 text-xs group",
+                pathname === "/feedback" || pathname.startsWith("/feedback")
+                  ? "text-palette-primary bg-palette-accent-3/50 font-semibold"
+                  : "text-slate-700 hover:text-palette-primary hover:bg-palette-accent-3/30"
+              )}
               asChild
             >
               <Link href="/feedback">
-                <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                <MessageCircle className={cn(
+                  "h-3.5 w-3.5 mr-1 transition-transform duration-300",
+                  pathname === "/feedback" || pathname.startsWith("/feedback") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 Feedback
+                {(pathname === "/feedback" || pathname.startsWith("/feedback")) && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
+                )}
               </Link>
             </Button>
             
             <Button 
               variant="ghost"
               size="sm"
-              className="text-slate-700 hover:text-palette-primary hover:bg-palette-200/50 transition-all duration-300 px-2 py-1 text-xs"
+              className={cn(
+                "relative transition-all duration-300 px-2 py-1 text-xs group",
+                pathname === "/consult" || pathname.startsWith("/consult")
+                  ? "text-palette-primary bg-palette-accent-3/50 font-semibold"
+                  : "text-slate-700 hover:text-palette-primary hover:bg-palette-accent-3/30"
+              )}
               asChild
             >
               <Link href="/consult">
-                <User className="h-3.5 w-3.5 mr-1" />
+                <User className={cn(
+                  "h-3.5 w-3.5 mr-1 transition-transform duration-300",
+                  pathname === "/consult" || pathname.startsWith("/consult") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 Consult
+                {(pathname === "/consult" || pathname.startsWith("/consult")) && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
+                )}
               </Link>
             </Button>
             
             <Button 
               variant="ghost"
               size="sm"
-              className="text-slate-700 hover:text-palette-primary hover:bg-palette-200/50 transition-all duration-300 px-2 py-1 text-xs"
+              className={cn(
+                "relative transition-all duration-300 px-2 py-1 text-xs group",
+                pathname === "/upgrade" || pathname.startsWith("/upgrade")
+                  ? "text-palette-primary bg-palette-accent-3/50 font-semibold"
+                  : "text-slate-700 hover:text-palette-primary hover:bg-palette-accent-3/30"
+              )}
               asChild
             >
               <Link href="/upgrade">
-                <BarChart3 className="h-3.5 w-3.5 mr-1" />
+                <BarChart3 className={cn(
+                  "h-3.5 w-3.5 mr-1 transition-transform duration-300",
+                  pathname === "/upgrade" || pathname.startsWith("/upgrade") ? "scale-110" : "group-hover:scale-110"
+                )} />
                 Upgrade
+                {(pathname === "/upgrade" || pathname.startsWith("/upgrade")) && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
+                )}
               </Link>
             </Button>
             
@@ -118,12 +165,23 @@ export function TopNavigation() {
                 <Button 
                   variant="ghost"
                   size="sm"
-                  className="text-slate-700 hover:text-palette-primary hover:bg-palette-200/50 transition-all duration-300 px-2 py-1 text-xs"
+                  className={cn(
+                    "relative transition-all duration-300 px-2 py-1 text-xs group",
+                    pathname === "/dashboard" || pathname.startsWith("/dashboard") || pathname === "/admin/dashboard" || pathname.startsWith("/admin/dashboard")
+                      ? "text-palette-primary bg-palette-accent-3/50 font-semibold"
+                      : "text-slate-700 hover:text-palette-primary hover:bg-palette-accent-3/30"
+                  )}
                   asChild
                 >
                   <Link href={user?.role === 'admin' ? "/admin/dashboard" : "/dashboard"}>
-                    <User className="h-3.5 w-3.5 mr-1" />
+                    <User className={cn(
+                      "h-3.5 w-3.5 mr-1 transition-transform duration-300",
+                      pathname === "/dashboard" || pathname.startsWith("/dashboard") || pathname === "/admin/dashboard" || pathname.startsWith("/admin/dashboard") ? "scale-110" : "group-hover:scale-110"
+                    )} />
                     Dashboard
+                    {(pathname === "/dashboard" || pathname.startsWith("/dashboard") || pathname === "/admin/dashboard" || pathname.startsWith("/admin/dashboard")) && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
+                    )}
                   </Link>
                 </Button>
                 
@@ -131,7 +189,7 @@ export function TopNavigation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-slate-700 hover:text-palette-primary hover:bg-palette-200/50 transition-all duration-300 px-2 py-1 text-xs"
+                  className="text-slate-700 hover:text-palette-primary hover:bg-palette-accent-3/30 transition-all duration-300 px-2 py-1 text-xs"
                   onClick={handleLogout}
                 >
                   <LogOut className="h-3.5 w-3.5 mr-1" />
@@ -142,12 +200,23 @@ export function TopNavigation() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-700 hover:text-palette-primary hover:bg-palette-200/50 transition-all duration-300 px-2 py-1 text-xs"
+                className={cn(
+                  "relative transition-all duration-300 px-2 py-1 text-xs group",
+                  pathname === "/login" || pathname.startsWith("/login")
+                    ? "text-palette-primary bg-palette-accent-3/50 font-semibold"
+                    : "text-slate-700 hover:text-palette-primary hover:bg-palette-accent-3/30"
+                )}
                 asChild
               >
                 <Link href="/login">
-                  <LogIn className="h-3.5 w-3.5 mr-1" />
+                  <LogIn className={cn(
+                    "h-3.5 w-3.5 mr-1 transition-transform duration-300",
+                    pathname === "/login" || pathname.startsWith("/login") ? "scale-110" : "group-hover:scale-110"
+                  )} />
                   Login
+                  {(pathname === "/login" || pathname.startsWith("/login")) && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
+                  )}
                 </Link>
               </Button>
             )}

@@ -27,9 +27,16 @@ import {
   Download,
   Share,
   RefreshCw,
+  Activity,
+  Sparkles,
+  Monitor,
+  Play,
+  Eye,
+  Target,
 } from "lucide-react"
 import Link from "next/link"
 import { ErrorDisplay } from "@/components/error-display"
+import { UrlInputForm } from "@/components/url-input-form"
 
 interface DetailedData {
   url: string;
@@ -573,40 +580,66 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
 
   // Default return for standalone page (no initialUrl prop)
   return (
-    <div className="p-6">
-      {/* Header and URL Entry - Only show on standalone page */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Performance Analysis</h1>
-        <p className="text-gray-600">Comprehensive website performance testing with Core Web Vitals</p>
-      </div>
-
-      <Card className="mb-6">
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
-                Website URL
-              </label>
-              <div className="relative">
-                <input
-                  id="url"
-                  type="text"
-                  placeholder="Enter your website URL (e.g., example.com)"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  disabled={loading}
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <Zap className="h-5 w-5 text-gray-400" />
-                </div>
-              </div>
+    <div className="min-h-screen overflow-x-hidden">
+      {/* Hero Section - Full hero with URL input */}
+      <section className="relative min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(to bottom right, var(--color-accent-1), var(--color-primary), var(--color-secondary))' }}>
+        {/* Balanced animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -inset-10 opacity-35">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-pulse" style={{ backgroundColor: 'var(--color-secondary)' }}></div>
+            <div className="absolute top-1/3 right-1/4 w-96 h-96 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-pulse animation-delay-2000" style={{ backgroundColor: 'var(--color-primary)' }}></div>
+            <div className="absolute bottom-1/4 left-1/3 w-96 h-96 rounded-full mix-blend-multiply filter blur-2xl opacity-55 animate-pulse animation-delay-4000" style={{ backgroundColor: 'var(--color-accent-1)' }}></div>
+          </div>
+        </div>
+        
+        {/* Subtle grid pattern overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:100px_100px]"></div>
+        
+        <div className="relative z-10 container mx-auto px-4 text-center">
+          <div className="mb-8">
+            <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
+              <Zap className="h-4 w-4 mr-2" />
+              Performance Analysis
+            </Badge>
+          </div>
+          
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            Test Your Website Performance
+          </h1>
+          
+          <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-8 leading-relaxed">
+            Get comprehensive performance analysis with <span className="text-white font-semibold">lightning-fast analysis</span>, 
+            <span className="text-white/90 font-semibold"> AI-powered insights</span>, and 
+            <span className="text-white/95 font-semibold"> actionable recommendations</span>.
+          </p>
+          
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
+            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
+              Load Time
             </div>
-            
-            <Button
+            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
+              Page Size
+            </div>
+            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
+              Requests
+            </div>
+            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
+              Core Web Vitals
+            </div>
+          </div>
+
+          <div className="max-w-3xl mx-auto mb-12">
+            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 border border-white/30 shadow-xl">
+              <UrlInputForm />
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-12">
+            <Button 
               onClick={analyzeWebsite}
               disabled={loading}
-              className="w-full bg-palette-primary hover:bg-palette-primary-hover text-white font-semibold py-3 px-8"
+              size="lg" 
+              className="bg-palette-primary hover:bg-palette-primary-hover text-white border-0 px-8 py-4 text-lg font-semibold rounded-xl shadow-xl transform hover:scale-105 transition-all duration-300"
             >
               {loading ? (
                 <>
@@ -615,14 +648,161 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
                 </>
               ) : (
                 <>
-                  <Zap className="mr-2 h-5 w-5" />
-                  Analyze Performance
+                  <Play className="mr-2 h-5 w-5" />
+                  Analyze Now - It's Free
                 </>
               )}
             </Button>
+            <Button size="lg" className="bg-white/20 text-white border border-white/30 hover:bg-white/30 px-8 py-4 text-lg rounded-xl backdrop-blur-sm font-semibold">
+              <Eye className="mr-2 h-5 w-5" />
+              Watch Demo
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+          
+          <div className="flex flex-wrap items-center justify-center gap-8 text-white/80">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-300" />
+              <span className="font-medium">No Credit Card Required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-300" />
+              <span className="font-medium">Instant Results</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-300" />
+              <span className="font-medium">Enterprise Grade</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section - 3-Pack Feature List */}
+      <section className="py-32 px-4 bg-gradient-to-br from-slate-50 to-white relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_200px,rgba(120,119,198,0.1),transparent)]"></div>
+        
+        <div className="container mx-auto max-w-7xl relative z-10 px-4">
+          <div className="text-center mb-20">
+            <Badge variant="outline" className="mb-6 px-4 py-2 border-palette-accent-2 text-palette-primary">
+              <Target className="h-4 w-4 mr-2" />
+              Professional Grade Tools
+            </Badge>
+            <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+              Everything You Need to
+              <br className="hidden md:block" />
+              <span className="bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">Dominate Performance</span>
+            </h2>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              From deep technical analysis to actionable business insights, we've built the most comprehensive 
+              performance testing platform for modern websites.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8 mb-16 justify-items-center">
+            {/* Feature 1 - Lightning Analysis */}
+            <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-slate-50 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 h-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-palette-accent-1/5 to-palette-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <CardContent className="p-8 relative z-10">
+                <div className="mb-6">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Activity className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Lightning Analysis</h3>
+                  <p className="text-slate-600 mb-4">
+                    Get comprehensive Core Web Vitals, performance metrics, and optimization insights in under 30 seconds.
+                  </p>
+                  <ul className="space-y-2 text-sm text-slate-500">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Sub-second analysis time
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Real lighthouse scores
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Mobile & desktop testing
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Feature 2 - AI-Powered Insights */}
+            <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-slate-50 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 h-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-palette-accent-1/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <CardContent className="p-8 relative z-10">
+                <div className="mb-6">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Sparkles className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">AI-Powered Insights</h3>
+                  <p className="text-slate-600 mb-4">
+                    Advanced machine learning algorithms provide personalized optimization recommendations that actually work.
+                  </p>
+                  <ul className="space-y-2 text-sm text-slate-500">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Smart priority ranking
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Code-level suggestions
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Impact predictions
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Feature 3 - Visual Waterfalls */}
+            <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-slate-50 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 h-full">
+              <div className="absolute inset-0 bg-gradient-to-br from-palette-accent-1/5 to-palette-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <CardContent className="p-8 relative z-10">
+                <div className="mb-6">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Monitor className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Visual Waterfalls</h3>
+                  <p className="text-slate-600 mb-4">
+                    Interactive waterfall charts reveal exactly where your site slows down with pixel-perfect precision.
+                  </p>
+                  
+                  <ul className="space-y-2 text-sm text-slate-500">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Resource timeline view
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Bottleneck identification
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Download & share reports
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Results Section - Show when there's data, loading, or error */}
+      <div className="bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
+        <div className="container mx-auto px-4 py-16 max-w-7xl">
 
       {loading && (
         <div className="text-center py-8">
@@ -914,6 +1094,8 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
           )}
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }

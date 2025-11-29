@@ -1,11 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
+from rest_framework import status
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
-from .models import EmailCapture, UpdateSignup
+from .models import EmailCapture, UpdateSignup, Feedback
+from .serializers import FeedbackSerializer, FeedbackCreateSerializer, FeedbackUpdateSerializer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -100,19 +102,32 @@ def send_feedback_email(request):
         great_work = data.get('greatWork', '')
         could_be_better = data.get('couldBeBetter', '')
         remove_and_relish = data.get('removeAndRelish', '')
+        user_email = data.get('userEmail', None)  # Optional email from authenticated users
         
         # Get client IP address
         ip_address = get_client_ip(request)
         
-        # Save to database (feedback forms don't always have email, so we'll create a placeholder entry)
+        # Save to new Feedback model
+        feedback = Feedback.objects.create(
+            user_email=user_email,
+            rating=rating,
+            great_work=great_work,
+            could_be_better=could_be_better,
+            remove_and_relish=remove_and_relish,
+            ip_address=ip_address,
+            status='new'
+        )
+        
+        # Also save to EmailCapture for backward compatibility
         EmailCapture.objects.create(
-            email='feedback@no-email.com',  # Placeholder since feedback form doesn't collect email
+            email=user_email or 'feedback@no-email.com',
             form_type='feedback',
             metadata={
                 'rating': rating,
                 'great_work': great_work,
                 'could_be_better': could_be_better,
-                'remove_and_relish': remove_and_relish
+                'remove_and_relish': remove_and_relish,
+                'feedback_id': feedback.id
             },
             ip_address=ip_address
         )
@@ -314,3 +329,139 @@ Sent from PageRodeo Update Signup Form
             'error': 'Failed to subscribe for updates',
             'details': str(e)
         }, status=500)
+
+
+# Admin Feedback Management Views
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def list_feedback(request):
+    """List all feedback entries (admin only)"""
+    try:
+        # Get query parameters for filtering
+        status_filter = request.query_params.get('status', None)
+        rating_filter = request.query_params.get('rating', None)
+        search = request.query_params.get('search', None)
+        
+        queryset = Feedback.objects.all()
+        
+        # Apply filters
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        
+        if rating_filter:
+            queryset = queryset.filter(rating=int(rating_filter))
+        
+        if search:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(user_email__icontains=search) |
+                Q(great_work__icontains=search) |
+                Q(could_be_better__icontains=search) |
+                Q(remove_and_relish__icontains=search)
+            )
+        
+        serializer = FeedbackSerializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    except Exception as e:
+        logger.error(f"Error listing feedback: {str(e)}")
+        return Response({
+            'error': 'Failed to retrieve feedback',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_feedback(request, feedback_id):
+    """Get a single feedback entry (admin only)"""
+    try:
+        feedback = get_object_or_404(Feedback, id=feedback_id)
+        serializer = FeedbackSerializer(feedback)
+        return Response(serializer.data)
+    
+    except Exception as e:
+        logger.error(f"Error retrieving feedback {feedback_id}: {str(e)}")
+        return Response({
+            'error': 'Failed to retrieve feedback',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['PATCH', 'PUT'])
+@permission_classes([IsAdminUser])
+def update_feedback(request, feedback_id):
+    """Update feedback status and admin notes (admin only)"""
+    try:
+        feedback = get_object_or_404(Feedback, id=feedback_id)
+        serializer = FeedbackUpdateSerializer(feedback, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            # Return updated feedback with full details
+            updated_serializer = FeedbackSerializer(feedback)
+            return Response(updated_serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        logger.error(f"Error updating feedback {feedback_id}: {str(e)}")
+        return Response({
+            'error': 'Failed to update feedback',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_feedback(request, feedback_id):
+    """Delete a feedback entry (admin only)"""
+    try:
+        feedback = get_object_or_404(Feedback, id=feedback_id)
+        feedback.delete()
+        return Response({
+            'success': True,
+            'message': 'Feedback deleted successfully'
+        })
+    
+    except Exception as e:
+        logger.error(f"Error deleting feedback {feedback_id}: {str(e)}")
+        return Response({
+            'error': 'Failed to delete feedback',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def feedback_stats(request):
+    """Get feedback statistics (admin only)"""
+    try:
+        total = Feedback.objects.count()
+        new_count = Feedback.objects.filter(status='new').count()
+        reviewed_count = Feedback.objects.filter(status='reviewed').count()
+        responded_count = Feedback.objects.filter(status='responded').count()
+        
+        # Calculate average rating
+        from django.db.models import Avg
+        avg_rating = Feedback.objects.aggregate(Avg('rating'))['rating__avg'] or 0
+        
+        # Calculate response rate (responded / total)
+        response_rate = (responded_count / total * 100) if total > 0 else 0
+        
+        return Response({
+            'total': total,
+            'new': new_count,
+            'reviewed': reviewed_count,
+            'responded': responded_count,
+            'average_rating': round(avg_rating, 1),
+            'response_rate': round(response_rate, 1)
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting feedback stats: {str(e)}")
+        return Response({
+            'error': 'Failed to retrieve feedback statistics',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -221,7 +221,9 @@ Please try a different website or check if the site is accessible.`)
           accessibility: accessibilityScore,
           bestPractices: bestPracticesScore,
           seo: seoScore,
-        }
+        },
+        // Include full Lighthouse JSON for detailed parsing
+        fullResults: pageSpeedData
       }
       
       console.log("[pagerodeo] REAL PageSpeed analysis completed successfully")

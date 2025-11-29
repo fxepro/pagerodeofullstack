@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
 class EmailCapture(models.Model):
@@ -95,3 +96,83 @@ class UpdateSignup(models.Model):
 
     def __str__(self):
         return f"{self.email} - {self.role} ({self.created_at.strftime('%Y-%m-%d %H:%M')})"
+
+class Feedback(models.Model):
+    """Model for user feedback submissions"""
+    
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('reviewed', 'Reviewed'),
+        ('responded', 'Responded'),
+        ('archived', 'Archived'),
+    ]
+    
+    user_email = models.EmailField(
+        null=True,
+        blank=True,
+        help_text="User's email address (optional)"
+    )
+    rating = models.IntegerField(
+        help_text="Rating from 1 to 5",
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    great_work = models.TextField(
+        blank=True,
+        help_text="What did we do great?"
+    )
+    could_be_better = models.TextField(
+        blank=True,
+        help_text="What could be better?"
+    )
+    remove_and_relish = models.TextField(
+        blank=True,
+        help_text="What should we remove and relish?"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='new',
+        help_text="Current status of the feedback"
+    )
+    admin_notes = models.TextField(
+        blank=True,
+        help_text="Internal admin notes about this feedback"
+    )
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        help_text="IP address of the user who submitted the feedback"
+    )
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        help_text="When this feedback was submitted"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When this feedback was last updated"
+    )
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When this feedback was reviewed"
+    )
+    responded_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When a response was sent to the user"
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Feedback"
+        verbose_name_plural = "Feedback"
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['rating']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['user_email']),
+        ]
+
+    def __str__(self):
+        email_display = self.user_email or "Anonymous"
+        return f"{email_display} - {self.rating}/5 ({self.created_at.strftime('%Y-%m-%d %H:%M')})"

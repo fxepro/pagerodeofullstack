@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -20,9 +20,12 @@ import {
   CheckCircle,
   ExternalLink,
   Monitor,
+  TrendingUp,
+  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { DevicePerformanceTesting } from '@/components/device-performance-testing';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Use relative URL in production (browser), localhost in dev (SSR)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
@@ -75,6 +78,13 @@ export default function MonitoringDetailPage() {
   const [authError, setAuthError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const linksPerPage = 20;
+  
+  // New state for historical data
+  const [responseTimeData, setResponseTimeData] = useState<any[]>([]);
+  const [uptimeData, setUptimeData] = useState<any>(null);
+  const [incidents, setIncidents] = useState<any[]>([]);
+  const [stats, setStats] = useState<any>(null);
+  const [chartLoading, setChartLoading] = useState(false);
 
   useEffect(() => {
     if (Number.isNaN(numericSiteId)) {
@@ -86,6 +96,16 @@ export default function MonitoringDetailPage() {
     setCurrentPage(1);
     fetchSiteDetail(numericSiteId);
   }, [numericSiteId]);
+
+  // Fetch historical data when site is loaded
+  useEffect(() => {
+    if (siteDetail && siteDetail.id) {
+      fetchHistoricalData(siteDetail.id);
+      fetchUptimeData(siteDetail.id);
+      fetchIncidents(siteDetail.id);
+      fetchStats(siteDetail.id);
+    }
+  }, [siteDetail?.id]);
 
   const fetchSiteDetail = async (siteId: number) => {
     setLoading(true);
@@ -144,6 +164,95 @@ export default function MonitoringDetailPage() {
       setSiteDetail(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHistoricalData = async (siteId: number) => {
+    setChartLoading(true);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/monitor/sites/${siteId}/history/?days=30`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          // Format data for chart
+          const chartData = data.data.map((check: any) => ({
+            date: new Date(check.checked_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            responseTime: check.response_time,
+            status: check.status,
+          }));
+          setResponseTimeData(chartData);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch historical data:', err);
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  const fetchUptimeData = async (siteId: number) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/monitor/sites/${siteId}/uptime/?period=all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setUptimeData(data);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch uptime data:', err);
+    }
+  };
+
+  const fetchIncidents = async (siteId: number) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/monitor/sites/${siteId}/incidents/?limit=10`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.incidents) {
+          setIncidents(data.incidents);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch incidents:', err);
+    }
+  };
+
+  const fetchStats = async (siteId: number) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/monitor/sites/${siteId}/stats/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setStats(data);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
     }
   };
 
@@ -308,6 +417,200 @@ export default function MonitoringDetailPage() {
               <AlertCircle className="h-5 w-5 text-red-600" />
               <span className="text-red-800 font-medium">{siteDetail.errorMessage}</span>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Uptime Percentages */}
+      {uptimeData && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-slate-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Uptime (24h)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-slate-800">
+                {uptimeData.uptime_24h?.toFixed(3) || '100.000'}%
+              </div>
+              <p className="text-xs text-slate-600 mt-2">
+                {uptimeData.total_checks_24h || 0} checks
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Uptime (7d)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-slate-800">
+                {uptimeData.uptime_7d?.toFixed(3) || '100.000'}%
+              </div>
+              <p className="text-xs text-slate-600 mt-2">
+                {uptimeData.total_checks_7d || 0} checks
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Uptime (30d)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-slate-800">
+                {uptimeData.uptime_30d?.toFixed(3) || '100.000'}%
+              </div>
+              <p className="text-xs text-slate-600 mt-2">
+                {uptimeData.total_checks_30d || 0} checks
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Response Time Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Response Time History (Last 30 Days)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {chartLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="h-8 w-8 animate-spin text-palette-primary" />
+            </div>
+          ) : responseTimeData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={responseTimeData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#666"
+                  tick={{ fontSize: 12 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis 
+                  stroke="#666"
+                  tick={{ fontSize: 12 }}
+                  label={{ value: 'Response Time (ms)', angle: -90, position: 'insideLeft' }}
+                />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '4px' }}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="responseTime" 
+                  stroke="#3b82f6" 
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  name="Response Time (ms)"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-center py-12 text-slate-500">
+              No historical data available yet
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Stats Summary */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-slate-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Avg Response Time</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-800">
+                {stats.avg_response_time || 0}ms
+              </div>
+              <p className="text-xs text-slate-600 mt-2">Last 30 days</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Min / Max</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-800">
+                {stats.min_response_time || 0}ms / {stats.max_response_time || 0}ms
+              </div>
+              <p className="text-xs text-slate-600 mt-2">Last 30 days</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-slate-600">Total Checks</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-800">
+                {stats.total_checks || 0}
+              </div>
+              <p className="text-xs text-slate-600 mt-2">Last 30 days</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Incidents Table */}
+      {incidents.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Latest Incidents</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Started</TableHead>
+                  <TableHead>Resolved</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Root Cause</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {incidents.map((incident: any) => (
+                  <TableRow key={incident.id}>
+                    <TableCell>
+                      <Badge 
+                        className={
+                          incident.status === 'resolved' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }
+                      >
+                        {incident.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(incident.started_at).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      {incident.resolved_at 
+                        ? new Date(incident.resolved_at).toLocaleString()
+                        : 'Ongoing'
+                      }
+                    </TableCell>
+                    <TableCell>
+                      {incident.duration_minutes 
+                        ? `${incident.duration_minutes} minutes`
+                        : '-'
+                      }
+                    </TableCell>
+                    <TableCell className="max-w-md truncate">
+                      {incident.root_cause || 'N/A'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
