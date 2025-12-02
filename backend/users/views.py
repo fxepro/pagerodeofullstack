@@ -218,37 +218,41 @@ def register_user(request):
         site_config = SiteConfig.get_config()
         email_verification_enabled = site_config.enable_email_verification if site_config else False
         
-        # If email verification is enabled, send verification email
+        # Always generate verification code/token (even if email verification is disabled)
+        # This provides an emergency fallback code that can be used manually
         verification_token = None
-        if email_verification_enabled:
+        try:
+            # Ensure profile is saved before generating token
+            if not profile.pk:
+                profile.save()
+            
+            # Refresh to ensure we have the latest state
+            profile.refresh_from_db()
+            
             try:
-                # Ensure profile is saved before generating token
-                if not profile.pk:
-                    profile.save()
+                token = profile.generate_verification_token()
+                verification_token = token  # Store for response
                 
-                # Refresh to ensure we have the latest state
+                # Verify token was generated
                 profile.refresh_from_db()
-                
-                try:
-                    token = profile.generate_verification_token()
-                    verification_token = token  # Store for response
-                    
-                    # Verify token was generated
-                    profile.refresh_from_db()
-                    if not profile.email_verification_token:
-                        logger.error(f"Token generation failed for user {user.email} - token field is still null")
-                    else:
+                if not profile.email_verification_token:
+                    logger.error(f"Token generation failed for user {user.email} - token field is still null")
+                else:
+                    # Only send email if email verification is enabled
+                    if email_verification_enabled:
                         email_sent = send_verification_email(user, token)
                         if not email_sent:
                             logger.warning(f"Failed to send verification email to {user.email}, but user was created")
-                except Exception as token_error:
-                    logger.error(f"Error generating verification token for user {user.email}: {str(token_error)}", exc_info=True)
-                    # Don't fail registration if token generation fails
-                    # User and profile are already created, so registration should succeed
-            except Exception as e:
-                logger.error(f"Error in email verification flow for user {user.email}: {str(e)}", exc_info=True)
-                # Don't fail registration if email sending fails
+                    else:
+                        logger.info(f"Verification code generated for {user.email} but email not sent (verification disabled)")
+            except Exception as token_error:
+                logger.error(f"Error generating verification token for user {user.email}: {str(token_error)}", exc_info=True)
+                # Don't fail registration if token generation fails
                 # User and profile are already created, so registration should succeed
+        except Exception as e:
+            logger.error(f"Error in email verification flow for user {user.email}: {str(e)}", exc_info=True)
+            # Don't fail registration if email sending fails
+            # User and profile are already created, so registration should succeed
         
         serializer = UserSerializer(user)
         response_data = serializer.data

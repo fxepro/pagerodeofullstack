@@ -214,15 +214,34 @@ def get_public_site_flags(request):
 @permission_classes([IsAdminUser])
 def update_site_config(request):
     """Update site configuration (Admin only)"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     config = SiteConfig.get_config()
+    
+    # Log incoming data for debugging
+    logger.info(f"Updating site config. Received data: {request.data}")
+    logger.info(f"Current enable_email_verification: {config.enable_email_verification}")
+    
     serializer = SiteConfigSerializer(
         config,
         data=request.data,
         partial=(request.method == 'PATCH')
     )
+    
     if serializer.is_valid():
+        # Log what will be saved
+        logger.info(f"Serializer valid. Saving with data: {serializer.validated_data}")
         serializer.save(updated_by=request.user)
+        
+        # Refresh and verify save
+        config.refresh_from_db()
+        logger.info(f"After save - enable_email_verification: {config.enable_email_verification}")
+        
         return Response(serializer.data)
+    
+    # Log validation errors
+    logger.error(f"Serializer validation failed: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
