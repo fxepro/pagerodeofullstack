@@ -6,7 +6,19 @@ import os
 import sys
 import django
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Fix path: Script can be run from anywhere
+# Find project root (where ServerDocs folder is)
+script_path = os.path.abspath(__file__)
+# Go up from ServerDocs/test_token_generation_live.py to project root
+project_root = os.path.dirname(os.path.dirname(script_path))
+backend_dir = os.path.join(project_root, 'backend')
+
+# Add backend to Python path
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+# Change to backend directory for Django to find settings
+os.chdir(backend_dir)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 django.setup()
 
