@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 /**
  * Test if Puppeteer can launch successfully
- * Run from studio directory: node ../ServerDocs/test_puppeteer.js
- * Or: cd /opt/pagerodeofullstack/studio && node ../ServerDocs/test_puppeteer.js
+ * Run from any directory: node ServerDocs/test_puppeteer.js
  */
 const path = require('path');
 const fs = require('fs');
 
-// Change to studio directory where node_modules is located
+// Find studio directory (where node_modules is)
 const scriptDir = __dirname;
 const projectRoot = path.resolve(scriptDir, '..');
 const studioDir = path.join(projectRoot, 'studio');
@@ -17,9 +16,10 @@ if (!fs.existsSync(studioDir)) {
   process.exit(1);
 }
 
-// Change working directory to studio so node_modules can be found
+// Change working directory to studio BEFORE requiring puppeteer
 process.chdir(studioDir);
 
+// Now require puppeteer from the studio directory
 const puppeteer = require('puppeteer');
 
 async function testPuppeteer() {
@@ -65,7 +65,6 @@ async function testPuppeteer() {
   } catch (error) {
     console.error('\n❌❌❌ Puppeteer test failed!');
     console.error('Error:', error.message);
-    console.error('\nFull error:', error);
     
     if (error.message.includes('Could not find Chrome') || error.message.includes('No usable sandbox')) {
       console.error('\n⚠️  Chrome/Chromium not found or sandbox issues!');
