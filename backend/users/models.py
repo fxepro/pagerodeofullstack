@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 import uuid
+import random
+import string
 
 class UserProfile(models.Model):
     ROLE_CHOICES = [
@@ -45,16 +47,45 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.role}"
     
+    def generate_human_readable_code(self):
+        """Generate a human-readable verification code (e.g., ABC-123-XYZ)"""
+        # Generate 3 uppercase letters, 3 digits, 3 uppercase letters
+        part1 = ''.join(random.choices(string.ascii_uppercase, k=3))
+        part2 = ''.join(random.choices(string.digits, k=3))
+        part3 = ''.join(random.choices(string.ascii_uppercase, k=3))
+        return f"{part1}-{part2}-{part3}"
+    
     def generate_verification_token(self):
-        """Generate a new verification token"""
+        """Generate a new verification token and human-readable code"""
         from django.contrib.auth.hashers import make_password
-        token = str(uuid.uuid4())
-        # Store both hashed token (for verification) and plain code (for retrieval fallback)
-        self.email_verification_token = make_password(token)
-        self.email_verification_code = token  # Store plain text for fallback retrieval
-        self.email_verification_sent_at = timezone.now()
-        self.save()
-        return token
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            token = str(uuid.uuid4())
+            # Generate human-readable code for emergency fallback
+            human_code = self.generate_human_readable_code()
+            
+            # Store both hashed token (for verification) and human-readable code (for emergency fallback)
+            hashed_token = make_password(token)
+            self.email_verification_token = hashed_token
+            self.email_verification_code = human_code  # Store human-readable code for emergency use
+            self.email_verification_sent_at = timezone.now()
+            
+            # Save with explicit update_fields to ensure all fields are saved
+            self.save(update_fields=['email_verification_token', 'email_verification_code', 'email_verification_sent_at'])
+            
+            # Verify the save worked
+            self.refresh_from_db()
+            if not self.email_verification_token:
+                logger.error(f"Failed to save verification token for user {self.user.email}")
+                raise ValueError("Failed to save verification token")
+            
+            logger.info(f"Generated verification token and code for user {self.user.email}")
+            return token
+        except Exception as e:
+            logger.error(f"Error generating verification token for user {self.user.email}: {str(e)}", exc_info=True)
+            raise
     
     def verify_token(self, token):
         """Verify a token against the stored hash"""
@@ -62,6 +93,15 @@ class UserProfile(models.Model):
         if not self.email_verification_token:
             return False
         return check_password(token, self.email_verification_token)
+    
+    def verify_code(self, code):
+        """Verify a human-readable code (case-insensitive, ignores dashes)"""
+        if not self.email_verification_code:
+            return False
+        # Normalize both codes: remove dashes and convert to uppercase
+        stored_code = self.email_verification_code.replace('-', '').upper()
+        provided_code = code.replace('-', '').upper()
+        return stored_code == provided_code
     
     def is_token_expired(self):
         """Check if verification token has expired (24 hours)"""

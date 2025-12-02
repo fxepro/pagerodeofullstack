@@ -178,6 +178,7 @@ INSTALLED_APPS = [
     'actstream',
     'auditlog',
     'drf_spectacular',
+    'anymail',  # For Amazon SES email backend
     'core.apps.CoreConfig',  # For management commands
     'users',
     'emails',
@@ -297,20 +298,48 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Email Configuration - Gmail SMTP
-# Load email credentials from environment variables - REQUIRED in production
+# Email Configuration
+# Supports both SMTP (Gmail, etc.) and Amazon SES via django-anymail
+# Set EMAIL_BACKEND to 'anymail.backends.amazon_ses.EmailBackend' for SES
+# Or use 'django.core.mail.backends.smtp.EmailBackend' for SMTP
+
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+
+# SMTP Configuration (for Gmail, etc.)
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = int(config('EMAIL_PORT', default='587'))
 EMAIL_USE_TLS = get_env_bool('EMAIL_USE_TLS', default=True)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')  # Load from environment variable
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
-SERVER_EMAIL = config('SERVER_EMAIL', default=EMAIL_HOST_USER)
-
-# Email settings
-EMAIL_TIMEOUT = 30
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_SSL = False  # Use TLS instead of SSL for port 587
+EMAIL_TIMEOUT = 30
+
+# Default FROM email address
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER or 'noreply@pagerodeo.com')
+SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
+
+# Amazon SES Configuration (when using anymail.backends.amazon_ses.EmailBackend)
+# AWS credentials can be provided via environment variables or IAM role
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default='')
+AWS_SES_REGION_NAME = config('AWS_SES_REGION_NAME', default='us-east-1')
+AWS_SES_REGION_ENDPOINT = config('AWS_SES_REGION_ENDPOINT', default='')
+
+# Anymail settings for Amazon SES
+ANYMAIL = {
+    "AMAZON_SES_CLIENT_PARAMS": {
+        "region_name": AWS_SES_REGION_NAME,
+    }
+}
+
+# If AWS credentials are provided, add them to client params
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+    ANYMAIL["AMAZON_SES_CLIENT_PARAMS"]["aws_access_key_id"] = AWS_ACCESS_KEY_ID
+    ANYMAIL["AMAZON_SES_CLIENT_PARAMS"]["aws_secret_access_key"] = AWS_SECRET_ACCESS_KEY
+
+# If custom endpoint is provided, add it
+if AWS_SES_REGION_ENDPOINT:
+    ANYMAIL["AMAZON_SES_CLIENT_PARAMS"]["endpoint_url"] = AWS_SES_REGION_ENDPOINT
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

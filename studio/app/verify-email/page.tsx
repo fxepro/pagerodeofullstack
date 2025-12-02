@@ -26,7 +26,7 @@ function VerifyEmailContent() {
   const handleVerify = useCallback(async (verifyToken?: string) => {
     const tokenToVerify = verifyToken || token;
     if (!tokenToVerify) {
-      setError("Please enter a verification token");
+      setError("Please enter a verification token or code");
       return;
     }
 
@@ -35,9 +35,15 @@ function VerifyEmailContent() {
     setSuccess(false);
 
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/verify-email/`, {
-        token: tokenToVerify,
-      });
+      // Detect if it's a code (format: XXX-XXX-XXX) or token (UUID format)
+      // Codes have dashes and are shorter, tokens are UUIDs (longer, no dashes in middle)
+      const isCode = tokenToVerify.includes('-') && tokenToVerify.length < 50;
+      
+      const res = await axios.post(`${API_BASE}/api/auth/verify-email/`, 
+        isCode 
+          ? { code: tokenToVerify }  // Send as code if it looks like a code
+          : { token: tokenToVerify } // Otherwise send as token
+      );
 
       if (res.data?.email_verified) {
         // If backend returned tokens, store them to auto-login
