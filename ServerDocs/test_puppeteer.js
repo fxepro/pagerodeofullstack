@@ -1,13 +1,37 @@
 #!/usr/bin/env node
 /**
  * Test if Puppeteer can launch successfully
- * Run: node test_puppeteer.js
+ * Run from studio directory: node ../ServerDocs/test_puppeteer.js
+ * Or: cd /opt/pagerodeofullstack/studio && node ../ServerDocs/test_puppeteer.js
  */
+const path = require('path');
+const fs = require('fs');
+
+// Change to studio directory where node_modules is located
+const scriptDir = __dirname;
+const projectRoot = path.resolve(scriptDir, '..');
+const studioDir = path.join(projectRoot, 'studio');
+
+if (!fs.existsSync(studioDir)) {
+  console.error('❌ Error: Could not find studio directory');
+  process.exit(1);
+}
+
+// Change working directory to studio so node_modules can be found
+process.chdir(studioDir);
+
 const puppeteer = require('puppeteer');
 
 async function testPuppeteer() {
   console.log('Testing Puppeteer...');
-  console.log('Puppeteer version:', require('puppeteer/package.json').version);
+  console.log('Working directory:', process.cwd());
+  
+  try {
+    const puppeteerPkg = require('puppeteer/package.json');
+    console.log('Puppeteer version:', puppeteerPkg.version);
+  } catch (e) {
+    console.error('❌ Could not read Puppeteer package.json');
+  }
   
   let browser;
   try {
@@ -43,11 +67,14 @@ async function testPuppeteer() {
     console.error('Error:', error.message);
     console.error('\nFull error:', error);
     
-    if (error.message.includes('Could not find Chrome')) {
-      console.error('\n⚠️  Chrome/Chromium not found!');
+    if (error.message.includes('Could not find Chrome') || error.message.includes('No usable sandbox')) {
+      console.error('\n⚠️  Chrome/Chromium not found or sandbox issues!');
       console.error('Install Chrome dependencies:');
-      console.error('  Ubuntu/Debian: sudo apt-get install -y chromium-browser');
-      console.error('  Or: sudo apt-get install -y chromium');
+      console.error('  sudo apt-get update');
+      console.error('  sudo apt-get install -y chromium-browser');
+      console.error('  OR: sudo apt-get install -y chromium');
+      console.error('\nIf Chrome is installed but not found, set PUPPETEER_EXECUTABLE_PATH:');
+      console.error('  export PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser');
     }
     
     if (browser) {
@@ -58,4 +85,3 @@ async function testPuppeteer() {
 }
 
 testPuppeteer();
-
