@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 
 export interface SiteConfig {
   id: number;
@@ -64,32 +63,28 @@ export function useSiteConfig() {
       let apiUrl: string;
       
       if (typeof window !== 'undefined') {
-        // Browser context - use relative URL or convert HTTP to HTTPS
-        const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-        if (envUrl) {
-          // If env var is set, ensure HTTPS in production
-          if (window.location.protocol === 'https:' && envUrl.startsWith('http://') && !envUrl.includes('localhost')) {
-            apiUrl = envUrl.replace('http://', 'https://') + '/api/typography/active/';
-          } else {
-            apiUrl = envUrl + '/api/typography/active/';
-          }
-        } else {
-          // No env var - use relative URL (matches page protocol automatically)
-          apiUrl = '/api/typography/active/';
-        }
+        // Browser context - ALWAYS use relative URL to match page protocol (HTTPS in production)
+        // This prevents mixed content errors (HTTP on HTTPS page)
+        apiUrl = '/api/typography/active/';
       } else {
         // Server-side rendering - use env var or default
         apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/typography/active/`;
       }
       
-      const typographyResponse = await axios.get(apiUrl);
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch typography: ${response.statusText}`);
+      }
+      
+      const typographyData = await response.json();
       
       // Apply typography from the active preset
-      if (typographyResponse.data) {
-        applyTypographyToDOM(typographyResponse.data);
+      if (typographyData) {
+        applyTypographyToDOM(typographyData);
         
         // Cache typography for instant application on next load
-        localStorage.setItem('activeTypography', JSON.stringify(typographyResponse.data));
+        localStorage.setItem('activeTypography', JSON.stringify(typographyData));
       }
       
       setLoading(false);

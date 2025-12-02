@@ -1,5 +1,4 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
-import axios from 'axios';
 
 export interface Palette {
   id: number;
@@ -42,14 +41,23 @@ export function usePalette() {
   const fetchActivePalette = async () => {
     try {
       // Public endpoint - no auth required
-      // Use relative URL in production, localhost in dev
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000')
-      const response = await axios.get(`${API_BASE}/api/palettes/active/`);
-      setPalette(response.data);
-      applyPaletteToDOM(response.data);
+      // Use relative URL in browser (matches page protocol - HTTPS in production)
+      const apiUrl = typeof window !== 'undefined' 
+        ? '/api/palettes/active/' // Relative URL in browser (automatic HTTPS)
+        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/palettes/active/`; // SSR: use env var or default
+      
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch palette: ${response.statusText}`);
+      }
+      
+      const paletteData = await response.json();
+      setPalette(paletteData);
+      applyPaletteToDOM(paletteData);
       
       // Cache palette for instant application on next load
-      localStorage.setItem('activePalette', JSON.stringify(response.data));
+      localStorage.setItem('activePalette', JSON.stringify(paletteData));
       
       setLoading(false);
     } catch (err: any) {

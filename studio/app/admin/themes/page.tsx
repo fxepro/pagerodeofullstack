@@ -13,8 +13,11 @@ import axios from "axios";
 import { toast } from "sonner";
 import { captureEvent } from "@/lib/posthog";
 
-// Use relative URL in production (browser), localhost in dev (SSR)
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+// Use relative URL in browser (matches page protocol - HTTPS in production)
+// Only use env var for server-side rendering
+const API_BASE = typeof window !== 'undefined' 
+  ? '' // Relative URL in browser (automatic HTTPS)
+  : (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'); // SSR: use env var or default
 
 interface ThemePalette {
   id: number;

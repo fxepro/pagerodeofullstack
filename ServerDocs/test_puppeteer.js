@@ -5,29 +5,48 @@
  */
 const path = require('path');
 const fs = require('fs');
+const Module = require('module');
 
 // Find studio directory (where node_modules is)
 const scriptDir = __dirname;
 const projectRoot = path.resolve(scriptDir, '..');
 const studioDir = path.join(projectRoot, 'studio');
+const studioNodeModules = path.join(studioDir, 'node_modules');
 
 if (!fs.existsSync(studioDir)) {
   console.error('❌ Error: Could not find studio directory');
   process.exit(1);
 }
 
-// Change working directory to studio BEFORE requiring puppeteer
-process.chdir(studioDir);
+if (!fs.existsSync(studioNodeModules)) {
+  console.error('❌ Error: Could not find studio/node_modules');
+  console.error('   Please run: cd studio && npm install');
+  process.exit(1);
+}
 
-// Now require puppeteer from the studio directory
+// Add studio/node_modules to module search path
+const originalResolveFilename = Module._resolveFilename;
+Module._resolveFilename = function(request, parent, isMain, options) {
+  // Try studio/node_modules first
+  if (request === 'puppeteer' || request.startsWith('puppeteer/')) {
+    const puppeteerPath = path.join(studioNodeModules, request);
+    if (fs.existsSync(puppeteerPath) || fs.existsSync(puppeteerPath + '.js')) {
+      return puppeteerPath;
+    }
+  }
+  return originalResolveFilename.call(this, request, parent, isMain, options);
+};
+
+// Now require puppeteer - it will find it in studio/node_modules
 const puppeteer = require('puppeteer');
 
 async function testPuppeteer() {
   console.log('Testing Puppeteer...');
-  console.log('Working directory:', process.cwd());
+  console.log('Studio directory:', studioDir);
+  console.log('Node modules:', studioNodeModules);
   
   try {
-    const puppeteerPkg = require('puppeteer/package.json');
+    const puppeteerPkg = require(path.join(studioNodeModules, 'puppeteer/package.json'));
     console.log('Puppeteer version:', puppeteerPkg.version);
   } catch (e) {
     console.error('❌ Could not read Puppeteer package.json');
