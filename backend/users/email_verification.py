@@ -39,14 +39,31 @@ def send_verification_email(user, code):
         return False
 
     try:
-        # Determine frontend URL
+        # Determine frontend URL - REQUIRED in production
         frontend_url = (
             getattr(settings, 'FRONTEND_URL', None)
             or getattr(settings, 'NEXT_PUBLIC_APP_URL', None)
-            or 'http://localhost:3000'
         )
+        
+        # Only use localhost fallback in DEBUG mode
+        if not frontend_url:
+            if getattr(settings, 'DEBUG', False):
+                frontend_url = 'http://localhost:3000'
+                logger.warning("FRONTEND_URL not set, using localhost fallback (DEBUG mode)")
+            else:
+                # Production: fail if not set
+                error_msg = "FRONTEND_URL must be set in production environment"
+                logger.error(error_msg)
+                if getattr(settings, 'DEBUG', False):
+                    raise ValueError(error_msg)
+                # In production, use a safe default that will be obvious if wrong
+                frontend_url = 'https://pagerodeo.com'
+                logger.warning(f"FRONTEND_URL not set in production, using default: {frontend_url}")
+        
+        # Fix common mistake: if someone set it to backend URL, use frontend default
         if frontend_url == 'http://localhost:8000':
-            frontend_url = 'http://localhost:3000'
+            frontend_url = 'http://localhost:3000' if getattr(settings, 'DEBUG', False) else 'https://pagerodeo.com'
+        
         verification_link = f"{frontend_url.rstrip('/')}/verify-email?code={code}"
 
         subject = "Verify your PageRodeo account"

@@ -1055,10 +1055,12 @@ def send_verification_email_endpoint(request):
             return Response({'error': 'Failed to generate verification code'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         email_sent = send_verification_email(user, code)
-        # Build verification link for optional debug surface
-        frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None) or 'http://localhost:3000'
+        # Build verification link for optional debug surface (same logic as email_verification.py)
+        frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None)
+        if not frontend_url:
+            frontend_url = 'http://localhost:3000' if getattr(settings, 'DEBUG', False) else 'https://pagerodeo.com'
         if frontend_url == 'http://localhost:8000':
-            frontend_url = 'http://localhost:3000'
+            frontend_url = 'http://localhost:3000' if getattr(settings, 'DEBUG', False) else 'https://pagerodeo.com'
         verification_link = f"{frontend_url.rstrip('/')}/verify-email?code={code}"
         
         if email_sent:
@@ -1181,10 +1183,12 @@ def resend_verification_email(request):
             return Response({'error': 'Failed to generate verification code'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         email_sent = send_verification_email(user, code)
-        # Build verification link (for debug)
-        frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None) or 'http://localhost:3000'
+        # Build verification link (for debug) - same logic as email_verification.py
+        frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None)
+        if not frontend_url:
+            frontend_url = 'http://localhost:3000' if getattr(settings, 'DEBUG', False) else 'https://pagerodeo.com'
         if frontend_url == 'http://localhost:8000':
-            frontend_url = 'http://localhost:3000'
+            frontend_url = 'http://localhost:3000' if getattr(settings, 'DEBUG', False) else 'https://pagerodeo.com'
         verification_link = f"{frontend_url.rstrip('/')}/verify-email?code={code}"
 
         if email_sent:
