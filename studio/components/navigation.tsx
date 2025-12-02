@@ -17,38 +17,67 @@ export function Navigation() {
   const [user, setUser] = useState<any>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Update loggedIn state on route change and storage events
+  // Update loggedIn state on mount, route change, and storage events
   useEffect(() => {
-    const checkToken = () => {
+    const checkAuthState = () => {
+      if (typeof window === 'undefined') return;
       const token = localStorage.getItem("access_token");
-      setLoggedIn(!!token);
+      const isLoggedIn = !!token;
+      setLoggedIn(isLoggedIn);
+      
       if (token) {
         // Fetch user info to check roles
         fetch(`${API_BASE}/api/user-info/`, {
           headers: { Authorization: `Bearer ${token}` },
         })
-          .then(res => res.json())
+          .then(res => {
+            if (res.ok) {
+              return res.json();
+            }
+            throw new Error('Unauthorized');
+          })
           .then(data => setUser(data))
-          .catch(() => setUser(null));
+          .catch(() => {
+            // Token invalid, clear it
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+            setLoggedIn(false);
+            setUser(null);
+          });
       } else {
         setUser(null);
       }
     };
-    checkToken();
-    window.addEventListener("storage", checkToken);
-    return () => window.removeEventListener("storage", checkToken);
+
+    checkAuthState();
+    // Listen for storage changes (e.g., logout from another tab)
+    window.addEventListener("storage", checkAuthState);
+    return () => window.removeEventListener("storage", checkAuthState);
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const token = localStorage.getItem("access_token");
-    setLoggedIn(!!token);
+    const isLoggedIn = !!token;
+    setLoggedIn(isLoggedIn);
+    
     if (token) {
       fetch(`${API_BASE}/api/user-info/`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-        .then(res => res.json())
+        .then(res => {
+          if (res.ok) {
+            return res.json();
+          }
+          throw new Error('Unauthorized');
+        })
         .then(data => setUser(data))
-        .catch(() => setUser(null));
+        .catch(() => {
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          setLoggedIn(false);
+          setUser(null);
+        });
     } else {
       setUser(null);
     }

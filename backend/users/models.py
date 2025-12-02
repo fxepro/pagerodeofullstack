@@ -55,36 +55,34 @@ class UserProfile(models.Model):
         part3 = ''.join(random.choices(string.ascii_uppercase, k=3))
         return f"{part1}-{part2}-{part3}"
     
-    def generate_verification_token(self):
-        """Generate a new verification token and human-readable code"""
-        from django.contrib.auth.hashers import make_password
+    def generate_verification_code(self):
+        """Generate a new human-readable verification code"""
         import logging
         logger = logging.getLogger(__name__)
         
         try:
-            token = str(uuid.uuid4())
-            # Generate human-readable code for emergency fallback
-            human_code = self.generate_human_readable_code()
+            # Generate human-readable code
+            code = self.generate_human_readable_code()
             
-            # Store both hashed token (for verification) and human-readable code (for emergency fallback)
-            hashed_token = make_password(token)
-            self.email_verification_token = hashed_token
-            self.email_verification_code = human_code  # Store human-readable code for emergency use
+            # Store code and timestamp
+            self.email_verification_code = code
             self.email_verification_sent_at = timezone.now()
+            # Clear old token field (for backward compatibility)
+            self.email_verification_token = None
             
-            # Save with explicit update_fields to ensure all fields are saved
-            self.save(update_fields=['email_verification_token', 'email_verification_code', 'email_verification_sent_at'])
+            # Save with explicit update_fields
+            self.save(update_fields=['email_verification_code', 'email_verification_token', 'email_verification_sent_at'])
             
             # Verify the save worked
             self.refresh_from_db()
-            if not self.email_verification_token:
-                logger.error(f"Failed to save verification token for user {self.user.email}")
-                raise ValueError("Failed to save verification token")
+            if not self.email_verification_code:
+                logger.error(f"Failed to save verification code for user {self.user.email}")
+                raise ValueError("Failed to save verification code")
             
-            logger.info(f"Generated verification token and code for user {self.user.email}")
-            return token
+            logger.info(f"Generated verification code for user {self.user.email}: {code}")
+            return code
         except Exception as e:
-            logger.error(f"Error generating verification token for user {self.user.email}: {str(e)}", exc_info=True)
+            logger.error(f"Error generating verification code for user {self.user.email}: {str(e)}", exc_info=True)
             raise
     
     def verify_token(self, token):
@@ -95,20 +93,24 @@ class UserProfile(models.Model):
         return check_password(token, self.email_verification_token)
     
     def verify_code(self, code):
-        """Verify a human-readable code (case-insensitive, ignores dashes)"""
+        """Verify a human-readable code (case-insensitive, ignores dashes and spaces)"""
         if not self.email_verification_code:
             return False
-        # Normalize both codes: remove dashes and convert to uppercase
-        stored_code = self.email_verification_code.replace('-', '').upper()
-        provided_code = code.replace('-', '').upper()
+        # Normalize both codes: remove dashes, spaces and convert to uppercase
+        stored_code = self.email_verification_code.replace('-', '').replace(' ', '').upper()
+        provided_code = (code or '').replace('-', '').replace(' ', '').upper()
         return stored_code == provided_code
     
-    def is_token_expired(self):
-        """Check if verification token has expired (24 hours)"""
+    def is_code_expired(self):
+        """Check if verification code has expired (24 hours)"""
         if not self.email_verification_sent_at:
             return True
         from datetime import timedelta
         return timezone.now() - self.email_verification_sent_at > timedelta(hours=24)
+    
+    def is_token_expired(self):
+        """Alias for backward compatibility"""
+        return self.is_code_expired()
     
     class Meta:
         verbose_name = "User Profile"

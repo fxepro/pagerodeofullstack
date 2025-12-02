@@ -24,9 +24,9 @@ def _build_from_address() -> str:
     return from_addr
 
 
-def send_verification_email(user, token):
+def send_verification_email(user, code):
     """
-    Send email verification email to user
+    Send email verification email to user with verification code
     Returns True if SMTP accepted the message. In DEBUG, address/SMTP errors raise.
     """
     # Validate recipient
@@ -47,13 +47,13 @@ def send_verification_email(user, token):
         )
         if frontend_url == 'http://localhost:8000':
             frontend_url = 'http://localhost:3000'
-        verification_link = f"{frontend_url.rstrip('/')}/verify-email?token={token}"
+        verification_link = f"{frontend_url.rstrip('/')}/verify-email?code={code}"
 
         subject = "Verify your PageRodeo account"
         context = {
             'user': user,
             'verification_link': verification_link,
-            'token': token,
+            'code': code,
             'expiration_hours': 24,
         }
 

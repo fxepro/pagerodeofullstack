@@ -10,7 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Mail, CheckCircle, AlertCircle, ArrowLeft, RefreshCw } from "lucide-react";
 
 // Use relative URL in production (browser), localhost in dev (SSR)
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+// Normalize API_BASE to avoid double slashes
+const getApiBase = () => {
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+  return base.endsWith('/') ? base.slice(0, -1) : base;
+};
+const API_BASE = getApiBase();
 
 function VerifyEmailContent() {
   const [token, setToken] = useState("");
@@ -22,11 +27,10 @@ function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-
-  const handleVerify = useCallback(async (verifyToken?: string) => {
-    const tokenToVerify = verifyToken || token;
-    if (!tokenToVerify) {
-      setError("Please enter a verification token or code");
+  const handleVerify = useCallback(async (verifyCode?: string) => {
+    const codeToVerify = (verifyCode || token || '').trim();
+    if (!codeToVerify) {
+      setError("Please enter a verification code");
       return;
     }
 
@@ -35,52 +39,56 @@ function VerifyEmailContent() {
     setSuccess(false);
 
     try {
-      // Detect if it's a code (format: XXX-XXX-XXX) or token (UUID format)
-      // Codes have dashes and are shorter, tokens are UUIDs (longer, no dashes in middle)
-      const isCode = tokenToVerify.includes('-') && tokenToVerify.length < 50;
+      const payload = { code: codeToVerify };
+      const url = `${API_BASE}/api/auth/verify-email/`.replace(/\/+/g, '/').replace(':/', '://');
       
-      const res = await axios.post(`${API_BASE}/api/auth/verify-email/`, 
-        isCode 
-          ? { code: tokenToVerify }  // Send as code if it looks like a code
-          : { token: tokenToVerify } // Otherwise send as token
-      );
+      const res = await axios.post(url, payload, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
       if (res.data?.email_verified) {
-        // If backend returned tokens, store them to auto-login
-        if (res.data.access_token && res.data.refresh_token) {
-          localStorage.setItem('access_token', res.data.access_token);
-          localStorage.setItem('refresh_token', res.data.refresh_token);
-          setSuccess(true);
-          setTimeout(() => {
-            router.push("/dashboard");
-          }, 800);
-          return;
-        }
-        // No tokens returned, show success then go to login
+        // Email verified - redirect to login page
         setSuccess(true);
         setTimeout(() => {
           router.push("/login");
-        }, 1200);
+        }, 1500); // Give user time to see success message
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || err.response?.data?.message || "Verification failed. Please try again.");
+      console.error('Verification error:', {
+        error: err,
+        response: err.response?.data,
+        status: err.response?.status,
+        url: err.config?.url,
+        payload: err.config?.data,
+        requestHeaders: err.config?.headers
+      });
+      
+      // Log the full response for debugging
+      if (err.response) {
+        console.error('Full error response:', JSON.stringify(err.response.data, null, 2));
+      }
+      
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Verification failed. Please try again.";
+      setError(errorMsg);
       setLoading(false);
     }
   }, [token, router]);
 
   useEffect(() => {
-    // Extract token and email from URL if present
-    const tokenFromUrl = searchParams.get('token');
+    // Extract code and email from URL if present
+    const codeFromUrl = searchParams.get('code');
     const emailFromUrl = searchParams.get('email');
     
     if (emailFromUrl) {
       setEmail(emailFromUrl);
     }
     
-    if (tokenFromUrl) {
-      setToken(tokenFromUrl);
-      // Auto-verify if token is in URL (from email link)
-      handleVerify(tokenFromUrl);
+    if (codeFromUrl) {
+      setToken(codeFromUrl);
+      // Auto-verify if code is in URL (from email link)
+      handleVerify(codeFromUrl);
     }
   }, [searchParams, handleVerify]);
 
@@ -94,29 +102,10 @@ function VerifyEmailContent() {
     setError("");
 
     try {
-      const resp = await axios.post(`${API_BASE}/api/auth/send-verification/`, {
+      const resp = await axios.post(`${API_BASE}/api/auth/resend-verification/`, {
         email: email,
       });
       
-      // In DEBUG mode, backend may include token and verification_link to unblock local testing
-      const dbgToken = resp.data?.token as string | undefined;
-      const dbgLink = resp.data?.verification_link as string | undefined;
-      
-      // Log response for debugging (only in development)
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Resend verification response:", resp.data);
-        if (dbgToken) {
-          console.log("DEBUG MODE: Verification token:", dbgToken);
-          console.log("DEBUG MODE: Verification link:", dbgLink);
-        }
-      }
-      
-      if (dbgToken) {
-        setToken(dbgToken);
-        // Optionally auto-verify to streamline testing flow
-        await handleVerify(dbgToken);
-        return;
-      }
       setSuccess(true);
       setError("");
     } catch (err: any) {
@@ -144,7 +133,7 @@ function VerifyEmailContent() {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Email Verified!</h2>
             <p className="text-slate-600 mb-4">Your email has been verified successfully.</p>
-            <p className="text-sm text-slate-500">Redirecting to dashboard...</p>
+            <p className="text-sm text-slate-500">Redirecting to login...</p>
           </CardContent>
         </Card>
       </div>
@@ -163,7 +152,7 @@ function VerifyEmailContent() {
               Verify Your Email
             </CardTitle>
             <CardDescription className="text-slate-600">
-              Please check your email and click the verification link
+              Check your email and click the verification link, or enter your code below
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -179,7 +168,6 @@ function VerifyEmailContent() {
                 )}
               </div>
             )}
-            
 
             {success && (
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -198,25 +186,35 @@ function VerifyEmailContent() {
               </div>
             )}
 
+            {/* Option 1: Enter Verification Code */}
             <div className="space-y-2">
-              <Label htmlFor="token" className="text-slate-700 font-medium">
-                Verification code (paste if you have it)
+              <Label htmlFor="code" className="text-slate-700 font-medium">
+                Enter Verification Code
               </Label>
               <p className="text-xs text-slate-500 mb-2">
-                If you received a code or see one displayed here (dev mode), paste it to verify immediately.
+                Enter the verification code you received (format: ABC-123-XYZ)
               </p>
               <Input
-                id="token"
+                id="code"
                 type="text"
-                placeholder="Paste verification code here"
+                placeholder="ABC-123-XYZ"
                 value={token}
-                onChange={(e) => setToken(e.target.value)}
+                onChange={(e) => setToken(e.target.value.trim().toUpperCase())}
+                onBlur={(e) => setToken(e.target.value.trim().toUpperCase())}
+                maxLength={11}
                 className="bg-white/70 border-palette-accent-2/50 focus:border-palette-accent-1"
                 disabled={loading || success}
               />
               {token && !success && (
                 <Button
-                  onClick={() => handleVerify()}
+                  onClick={() => {
+                    const currentCode = (document.getElementById('code') as HTMLInputElement)?.value?.trim() || token.trim();
+                    if (currentCode) {
+                      handleVerify(currentCode);
+                    } else {
+                      setError("Please enter a verification code");
+                    }
+                  }}
                   disabled={loading}
                   className="w-full bg-palette-primary hover:bg-palette-primary-hover text-white"
                 >
@@ -225,7 +223,18 @@ function VerifyEmailContent() {
               )}
             </div>
 
-            <div className="pt-4 border-t border-slate-200">
+            {/* OR Divider */}
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-slate-500 font-medium">OR</span>
+              </div>
+            </div>
+
+            {/* Option 2: Resend Email */}
+            <div className="pt-2">
               <p className="text-sm text-slate-600 mb-3 text-center">
                 Didn't receive the email?
               </p>
@@ -293,4 +302,3 @@ export default function VerifyEmailPage() {
     </Suspense>
   );
 }
-

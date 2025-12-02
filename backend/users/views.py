@@ -230,17 +230,17 @@ def register_user(request):
             profile.refresh_from_db()
             
             try:
-                token = profile.generate_verification_token()
-                verification_token = token  # Store for response
+                code = profile.generate_verification_code()
+                verification_code = code  # Store for response
                 
-                # Verify token was generated
+                # Verify code was generated
                 profile.refresh_from_db()
-                if not profile.email_verification_token:
-                    logger.error(f"Token generation failed for user {user.email} - token field is still null")
+                if not profile.email_verification_code:
+                    logger.error(f"Code generation failed for user {user.email} - code field is still null")
                 else:
                     # Only send email if email verification is enabled
                     if email_verification_enabled:
-                        email_sent = send_verification_email(user, token)
+                        email_sent = send_verification_email(user, code)
                         if not email_sent:
                             logger.warning(f"Failed to send verification email to {user.email}, but user was created")
                     else:
@@ -1089,73 +1089,47 @@ def send_verification_email_endpoint(request):
 @permission_classes([AllowAny])
 @rate_limit_api
 def verify_email(request):
-    """Verify email with token or human-readable code (Public endpoint, rate limited)"""
-    token = request.data.get('token')
-    code = request.data.get('code')
+    """Verify email with human-readable code (Public endpoint, rate limited)"""
+    code = request.data.get('code', '').strip()
     
-    if not token and not code:
-        return Response({'error': 'Token or code is required'}, status=status.HTTP_400_BAD_REQUEST)
+    if not code:
+        return Response({'error': 'Verification code is required'}, status=status.HTTP_400_BAD_REQUEST)
     
-    logger.info(f"Verification attempt - token provided: {bool(token)}, code provided: {bool(code)}")
+    logger.info(f"Verification attempt - code: {code[:10]}...")
     
-    # Find user with matching token or code
-    profiles = UserProfile.objects.filter(
-        Q(email_verification_token__isnull=False) | 
-        Q(email_verification_code__isnull=False)
-    )
+    # Find user with matching code
+    profiles = UserProfile.objects.filter(email_verification_code__isnull=False)
     verified_profile = None
     
     for profile in profiles:
-        # Try token first (if token provided)
-        if token:
-            if profile.verify_token(token):
-                logger.info(f"Token verified successfully for user {profile.user.email}")
-                verified_profile = profile
-                break
-            # If token verification failed, try treating it as a code (user might have pasted code in token field)
-            elif profile.verify_code(token):
-                logger.info(f"Code verified successfully (sent as token) for user {profile.user.email}")
-                verified_profile = profile
-                break
-        # Try code if provided separately
-        if code and profile.verify_code(code):
+        if profile.verify_code(code):
             logger.info(f"Code verified successfully for user {profile.user.email}")
             verified_profile = profile
             break
     
     if not verified_profile:
-        logger.warning(f"Verification failed - no matching profile found. Token length: {len(token) if token else 0}, Code length: {len(code) if code else 0}")
-        # Log available codes for debugging (only in DEBUG mode)
-        if getattr(settings, 'DEBUG', False):
-            available_codes = [p.email_verification_code for p in profiles if p.email_verification_code]
-            logger.debug(f"Available codes in DB: {available_codes[:3]}")  # Only log first 3 for privacy
-        return Response({'error': 'Invalid verification token or code'}, status=status.HTTP_400_BAD_REQUEST)
+        logger.warning(f"Verification failed - no matching code found")
+        return Response({'error': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Check if token/code is expired
-    if verified_profile.is_token_expired():
-        return Response({'error': 'Verification link/code has expired. Please request a new one.'}, status=status.HTTP_400_BAD_REQUEST)
+    # Check if code is expired
+    if verified_profile.is_code_expired():
+        return Response({'error': 'Verification code has expired. Please request a new one.'}, status=status.HTTP_400_BAD_REQUEST)
     
     # Check if already verified
     if verified_profile.email_verified:
         return Response({'message': 'Email is already verified'}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Mark as verified and clear token and code
+    # Mark as verified and clear code
     verified_profile.email_verified = True
-    verified_profile.email_verification_token = None
     verified_profile.email_verification_code = None
+    verified_profile.email_verification_token = None
     verified_profile.email_verification_sent_at = None
     verified_profile.save()
     
-    # Generate JWT tokens
-    refresh = RefreshToken.for_user(verified_profile.user)
-    access_token = str(refresh.access_token)
-    refresh_token = str(refresh)
-    
+    # Return success - user must log in with username/password
     return Response({
-        'message': 'Email verified successfully',
-        'email_verified': True,
-        'access_token': access_token,
-        'refresh_token': refresh_token
+        'message': 'Email verified successfully. Please log in with your username and password.',
+        'email_verified': True
     }, status=status.HTTP_200_OK)
 
 
@@ -1201,38 +1175,35 @@ def resend_verification_email(request):
         # Verify profile exists in database
         profile.refresh_from_db()
         
-        token = profile.generate_verification_token()
+        code = profile.generate_verification_code()
         
-        # Verify token was generated
+        # Verify code was generated
         profile.refresh_from_db()
-        if not profile.email_verification_token:
-            logger.error(f"Token generation failed for user {user.email} - token field is still null")
-            return Response({'error': 'Failed to generate verification token'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if not profile.email_verification_code:
+            logger.error(f"Code generation failed for user {user.email} - code field is still null")
+            return Response({'error': 'Failed to generate verification code'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        # Get the human-readable code for emergency fallback
-        human_code = profile.email_verification_code
-        
-        email_sent = send_verification_email(user, token)
+        email_sent = send_verification_email(user, code)
         # Build verification link (for debug)
         frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None) or 'http://localhost:3000'
         if frontend_url == 'http://localhost:8000':
             frontend_url = 'http://localhost:3000'
-        verification_link = f"{frontend_url.rstrip('/')}/verify-email?token={token}"
+        verification_link = f"{frontend_url.rstrip('/')}/verify-email?code={code}"
 
         if email_sent:
             payload = {'message': 'Verification email sent successfully'}
             if getattr(settings, 'DEBUG', False):
-                payload.update({'token': token, 'verification_link': verification_link, 'code': human_code})
+                payload.update({'code': code, 'verification_link': verification_link})
             return Response(payload, status=status.HTTP_200_OK)
         else:
             # Email failed - return code as emergency fallback
             payload = {
                 'error': 'Failed to send verification email',
-                'code': human_code,
+                'code': code,
                 'message': 'Use the verification code below to verify your email manually'
             }
             if getattr(settings, 'DEBUG', False):
-                payload.update({'token': token, 'verification_link': verification_link})
+                payload.update({'verification_link': verification_link})
             return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         logger.error(f"Error resending verification email: {str(e)}", exc_info=True)
