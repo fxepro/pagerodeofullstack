@@ -88,8 +88,10 @@ function VerifyEmailContent() {
     
     // If code/token is in URL (from email link), verify immediately and redirect to login
     if (codeFromUrl) {
+      // Set loading immediately to show loading screen
       setLoading(true);
       setToken(codeFromUrl);
+      setError(""); // Clear any previous errors
       
       // Verify immediately without showing the form
       const verifyAndRedirect = async () => {
@@ -104,8 +106,9 @@ function VerifyEmailContent() {
           });
 
           if (res.data?.email_verified) {
-            // Email verified - redirect to login immediately
+            // Email verified - redirect to login immediately (no delay)
             router.push("/login");
+            return; // Don't set loading to false, let redirect happen
           } else {
             // Verification failed - show error on verify page
             setError("Verification failed. Please try again.");
@@ -158,7 +161,9 @@ function VerifyEmailContent() {
 
   // If code/token is in URL (from email link), show minimal loading and redirect immediately after verification
   const codeFromUrl = searchParams.get('code') || searchParams.get('token');
-  if (codeFromUrl && loading) {
+  // Show loading screen if code is in URL (auto-verification flow from email link)
+  // Don't show the form - just verify and redirect
+  if (codeFromUrl) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
@@ -166,7 +171,13 @@ function VerifyEmailContent() {
             <RefreshCw className="h-16 w-16 text-palette-primary mx-auto mb-4 animate-spin" />
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Verifying Email...</h2>
             <p className="text-slate-600 mb-4">Please wait while we verify your email address.</p>
-            <p className="text-sm text-slate-500">Redirecting to login...</p>
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                {error}
+                <p className="mt-2 text-xs">You can still enter your code manually below.</p>
+              </div>
+            )}
+            {!error && <p className="text-sm text-slate-500">Redirecting to login...</p>}
           </CardContent>
         </Card>
       </div>
