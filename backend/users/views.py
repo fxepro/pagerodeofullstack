@@ -1046,38 +1046,35 @@ def send_verification_email_endpoint(request):
         # Verify profile exists in database
         profile.refresh_from_db()
         
-        token = profile.generate_verification_token()
+        code = profile.generate_verification_code()
         
-        # Verify token was generated
+        # Verify code was generated
         profile.refresh_from_db()
-        if not profile.email_verification_token:
-            logger.error(f"Token generation failed for user {user.email} - token field is still null")
-            return Response({'error': 'Failed to generate verification token'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if not profile.email_verification_code:
+            logger.error(f"Code generation failed for user {user.email} - code field is still null")
+            return Response({'error': 'Failed to generate verification code'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        # Get the human-readable code for emergency fallback
-        human_code = profile.email_verification_code
-        
-        email_sent = send_verification_email(user, token)
+        email_sent = send_verification_email(user, code)
         # Build verification link for optional debug surface
         frontend_url = getattr(settings, 'FRONTEND_URL', None) or getattr(settings, 'NEXT_PUBLIC_APP_URL', None) or 'http://localhost:3000'
         if frontend_url == 'http://localhost:8000':
             frontend_url = 'http://localhost:3000'
-        verification_link = f"{frontend_url.rstrip('/')}/verify-email?token={token}"
+        verification_link = f"{frontend_url.rstrip('/')}/verify-email?code={code}"
         
         if email_sent:
             payload = {'message': 'Verification email sent successfully'}
             if getattr(settings, 'DEBUG', False):
-                payload.update({'token': token, 'verification_link': verification_link, 'code': human_code})
+                payload.update({'code': code, 'verification_link': verification_link})
             return Response(payload, status=status.HTTP_200_OK)
         else:
             # Email failed - return code as emergency fallback
             payload = {
                 'error': 'Failed to send verification email',
-                'code': human_code,
+                'code': code,
                 'message': 'Use the verification code below to verify your email manually'
             }
             if getattr(settings, 'DEBUG', False):
-                payload.update({'token': token, 'verification_link': verification_link})
+                payload.update({'verification_link': verification_link})
             return Response(payload, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         logger.error(f"Error sending verification email: {str(e)}", exc_info=True)

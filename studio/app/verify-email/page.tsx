@@ -77,20 +77,51 @@ function VerifyEmailContent() {
   }, [token, router]);
 
   useEffect(() => {
-    // Extract code and email from URL if present
-    const codeFromUrl = searchParams.get('code');
+    // Extract code/token and email from URL if present
+    // Support both ?code= (new) and ?token= (old emails) for backward compatibility
+    const codeFromUrl = searchParams.get('code') || searchParams.get('token');
     const emailFromUrl = searchParams.get('email');
     
     if (emailFromUrl) {
       setEmail(emailFromUrl);
     }
     
+    // If code/token is in URL (from email link), verify immediately and redirect to login
     if (codeFromUrl) {
+      setLoading(true);
       setToken(codeFromUrl);
-      // Auto-verify if code is in URL (from email link)
-      handleVerify(codeFromUrl);
+      
+      // Verify immediately without showing the form
+      const verifyAndRedirect = async () => {
+        try {
+          const payload = { code: codeFromUrl };
+          const url = `${API_BASE}/api/auth/verify-email/`.replace(/\/+/g, '/').replace(':/', '://');
+          
+          const res = await axios.post(url, payload, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (res.data?.email_verified) {
+            // Email verified - redirect to login immediately
+            router.push("/login");
+          } else {
+            // Verification failed - show error on verify page
+            setError("Verification failed. Please try again.");
+            setLoading(false);
+          }
+        } catch (err: any) {
+          // Verification failed - show error on verify page
+          const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Verification failed. Please try again.";
+          setError(errorMsg);
+          setLoading(false);
+        }
+      };
+      
+      verifyAndRedirect();
     }
-  }, [searchParams, handleVerify]);
+  }, [searchParams, router]);
 
   const handleResend = async () => {
     if (!email) {
@@ -125,14 +156,16 @@ function VerifyEmailContent() {
     return `${masked}@${domain}`;
   };
 
-  if (success && !token) {
+  // If code/token is in URL (from email link), show minimal loading and redirect immediately after verification
+  const codeFromUrl = searchParams.get('code') || searchParams.get('token');
+  if (codeFromUrl && loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
           <CardContent className="pt-6 text-center">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Email Verified!</h2>
-            <p className="text-slate-600 mb-4">Your email has been verified successfully.</p>
+            <RefreshCw className="h-16 w-16 text-palette-primary mx-auto mb-4 animate-spin" />
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Verifying Email...</h2>
+            <p className="text-slate-600 mb-4">Please wait while we verify your email address.</p>
             <p className="text-sm text-slate-500">Redirecting to login...</p>
           </CardContent>
         </Card>
