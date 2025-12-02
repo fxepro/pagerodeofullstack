@@ -18,10 +18,18 @@ export async function POST(request: NextRequest) {
     let page
     
     try {
+      // Check if Puppeteer is available
+      if (!puppeteer) {
+        throw new Error('Puppeteer module not found. Please install: npm install puppeteer');
+      }
+      
       browser = await puppeteer.launch({ 
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      })
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+      }).catch((launchError) => {
+        console.error('[pagerodeo] Puppeteer launch error:', launchError);
+        throw new Error(`Failed to launch browser: ${launchError.message}. Puppeteer may not be installed or Chrome dependencies are missing.`);
+      });
       
       page = await browser.newPage()
 
@@ -331,12 +339,53 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[pagerodeo] Typography analysis error:', error)
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error('[pagerodeo] Typography analysis error:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
+    
+    // Check for specific error types
+    let errorMessage = 'Failed to analyze typography';
+    let errorDetails = err.message || 'Unknown error';
+    let retryable = false;
+    let errorCode = 'ANALYSIS_FAILED';
+    
+    // Check if Puppeteer is available
+    if (err.message.includes('Cannot find module') || err.message.includes('puppeteer') || err.message.includes('Failed to launch browser')) {
+      errorMessage = 'Puppeteer is not installed or configured';
+      errorDetails = 'Typography analysis requires Puppeteer and Chrome/Chromium. On production, ensure Puppeteer dependencies are installed.';
+      retryable = false;
+      errorCode = 'PUPPETEER_NOT_FOUND';
+    } else if (err.message.includes('timeout') || err.message.includes('Navigation timeout')) {
+      errorMessage = 'Analysis timed out';
+      errorDetails = 'The page took too long to load. Please try again or check if the website is accessible.';
+      retryable = true;
+      errorCode = 'TIMEOUT';
+    } else if (err.message.includes('ERR_NAME_NOT_RESOLVED') || err.message.includes('ENOTFOUND')) {
+      errorMessage = 'Domain not found';
+      errorDetails = `The domain "${domain}" cannot be resolved. Please check the domain name is correct.`;
+      retryable = false;
+      errorCode = 'DNS_NOT_FOUND';
+    } else if (err.message.includes('ECONNREFUSED') || err.message.includes('Connection refused')) {
+      errorMessage = 'Connection refused';
+      errorDetails = 'Unable to connect to the website. The server may be down or blocking requests.';
+      retryable = true;
+      errorCode = 'CONNECTION_REFUSED';
+    }
+    
     return NextResponse.json(
       { 
-        error: 'Failed to analyze typography',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        retryable: false
+        error: errorMessage,
+        details: errorDetails,
+        retryable: retryable,
+        errorCode: errorCode,
+        // Include full error in development
+        ...(process.env.NODE_ENV === 'development' && { 
+          fullError: err.message,
+          stack: err.stack 
+        })
       },
       { status: 500 }
     )

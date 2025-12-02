@@ -72,18 +72,32 @@ export function createAppError(
   const category = categorizeError(error)
   const err = error as any
 
+  // Build error message - include details if available
+  let errorMessage = err.message || 'An unexpected error occurred';
+  if (err.details) {
+    errorMessage = `${errorMessage}: ${err.details}`;
+  } else if (err.response?.data?.details) {
+    errorMessage = `${errorMessage}: ${err.response.data.details}`;
+  } else if (err.response?.data?.error && err.response.data.error !== errorMessage) {
+    errorMessage = err.response.data.error;
+    if (err.response.data.details) {
+      errorMessage = `${errorMessage}: ${err.response.data.details}`;
+    }
+  }
+
   return {
     category,
-    code: err.code || err.response?.status?.toString() || 'UNKNOWN',
-    message: err.message || 'An unexpected error occurred',
+    code: err.code || err.errorCode || err.response?.status?.toString() || 'UNKNOWN',
+    message: errorMessage,
     feature,
     domain,
     timestamp: new Date().toISOString(),
-    retryable: isRetryable(category),
+    retryable: err.retryable !== undefined ? err.retryable : isRetryable(category),
     technicalDetails: {
       stack: err.stack,
       response: err.response?.data,
-      config: err.config
+      config: err.config,
+      details: err.details
     }
   }
 }

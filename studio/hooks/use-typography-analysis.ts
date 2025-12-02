@@ -148,17 +148,37 @@ export function useTypographyAnalysis(options: UseTypographyAnalysisOptions = {}
       
       const data = await executeWithErrorHandling(
         async () => {
-          const response = await fetch('/api/typography', {
+          // Use relative URL to match page protocol (HTTPS in production)
+          const apiUrl = '/api/typography';
+          
+          // Only log in production for debugging
+          if (process.env.NODE_ENV === 'production') {
+            console.log('[Typography] Calling API:', apiUrl, 'for domain:', testUrl);
+          }
+          
+          const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ domain: testUrl })
           });
 
+          // Only log errors in production
+          if (process.env.NODE_ENV === 'production') {
+            console.log('[Typography] Response status:', response.status, response.statusText);
+          }
+
           // Attach HTTP status to error
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            const error: any = new Error(errorData.error || 'Typography analysis failed');
+            if (process.env.NODE_ENV === 'production') {
+              console.error('[Typography] Error response:', errorData);
+            }
+            const errorMessage = errorData.error || errorData.details || 'Typography analysis failed';
+            const error: any = new Error(errorMessage);
             error.response = { status: response.status };
+            error.details = errorData.details;
+            error.errorCode = errorData.errorCode;
+            error.retryable = errorData.retryable;
             throw error;
           }
 
