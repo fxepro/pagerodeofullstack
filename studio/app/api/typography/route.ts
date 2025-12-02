@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import puppeteer from 'puppeteer'
 
 export async function POST(request: NextRequest) {
+  let domain: string | undefined;
   try {
-    const { domain } = await request.json()
+    const body = await request.json();
+    domain = body.domain;
 
     if (!domain) {
       return NextResponse.json(
@@ -365,7 +367,9 @@ export async function POST(request: NextRequest) {
       errorCode = 'TIMEOUT';
     } else if (err.message.includes('ERR_NAME_NOT_RESOLVED') || err.message.includes('ENOTFOUND')) {
       errorMessage = 'Domain not found';
-      errorDetails = `The domain "${domain}" cannot be resolved. Please check the domain name is correct.`;
+      errorDetails = domain 
+        ? `The domain "${domain}" cannot be resolved. Please check the domain name is correct.`
+        : 'The domain cannot be resolved. Please check the domain name is correct.';
       retryable = false;
       errorCode = 'DNS_NOT_FOUND';
     } else if (err.message.includes('ECONNREFUSED') || err.message.includes('Connection refused')) {

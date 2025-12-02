@@ -71,6 +71,7 @@ export interface AppError {
     stack?: string;
     response?: any;
     config?: any;
+    details?: string;
   };
 }
 
