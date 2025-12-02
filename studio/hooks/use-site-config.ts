@@ -61,11 +61,27 @@ export function useSiteConfig() {
   const fetchSiteConfig = async () => {
     try {
       // Fetch active typography preset (public endpoint, no auth)
-      // Always use relative URL in browser to match page protocol (HTTPS automatically)
-      // Server-side rendering: use env var or default
-      const apiUrl = typeof window !== 'undefined' 
-        ? `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/typography/active/`  // Use full URL to avoid redirect loops
-        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/typography/active/`;
+      let apiUrl: string;
+      
+      if (typeof window !== 'undefined') {
+        // Browser context - use relative URL or convert HTTP to HTTPS
+        const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+        if (envUrl) {
+          // If env var is set, ensure HTTPS in production
+          if (window.location.protocol === 'https:' && envUrl.startsWith('http://') && !envUrl.includes('localhost')) {
+            apiUrl = envUrl.replace('http://', 'https://') + '/api/typography/active/';
+          } else {
+            apiUrl = envUrl + '/api/typography/active/';
+          }
+        } else {
+          // No env var - use relative URL (matches page protocol automatically)
+          apiUrl = '/api/typography/active/';
+        }
+      } else {
+        // Server-side rendering - use env var or default
+        apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/typography/active/`;
+      }
+      
       const typographyResponse = await axios.get(apiUrl);
       
       // Apply typography from the active preset
