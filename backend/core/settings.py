@@ -150,6 +150,11 @@ ALLOWED_HOSTS = get_env_list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1']
 # Set via environment variable as comma-separated list: http://129.146.57.158,http://pagerodeo.com
 CSRF_TRUSTED_ORIGINS = get_env_list('CSRF_TRUSTED_ORIGINS', default=['http://localhost:8000', 'http://127.0.0.1:8000'])
 
+# Frontend URL - used for email verification links and other frontend redirects
+# Set via environment variable: FRONTEND_URL=https://pagerodeo.com
+FRONTEND_URL = config('FRONTEND_URL', default=None)
+NEXT_PUBLIC_APP_URL = config('NEXT_PUBLIC_APP_URL', default=None)  # Alternative name for Next.js compatibility
+
 # Warn if using insecure defaults
 if DEBUG and SECRET_KEY.startswith('django-insecure-'):
     import warnings
