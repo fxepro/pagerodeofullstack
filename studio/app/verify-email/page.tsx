@@ -168,6 +168,13 @@ function VerifyEmailContent() {
       <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
           <CardContent className="pt-6 text-center">
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/Pagerodeo-Logo-Black.png" 
+                alt="PageRodeo Logo" 
+                className="h-16 w-auto"
+              />
+            </div>
             <RefreshCw className="h-16 w-16 text-palette-primary mx-auto mb-4 animate-spin" />
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Verifying Email...</h2>
             <p className="text-slate-600 mb-4">Please wait while we verify your email address.</p>
@@ -189,8 +196,12 @@ function VerifyEmailContent() {
       <div className="w-full max-w-md">
         <Card className="bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
           <CardHeader className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-palette-primary rounded-xl mb-4">
-              <Mail className="h-8 w-8 text-white" />
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/Pagerodeo-Logo-Black.png" 
+                alt="PageRodeo Logo" 
+                className="h-16 w-auto"
+              />
             </div>
             <CardTitle className="text-2xl font-bold text-slate-800">
               Verify Your Email
@@ -337,6 +348,13 @@ export default function VerifyEmailPage() {
       <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
           <CardContent className="pt-6 text-center">
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/Pagerodeo-Logo-Black.png" 
+                alt="PageRodeo Logo" 
+                className="h-16 w-auto"
+              />
+            </div>
             <p className="text-slate-600">Loading...</p>
           </CardContent>
         </Card>

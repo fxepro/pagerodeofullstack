@@ -42,6 +42,27 @@ export function useSiteConfig() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Skip typography fetch on /typography page - it's a frontend-only analysis tool
+    // This prevents unnecessary API calls and mixed content warnings
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : null;
+    if (currentPath === '/typography') {
+      setLoading(false);
+      // Still apply cached typography if available
+      const cachedTypography = localStorage.getItem('activeTypography');
+      if (cachedTypography) {
+        try {
+          const typographyData = JSON.parse(cachedTypography);
+          applyTypographyToDOM(typographyData);
+        } catch (e) {
+          console.warn('Failed to parse cached typography');
+        }
+      } else {
+        // Apply default typography for typography page
+        applyDefaultTypography();
+      }
+      return;
+    }
+
     // Immediately apply cached typography to prevent flash
     const cachedTypography = localStorage.getItem('activeTypography');
     if (cachedTypography) {

@@ -91,8 +91,12 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-palette-primary text-white rounded-xl shadow-lg mb-4">
-            <User className="h-8 w-8 text-white" />
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/Pagerodeo-Logo-Black.png" 
+              alt="PageRodeo Logo" 
+              className="h-16 w-auto"
+            />
           </div>
           <h1 className="text-3xl font-bold text-slate-800">PageRodeo</h1>
           <p className="text-slate-600 mt-2">Welcome back! Please sign in to your account.</p>

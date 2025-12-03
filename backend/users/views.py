@@ -1108,7 +1108,41 @@ def verify_email(request):
     
     if not verified_profile:
         logger.warning(f"Verification failed - no matching code found")
-        return Response({'error': 'Invalid verification code'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if email is provided and already verified
+        email = request.data.get('email', '').strip()
+        if email:
+            try:
+                user = User.objects.get(email=email)
+                profile = user.profile
+                if profile.email_verified:
+                    return Response({
+                        'message': 'Email is already verified. Please log in with your username and password.',
+                        'email_verified': True
+                    }, status=status.HTTP_200_OK)
+            except (User.DoesNotExist, UserProfile.DoesNotExist, AttributeError):
+                pass
+        
+        # Code not found - might be already used (cleared after verification) or invalid
+        # Check if there are recently verified profiles (within last hour) - code might have been used
+        from django.utils import timezone
+        from datetime import timedelta
+        recently_verified = UserProfile.objects.filter(
+            email_verified=True,
+            email_verification_sent_at__gte=timezone.now() - timedelta(hours=1)
+        ).exists()
+        
+        if recently_verified:
+            # Code was likely already used - suggest email is already verified
+            return Response({
+                'message': 'Email is already verified. Please log in with your username and password.',
+                'email_verified': True
+            }, status=status.HTTP_200_OK)
+        
+        # Code not found - invalid or expired
+        return Response({
+            'error': 'Invalid verification code. Please check the code and try again, or request a new verification email.'
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     # Check if code is expired
     if verified_profile.is_code_expired():
