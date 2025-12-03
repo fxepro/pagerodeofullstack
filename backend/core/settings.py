@@ -152,15 +152,27 @@ DEBUG = get_env_bool('DEBUG', default=True)
 # ALLOWED_HOSTS - must be set in production via environment variable
 ALLOWED_HOSTS = get_env_list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
-# CSRF_TRUSTED_ORIGINS - required for Django 4.0+ to allow CSRF from these origins
-# Set via environment variable as comma-separated list: http://129.146.57.158,http://pagerodeo.com
-CSRF_TRUSTED_ORIGINS = get_env_list('CSRF_TRUSTED_ORIGINS', default=['http://localhost:8000', 'http://127.0.0.1:8000'])
-
 # Frontend URL - used for email verification links and other frontend redirects
 # Set via environment variable: FRONTEND_URL=https://pagerodeo.com
+# This is also used to auto-configure CSRF_TRUSTED_ORIGINS and CORS_ALLOWED_ORIGINS
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 NEXT_PUBLIC_APP_URL = os.getenv("NEXT_PUBLIC_APP_URL")  # Alternative name for Next.js compatibility
 NEXT_PUBLIC_API_BASE_URL = os.getenv("NEXT_PUBLIC_API_BASE_URL")
+
+# CSRF_TRUSTED_ORIGINS - required for Django 4.0+ to allow CSRF from these origins
+# Set via environment variable as comma-separated list: http://129.146.57.158,https://pagerodeo.com,http://pagerodeo.com
+# In production, MUST include your production domain (both HTTP and HTTPS if applicable)
+csrf_defaults = ['http://localhost:8000', 'http://127.0.0.1:8000']
+# Auto-add production domain from FRONTEND_URL if set
+if FRONTEND_URL:
+    # Add both HTTP and HTTPS versions if FRONTEND_URL is HTTPS
+    if FRONTEND_URL.startswith('https://'):
+        csrf_defaults.append(FRONTEND_URL)
+        csrf_defaults.append(FRONTEND_URL.replace('https://', 'http://'))
+    elif FRONTEND_URL.startswith('http://'):
+        csrf_defaults.append(FRONTEND_URL)
+        csrf_defaults.append(FRONTEND_URL.replace('http://', 'https://'))
+CSRF_TRUSTED_ORIGINS = get_env_list('CSRF_TRUSTED_ORIGINS', default=csrf_defaults)
 
 # Warn if using insecure defaults
 if DEBUG and SECRET_KEY.startswith('django-insecure-'):
@@ -293,11 +305,22 @@ USE_I18N = True
 
 USE_TZ = True
 
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
+# CORS Configuration
+# In production, set CORS_ALLOW_ALL_ORIGINS=False and configure CORS_ALLOWED_ORIGINS
+CORS_ALLOW_ALL_ORIGINS = get_env_bool('CORS_ALLOW_ALL_ORIGINS', default=True)
+cors_defaults = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+# Auto-add production frontend URL if set
+if FRONTEND_URL:
+    cors_defaults.append(FRONTEND_URL)
+    # Also add HTTP/HTTPS variant
+    if FRONTEND_URL.startswith('https://'):
+        cors_defaults.append(FRONTEND_URL.replace('https://', 'http://'))
+    elif FRONTEND_URL.startswith('http://'):
+        cors_defaults.append(FRONTEND_URL.replace('http://', 'https://'))
+CORS_ALLOWED_ORIGINS = get_env_list('CORS_ALLOWED_ORIGINS', default=cors_defaults)
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -498,12 +521,30 @@ except ImportError:
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = 'DENY'
     SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
-    SESSION_COOKIE_SECURE = not DEBUG
+    
+    # Secure Cookies - Allow override via environment for proxy/load balancer setups
+    # If behind a proxy that doesn't properly set X-Forwarded-Proto, you may need to set these to False
+    # Or configure your proxy to set X-Forwarded-Proto header correctly
+    SESSION_COOKIE_SECURE = get_env_bool('SESSION_COOKIE_SECURE', default=not DEBUG)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    CSRF_COOKIE_SECURE = not DEBUG
+    CSRF_COOKIE_SECURE = get_env_bool('CSRF_COOKIE_SECURE', default=not DEBUG)
     CSRF_COOKIE_HTTPONLY = True
     CSRF_COOKIE_SAMESITE = 'Lax'
+    
+    # Proxy SSL Header - Set this if behind a reverse proxy/load balancer
+    # Format: HTTP_X_FORWARDED_PROTO,https
+    proxy_header = config('SECURE_PROXY_SSL_HEADER', default='')
+    if proxy_header:
+        # Parse comma-separated value: "HTTP_X_FORWARDED_PROTO,https"
+        parts = [p.strip() for p in proxy_header.split(',')]
+        if len(parts) == 2:
+            SECURE_PROXY_SSL_HEADER = tuple(parts)
+        else:
+            SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    else:
+        SECURE_PROXY_SSL_HEADER = None
+    
     RATE_LIMIT_ENABLE = True
     RATE_LIMIT_PER_MINUTE = 60
     RATE_LIMIT_PER_HOUR = 1000

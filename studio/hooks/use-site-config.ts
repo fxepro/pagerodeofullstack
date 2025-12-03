@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 
 export interface SiteConfig {
   id: number;
@@ -40,45 +41,46 @@ export function useSiteConfig() {
   const [config, setConfig] = useState<SiteConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Get pathname using Next.js router (this hook is only used in client components)
+  const pathname = usePathname();
 
-  useEffect(() => {
-    // Skip typography fetch on /typography page - it's a frontend-only analysis tool
-    // This prevents unnecessary API calls and mixed content warnings
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : null;
-    if (currentPath === '/typography') {
-      setLoading(false);
-      // Still apply cached typography if available
-      const cachedTypography = localStorage.getItem('activeTypography');
-      if (cachedTypography) {
-        try {
-          const typographyData = JSON.parse(cachedTypography);
-          applyTypographyToDOM(typographyData);
-        } catch (e) {
-          console.warn('Failed to parse cached typography');
-        }
-      } else {
-        // Apply default typography for typography page
-        applyDefaultTypography();
-      }
-      return;
-    }
-
-    // Immediately apply cached typography to prevent flash
-    const cachedTypography = localStorage.getItem('activeTypography');
-    if (cachedTypography) {
-      try {
-        const typographyData = JSON.parse(cachedTypography);
-        applyTypographyToDOM(typographyData);
-      } catch (e) {
-        console.warn('Failed to parse cached typography');
-      }
-    }
+  const applyTypographyToDOM = (typographyData: any) => {
+    if (typeof document === 'undefined') return;
     
-    // Then fetch fresh data from API
-    fetchSiteConfig();
-  }, []);
+    const root = document.documentElement;
+    
+    // Apply typography CSS custom properties from TypographyPreset
+    root.style.setProperty('--font-body', typographyData.body_font);
+    root.style.setProperty('--font-heading', typographyData.heading_font);
+    root.style.setProperty('--font-size-base', typographyData.font_size_base);
+    root.style.setProperty('--font-size-h1', typographyData.font_size_h1);
+    root.style.setProperty('--font-size-h2', typographyData.font_size_h2);
+    root.style.setProperty('--font-size-h3', typographyData.font_size_h3);
+    root.style.setProperty('--font-size-h4', typographyData.font_size_h4);
+    root.style.setProperty('--font-size-h5', typographyData.font_size_h5);
+    root.style.setProperty('--font-size-h6', typographyData.font_size_h6);
+    root.style.setProperty('--line-height-base', typographyData.line_height_base);
+  };
 
-  const fetchSiteConfig = async () => {
+  const applyDefaultTypography = () => {
+    if (typeof document === 'undefined') return;
+    
+    const root = document.documentElement;
+    // Default typography
+    root.style.setProperty('--font-body', 'Inter, system-ui, -apple-system, sans-serif');
+    root.style.setProperty('--font-heading', 'Inter, system-ui, -apple-system, sans-serif');
+    root.style.setProperty('--font-size-base', '16px');
+    root.style.setProperty('--font-size-h1', '48px');
+    root.style.setProperty('--font-size-h2', '36px');
+    root.style.setProperty('--font-size-h3', '30px');
+    root.style.setProperty('--font-size-h4', '24px');
+    root.style.setProperty('--font-size-h5', '20px');
+    root.style.setProperty('--font-size-h6', '18px');
+    root.style.setProperty('--line-height-base', '1.6');
+  };
+
+  const fetchSiteConfig = useCallback(async () => {
     try {
       // Fetch active typography preset (public endpoint, no auth)
       let apiUrl: string;
@@ -117,42 +119,48 @@ export function useSiteConfig() {
       // Apply default typography on error
       applyDefaultTypography();
     }
-  };
+  }, []); // Empty deps - function doesn't depend on any props/state
 
-  const applyTypographyToDOM = (typographyData: any) => {
-    if (typeof document === 'undefined') return;
+  useEffect(() => {
+    // Ensure we're in browser context
+    if (typeof window === 'undefined') return;
     
-    const root = document.documentElement;
-    
-    // Apply typography CSS custom properties from TypographyPreset
-    root.style.setProperty('--font-body', typographyData.body_font);
-    root.style.setProperty('--font-heading', typographyData.heading_font);
-    root.style.setProperty('--font-size-base', typographyData.font_size_base);
-    root.style.setProperty('--font-size-h1', typographyData.font_size_h1);
-    root.style.setProperty('--font-size-h2', typographyData.font_size_h2);
-    root.style.setProperty('--font-size-h3', typographyData.font_size_h3);
-    root.style.setProperty('--font-size-h4', typographyData.font_size_h4);
-    root.style.setProperty('--font-size-h5', typographyData.font_size_h5);
-    root.style.setProperty('--font-size-h6', typographyData.font_size_h6);
-    root.style.setProperty('--line-height-base', typographyData.line_height_base);
-  };
+    // Skip typography fetch on /typography page - it's a frontend-only analysis tool
+    // This prevents unnecessary API calls and mixed content warnings
+    // Check both pathname (from Next.js) and window.location (fallback for SSR/hydration)
+    const currentPath = pathname || window.location.pathname;
+    if (currentPath === '/typography') {
+      setLoading(false);
+      // Still apply cached typography if available
+      const cachedTypography = localStorage.getItem('activeTypography');
+      if (cachedTypography) {
+        try {
+          const typographyData = JSON.parse(cachedTypography);
+          applyTypographyToDOM(typographyData);
+        } catch (e) {
+          console.warn('Failed to parse cached typography');
+        }
+      } else {
+        // Apply default typography for typography page
+        applyDefaultTypography();
+      }
+      return;
+    }
 
-  const applyDefaultTypography = () => {
-    if (typeof document === 'undefined') return;
+    // Immediately apply cached typography to prevent flash
+    const cachedTypography = localStorage.getItem('activeTypography');
+    if (cachedTypography) {
+      try {
+        const typographyData = JSON.parse(cachedTypography);
+        applyTypographyToDOM(typographyData);
+      } catch (e) {
+        console.warn('Failed to parse cached typography');
+      }
+    }
     
-    const root = document.documentElement;
-    // Default typography
-    root.style.setProperty('--font-body', 'Inter, system-ui, -apple-system, sans-serif');
-    root.style.setProperty('--font-heading', 'Inter, system-ui, -apple-system, sans-serif');
-    root.style.setProperty('--font-size-base', '16px');
-    root.style.setProperty('--font-size-h1', '48px');
-    root.style.setProperty('--font-size-h2', '36px');
-    root.style.setProperty('--font-size-h3', '30px');
-    root.style.setProperty('--font-size-h4', '24px');
-    root.style.setProperty('--font-size-h5', '20px');
-    root.style.setProperty('--font-size-h6', '18px');
-    root.style.setProperty('--line-height-base', '1.6');
-  };
+    // Then fetch fresh data from API
+    fetchSiteConfig();
+  }, [pathname, fetchSiteConfig]); // Re-run when pathname changes
 
   return { config, loading, error, refetch: fetchSiteConfig };
 }
