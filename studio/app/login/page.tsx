@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
@@ -68,7 +68,7 @@ export default function LoginPage() {
         localStorage.removeItem("email_verified");
       }
 
-      // Redirect Admin users to admin dashboard, others to regular dashboard
+      // Redirect Admin users to app admin dashboard, others to regular dashboard
       if (isAdmin) {
         router.push("/admin/dashboard");
       } else {
@@ -180,6 +180,56 @@ export default function LoginPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Admin Testing Links */}
+        <AdminLinks />
+      </div>
+    </div>
+  );
+}
+
+// Separate component to access window.location for protocol detection
+function AdminLinks() {
+  const [djangoAdminUrl, setDjangoAdminUrl] = useState('http://localhost:8000/django-admin/');
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Detect current protocol (http or https)
+      const protocol = window.location.protocol; // 'http:' or 'https:'
+      const hostname = window.location.hostname;
+      
+      // In production, use same protocol and hostname, different port for Django
+      // In development, use localhost:8000
+      if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        // Production: use same domain with /django-admin/ (Nginx will route it)
+        setDjangoAdminUrl(`${protocol}//${hostname}/django-admin/`);
+      } else {
+        // Development: use localhost:8000
+        setDjangoAdminUrl('http://localhost:8000/django-admin/');
+      }
+    }
+  }, []);
+  
+  return (
+    <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+      <p className="text-sm font-semibold text-yellow-800 mb-2">Admin Testing Links:</p>
+      <div className="flex flex-col gap-2 text-sm">
+        <a 
+          href="/admin/dashboard" 
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline"
+        >
+          📊 Next.js App Admin: /admin/dashboard
+        </a>
+        <a 
+          href={djangoAdminUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline"
+        >
+          ⚙️ Django Admin: {djangoAdminUrl}
+        </a>
       </div>
     </div>
   );

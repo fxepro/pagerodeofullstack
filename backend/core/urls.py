@@ -37,7 +37,8 @@ def favicon_view(request):
     return HttpResponse(status=204)  # No Content
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Django admin at /django-admin/ to avoid conflict with Next.js app admin
+    path('django-admin/', admin.site.urls),
     path('', include('users.urls')),
     path('', include('emails.urls')),
     path('', include('dns.urls')),

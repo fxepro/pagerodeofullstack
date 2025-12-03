@@ -42,10 +42,8 @@ const nextConfig = {
         source: '/api/:path*',
         destination: 'http://localhost:8000/api/:path*',
       },
-      {
-        source: '/admin/:path*',
-        destination: 'http://localhost:8000/admin/:path*',
-      },
+      // Note: Django admin should be accessed directly at http://localhost:8000/django-admin/
+      // to avoid redirect loops. Next.js rewrites don't handle Django's APPEND_SLASH redirects well.
     ];
   },
 }

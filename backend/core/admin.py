@@ -17,9 +17,9 @@ LOGS_DIR = BASE_DIR / 'logs'
 
 class MonitoringAdminSite(admin.AdminSite):
     """Custom admin site with monitoring dashboard"""
-    site_header = 'PageRodeo Admin'
-    site_title = 'PageRodeo Admin'
-    index_title = 'Welcome to PageRodeo Administration'
+    site_header = 'PageRodeo Django Admin'
+    site_title = 'PageRodeo Django Admin'
+    index_title = 'Welcome to PageRodeo Django Administration'
 
 
 # Create custom admin site instance (optional - can use default)
