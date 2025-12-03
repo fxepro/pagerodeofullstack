@@ -5,34 +5,42 @@ This checklist verifies the complete email verification flow from code generatio
 
 ## Quick Summary Checklist
 
+**Note:** All items below are automatically tested by `check-verification-code-migration.sh` script. Run the script to see ✅/❌ results for each item.
+
 ### ✅ Step 1: Generate Code and Store in UserProfile
-- [ ] Code is generated using `generate_verification_code()` method
-- [ ] Code is stored in `email_verification_code` field in database
-- [ ] Old `email_verification_token` field is cleared (set to NULL)
-- [ ] Code format is human-readable (e.g., "ABC-123-XYZ")
-- [ ] Code generation happens during registration and email resend
+- [ ] **[TESTED]** Code is generated using `generate_verification_code()` method
+- [ ] **[TESTED]** Code is stored in `email_verification_code` field in database
+- [ ] **[TESTED]** Old `email_verification_token` field is cleared (set to NULL)
+- [ ] **[TESTED]** Code format is human-readable (e.g., "ABC-123-XYZ")
+- [ ] **[TESTED]** Code generation happens during registration and email resend
 
 ### ✅ Step 2: Code is Embedded in the Email
-- [ ] Email verification function accepts `code` parameter (not `token`)
-- [ ] Verification link in email uses `?code=` parameter (not `?token=`)
-- [ ] Email template displays the code to user
-- [ ] Email link format: `https://pagerodeo.com/verify-email?code=ABC-123-XYZ`
+- [ ] **[TESTED]** Email verification function accepts `code` parameter (not `token`)
+- [ ] **[TESTED]** Verification link in email uses `?code=` parameter (not `?token=`)
+- [ ] **[TESTED]** Email template displays the code to user
+- [ ] **[TESTED]** Email link format: `https://pagerodeo.com/verify-email?code=ABC-123-XYZ`
 
 ### ✅ Step 3: Verify-Email Page Verifies for Code (Not Token)
-- [ ] Frontend extracts `code` from URL parameter
-- [ ] Frontend sends `{ code: "..." }` to API (not `{ token: "..." }`)
-- [ ] Backend accepts `code` parameter in verify_email endpoint
-- [ ] Backend uses `verify_code()` method (not `verify_token()`)
-- [ ] Error messages say "code" not "token" (e.g., "Invalid verification code")
-- [ ] Backward compatibility: Still accepts `?token=` from old emails
+- [ ] **[TESTED]** Frontend extracts `code` from URL parameter
+- [ ] **[TESTED]** Frontend sends `{ code: "..." }` to API (not `{ token: "..." }`)
+- [ ] **[TESTED]** Backend accepts `code` parameter in verify_email endpoint
+- [ ] **[TESTED]** Backend uses `verify_code()` method (not `verify_token()`)
+- [ ] **[TESTED]** Error messages say "code" not "token" (e.g., "Invalid verification code")
+- [ ] **[TESTED]** Backward compatibility: Still accepts `?token=` from old emails
 
 ### ✅ Step 4: Clean Handover to Working Login Page from Verification Email
-- [ ] When code is in URL, page auto-verifies without showing form
-- [ ] Shows minimal "Verifying Email..." loading screen
-- [ ] On success, redirects to `/login` page (not dashboard)
-- [ ] Does NOT set authentication tokens in localStorage
-- [ ] User must login with username/password after verification
-- [ ] Verification code is cleared from database after success
+- [ ] **[TESTED]** When code is in URL, page auto-verifies without showing form
+- [ ] **[TESTED]** Shows minimal "Verifying Email..." loading screen
+- [ ] **[TESTED]** On success, redirects to `/login` page (not dashboard)
+- [ ] **[TESTED]** Does NOT set authentication tokens in localStorage
+- [ ] **[TESTED]** User must login with username/password after verification
+- [ ] **[TESTED]** Verification code is cleared from database after success
+
+**To run the test script:**
+```bash
+cd /opt/pagerodeofullstack
+sudo ./ServerDocs/check-verification-code-migration.sh
+```
 
 ---
 

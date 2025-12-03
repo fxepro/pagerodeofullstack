@@ -75,9 +75,47 @@ else
 fi
 echo ""
 
-# Step 3: Build Next.js frontend
+# Step 3: Install backend dependencies
+echo -e "${GREEN}[3/6] Installing backend dependencies...${NC}"
+cd "${BACKEND_DIR}" || {
+  echo -e "${RED}Error: Could not navigate to ${BACKEND_DIR}${NC}"
+  exit 1
+}
+
+# Activate virtual environment if it exists
+if [ -f "venv/bin/activate" ]; then
+  source venv/bin/activate
+elif [ -f "../venv/bin/activate" ]; then
+  source ../venv/bin/activate
+fi
+
+# Install/upgrade dependencies
+echo "Installing Python dependencies..."
+pip install --upgrade pip -q
+pip install -r requirements.txt -q
+
+# Verify python-dotenv is installed (critical for .env loading)
+if python -c "import dotenv" 2>/dev/null; then
+  echo -e "${GREEN}✓ python-dotenv is installed${NC}"
+else
+  echo -e "${YELLOW}⚠️  python-dotenv not found, installing...${NC}"
+  pip install python-dotenv==1.0.0 -q
+  echo -e "${GREEN}✓ python-dotenv installed${NC}"
+fi
+
+# Run migrations
+echo "Running database migrations..."
+python manage.py migrate --noinput
+
+# Collect static files
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
+echo ""
+
+# Step 4: Build Next.js frontend
 if [ "$SKIP_BUILD" = false ]; then
-  echo -e "${GREEN}[3/5] Building Next.js frontend...${NC}"
+  echo -e "${GREEN}[4/6] Building Next.js frontend...${NC}"
   cd "${STUDIO_DIR}" || {
     echo -e "${RED}Error: Could not navigate to ${STUDIO_DIR}${NC}"
     exit 1
@@ -99,12 +137,12 @@ if [ "$SKIP_BUILD" = false ]; then
   fi
   echo ""
 else
-  echo -e "${YELLOW}[3/5] Skipping build (--skip-build flag)${NC}"
+  echo -e "${YELLOW}[4/6] Skipping build (--skip-build flag)${NC}"
   echo ""
 fi
 
-# Step 4: Restart services
-echo -e "${GREEN}[4/5] Restarting services...${NC}"
+# Step 5: Restart services
+echo -e "${GREEN}[5/6] Restarting services...${NC}"
 cd "${PROJECT_ROOT}"
 
 for service in "${SERVICES[@]}"; do
@@ -130,8 +168,8 @@ for service in "${SERVICES[@]}"; do
 done
 echo ""
 
-# Step 5: Show status
-echo -e "${GREEN}[5/5] Service Status${NC}"
+# Step 6: Show status
+echo -e "${GREEN}[6/6] Service Status${NC}"
 echo "----------------------------------------"
 for service in "${SERVICES[@]}"; do
   echo ""

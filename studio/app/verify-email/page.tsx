@@ -113,7 +113,7 @@ function VerifyEmailContent() {
             // Verification failed - show error on verify page
             setError("Verification failed. Please try again.");
             setLoading(false);
-          }
+    }
         } catch (err: any) {
           // Verification failed - show error on verify page
           const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Verification failed. Please try again.";

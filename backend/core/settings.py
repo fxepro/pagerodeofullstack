@@ -21,6 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Look for .env file in the backend directory (BASE_DIR)
 env_path = BASE_DIR / '.env'
 load_dotenv(dotenv_path=env_path)
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+NEXT_PUBLIC_APP_URL = os.getenv("NEXT_PUBLIC_APP_URL")
+
 
 # Environment variable loading
 # Try to use python-decouple if available, otherwise use os.environ
