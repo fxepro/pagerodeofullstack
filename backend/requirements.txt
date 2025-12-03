@@ -23,6 +23,7 @@ qrcode[pil]==7.4.2
 
 # Environment variable management
 django-environ==0.12.0
+python-dotenv==1.0.0
 
 # Email providers and AWS SDK
 django-anymail==10.3

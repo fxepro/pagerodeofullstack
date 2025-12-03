@@ -45,6 +45,11 @@ def send_verification_email(user, code):
             or getattr(settings, 'NEXT_PUBLIC_APP_URL', None)
         )
         
+        # Log what we found
+        logger.info(f"FRONTEND_URL from settings: {getattr(settings, 'FRONTEND_URL', None)}")
+        logger.info(f"NEXT_PUBLIC_APP_URL from settings: {getattr(settings, 'NEXT_PUBLIC_APP_URL', None)}")
+        logger.info(f"DEBUG mode: {getattr(settings, 'DEBUG', False)}")
+        
         # Only use localhost fallback in DEBUG mode
         if not frontend_url:
             if getattr(settings, 'DEBUG', False):
@@ -54,8 +59,6 @@ def send_verification_email(user, code):
                 # Production: fail if not set
                 error_msg = "FRONTEND_URL must be set in production environment"
                 logger.error(error_msg)
-                if getattr(settings, 'DEBUG', False):
-                    raise ValueError(error_msg)
                 # In production, use a safe default that will be obvious if wrong
                 frontend_url = 'https://pagerodeo.com'
                 logger.warning(f"FRONTEND_URL not set in production, using default: {frontend_url}")
@@ -64,7 +67,16 @@ def send_verification_email(user, code):
         if frontend_url == 'http://localhost:8000':
             frontend_url = 'http://localhost:3000' if getattr(settings, 'DEBUG', False) else 'https://pagerodeo.com'
         
-        verification_link = f"{frontend_url.rstrip('/')}/verify-email?code={code}"
+        # Prevent localhost URLs in production (even if DEBUG is accidentally True)
+        if 'localhost' in frontend_url.lower() and not getattr(settings, 'DEBUG', False):
+            logger.error(f"Localhost URL detected in production: {frontend_url}. Falling back to https://pagerodeo.com")
+            frontend_url = 'https://pagerodeo.com'
+        
+        # Strip whitespace and trailing slashes
+        frontend_url = frontend_url.strip().rstrip('/') if frontend_url else None
+        
+        logger.info(f"Using frontend URL for verification email: {frontend_url}")
+        verification_link = f"{frontend_url}/verify-email?code={code}"
 
         subject = "Verify your PageRodeo account"
         context = {

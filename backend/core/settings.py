@@ -12,9 +12,15 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+# Look for .env file in the backend directory (BASE_DIR)
+env_path = BASE_DIR / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # Environment variable loading
 # Try to use python-decouple if available, otherwise use os.environ
@@ -152,8 +158,9 @@ CSRF_TRUSTED_ORIGINS = get_env_list('CSRF_TRUSTED_ORIGINS', default=['http://loc
 
 # Frontend URL - used for email verification links and other frontend redirects
 # Set via environment variable: FRONTEND_URL=https://pagerodeo.com
-FRONTEND_URL = config('FRONTEND_URL', default=None)
-NEXT_PUBLIC_APP_URL = config('NEXT_PUBLIC_APP_URL', default=None)  # Alternative name for Next.js compatibility
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+NEXT_PUBLIC_APP_URL = os.getenv("NEXT_PUBLIC_APP_URL")  # Alternative name for Next.js compatibility
+NEXT_PUBLIC_API_BASE_URL = os.getenv("NEXT_PUBLIC_API_BASE_URL")
 
 # Warn if using insecure defaults
 if DEBUG and SECRET_KEY.startswith('django-insecure-'):
