@@ -42,3 +42,8 @@ Local
     Django Admin: http://localhost:8000/django-admin/
     username:fxepro@gmail.com
     password:fxe
+
+    Backup/admin login
+    http://localhost:3000/admin/login
+
+    http://localhost:3000/django-admin/login

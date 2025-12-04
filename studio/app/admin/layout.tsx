@@ -20,9 +20,15 @@ export default function AdminLayout({
   const pathname = usePathname();
 
   useEffect(() => {
+    // Allow /admin/login without authentication
+    if (pathname === '/admin/login') {
+      setLoading(false);
+      return;
+    }
+
     const token = localStorage.getItem("access_token");
     if (!token) {
-      router.push("/login");
+      router.push("/admin/login");
       return;
     }
 
@@ -40,10 +46,15 @@ export default function AdminLayout({
       .catch(() => {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
-        router.push("/login");
+        router.push("/admin/login");
       })
       .finally(() => setLoading(false));
-  }, [router]);
+  }, [router, pathname]);
+
+  // For login page, render without layout
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (
