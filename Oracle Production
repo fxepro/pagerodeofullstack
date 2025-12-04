@@ -1,0 +1,44 @@
+129.146.57.158
+
+Production
+    User
+    username:shubham
+    password: Rodeo!23
+
+    Admin: https://pagerodeo.com/admin/dashboard
+    username:fxepro@gmail.com
+    password:fxe
+
+
+    Django Admin: https://pagerodeo.com/django-admin/
+    username:fxepro@gmail.com
+    password:fxe
+
+
+
+Django Admin: http://129.146.57.158/django-admin/
+Next.js App Admin: http://129.146.57.158/app/admin/
+
+
+Super Admin
+----------------------------------
+suadmin
+Suadmin!23
+satishd1@gmail.com
+
+
+
+
+Local
+    User
+    username:madman
+    password: Rodeo!23
+
+    Admin: http://localhost:3000/admin/dashboard
+    username:fxepro@gmail.com
+    password:fxe
+
+
+    Django Admin: http://localhost:8000/django-admin/
+    username:fxepro@gmail.com
+    password:fxe

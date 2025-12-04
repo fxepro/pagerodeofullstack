@@ -18,7 +18,11 @@ NC='\033[0m' # No Color
 PROJECT_ROOT="/opt/pagerodeofullstack"
 STUDIO_DIR="${PROJECT_ROOT}/studio"
 BACKEND_DIR="${PROJECT_ROOT}/backend"
-SERVICES=("pagerodeo-nextjs" "pagerodeo-django")
+# Service names - use most common names (pagerodeo-frontend, pagerodeo-backend)
+# If your services use different names, update these variables
+FRONTEND_SERVICE="pagerodeo-frontend"
+BACKEND_SERVICE="pagerodeo-backend"
+SERVICES=("${FRONTEND_SERVICE}" "${BACKEND_SERVICE}")
 
 # Parse arguments
 SKIP_BUILD=false
@@ -205,7 +209,7 @@ for service in "${SERVICES[@]}"; do
 done
 echo ""
 echo "To view logs:"
-echo "  sudo journalctl -u pagerodeo-nextjs -f"
-echo "  sudo journalctl -u pagerodeo-django -f"
+echo "  sudo journalctl -u ${FRONTEND_SERVICE} -f"
+echo "  sudo journalctl -u ${BACKEND_SERVICE} -f"
 echo ""
 

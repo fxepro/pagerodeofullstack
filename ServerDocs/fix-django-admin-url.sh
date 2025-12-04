@@ -38,6 +38,12 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
 
     # Django Admin - changed to /django-admin/ to avoid conflict
+    # Redirect /django-admin (no slash) to /django-admin/ (with slash)
+    location = /django-admin {
+        return 301 /django-admin/;
+    }
+    
+    # Proxy /django-admin/ to Django backend
     location /django-admin/ {
         proxy_pass http://django;
         proxy_set_header Host \$host;
@@ -112,7 +118,7 @@ echo "✅ Django Admin URL Separation Complete"
 echo "=========================================="
 echo ""
 echo "Django Admin: http://$DOMAIN/django-admin/"
-echo "Next.js App Admin: http://$DOMAIN/app/admin/"
+echo "Next.js App Admin: http://$DOMAIN/admin/dashboard"
 echo ""
 echo "Note: Make sure you've updated backend/core/urls.py to use 'django-admin/' instead of 'admin/'"
 echo "      and pushed the changes to GitHub, then pulled on the server."
