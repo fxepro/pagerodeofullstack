@@ -29,7 +29,6 @@ import {
   Trash2,
   StopCircle
 } from "lucide-react";
-import { exportToPDF } from "@/lib/pdf-export";
 import { triggerBackgroundSave } from "@/lib/save-audit-to-db";
 
 import { getApiBaseUrl } from '@/lib/api-config';
