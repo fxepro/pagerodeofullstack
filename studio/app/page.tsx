@@ -29,6 +29,12 @@ export default function HomePage() {
       })
       .catch(err => {
         console.error('Error fetching featured deal:', err);
+        console.error('Request URL:', getDjangoApiUrl('/api/deals/featured/'));
+        console.error('Error response:', err.response?.data);
+        console.error('Error status:', err.response?.status);
+        if (err.response?.status === 404) {
+          console.error('404 Error: /api/deals/featured/ not found. Check nginx configuration to proxy /api/* to Django backend.');
+        }
       });
     
     // Check if user is logged in and redirect to dashboard

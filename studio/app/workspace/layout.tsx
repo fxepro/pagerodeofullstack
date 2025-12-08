@@ -115,12 +115,21 @@ export default function WorkspaceLayout({
       })
       .catch((err) => {
         console.error("Error loading workspace:", err);
+        console.error("API_BASE:", API_BASE);
+        console.error("Request URL:", `${API_BASE}/api/navigation/`);
+        console.error("Error response:", err.response?.data);
+        console.error("Error status:", err.response?.status);
+        console.error("Error message:", err.message);
+        
         // Clear tokens on any auth error
         if (err.response?.status === 401 || !err.response) {
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
+          router.push("/workspace/login");
+        } else if (err.response?.status === 404) {
+          // 404 means API endpoint not found - likely nginx routing issue
+          console.error("404 Error: API endpoint not found. Check nginx configuration to proxy /api/* to Django backend.");
         }
-        router.push("/workspace/login");
       });
   }, [router, pathname]);
 
