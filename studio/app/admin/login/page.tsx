@@ -62,8 +62,8 @@ export default function AdminLoginPage() {
         email: userRes.data.email || '',
       });
 
-      // Redirect to admin dashboard
-      router.push("/admin/dashboard");
+      // Redirect to workspace (unified dashboard)
+      router.push("/workspace");
     } catch (err: any) {
       if (err.response?.status === 401) {
         setError("Invalid username or password");

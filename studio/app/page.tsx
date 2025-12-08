@@ -45,13 +45,9 @@ export default function HomePage() {
           throw new Error('Invalid token');
         })
         .then(data => {
-          // If email is verified, redirect to appropriate dashboard
+          // If email is verified, redirect to workspace (unified dashboard)
           if (data.email_verified !== false) {
-            if (data.role === 'admin') {
-              router.push("/admin/dashboard");
-            } else {
-              router.push("/dashboard");
-            }
+            router.push("/workspace");
           }
         })
         .catch(() => {

@@ -93,10 +93,9 @@ export default function RegisterPage() {
       if (!emailVerified) {
         // Redirect to verification page with email in URL
         router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
-      } else if (userRes.data.role === 'admin') {
-        router.push("/admin/dashboard");
       } else {
-        router.push("/dashboard");
+        // Redirect to workspace (unified dashboard) for all users
+        router.push("/workspace");
       }
     } catch (err: any) {
       console.error("Registration error:", err);

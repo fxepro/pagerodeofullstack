@@ -40,7 +40,8 @@ export default function AdminLayout({
         // Normalize role check (handle uppercase or undefined)
         const normalizedRole = (res.data.role ?? '').toString().toLowerCase();
         if (normalizedRole !== 'admin') {
-          router.push("/dashboard");
+          // Non-admin users should use workspace, not admin area
+          router.push("/workspace");
         }
       })
       .catch(() => {
