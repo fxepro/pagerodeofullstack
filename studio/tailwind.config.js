@@ -3,10 +3,27 @@
  * 
  * Theme customization using CSS variables for dynamic theming.
  * Base variables are defined in app/globals.css.
+ * 
+ * ⚠️ CRITICAL: This config runs in Node.js during build time, NOT in the browser.
+ * 
+ * ❌ NEVER USE THESE IN THIS FILE:
+ * - window
+ * - document
+ * - localStorage
+ * - navigator
+ * - matchMedia
+ * - Any browser-only APIs
+ * 
+ * ✅ ONLY USE:
+ * - Static values
+ * - CSS variables (var(--variable-name))
+ * - Node.js APIs (require, module.exports)
+ * 
+ * For runtime theming, use CSS variables and update them in your React components.
  */
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+const config = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -90,3 +107,5 @@ module.exports = {
     require('tailwindcss-animate'),
   ],
 };
+
+module.exports = config;
