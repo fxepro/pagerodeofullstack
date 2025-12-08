@@ -1,6 +1,5 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
 
 // Import translation files - Recommended SaaS language set
 import enTranslations from '../locales/en/common.json'
@@ -39,29 +38,44 @@ const resources = {
   he: { translation: heTranslations },
 }
 
-i18n
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    resources,
-    fallbackLng: 'en',
-    lng: typeof window === 'undefined' ? 'en' : undefined, // Force 'en' during SSR
-    defaultNS: 'translation',
-    interpolation: {
-      escapeValue: false, // React already escapes values
-    },
-    detection: {
+// Check if we're in browser environment before using LanguageDetector
+const isBrowser = typeof window !== 'undefined'
+
+// Initialize i18n
+const initConfig: any = {
+  resources,
+  fallbackLng: 'en',
+  lng: isBrowser ? undefined : 'en', // Force 'en' during SSR
+  defaultNS: 'translation',
+  interpolation: {
+    escapeValue: false, // React already escapes values
+  },
+  react: {
+    useSuspense: false, // Disable suspense for better compatibility
+  },
+}
+
+// Only add LanguageDetector and detection config on client side
+if (isBrowser) {
+  try {
+    // Dynamically import LanguageDetector to avoid SSR issues
+    const LanguageDetector = require('i18next-browser-languagedetector')
+    i18n.use(LanguageDetector.default || LanguageDetector)
+    initConfig.detection = {
       // Order of detection methods
       order: ['localStorage', 'navigator', 'htmlTag'],
       // Keys to lookup language from
       lookupLocalStorage: 'preferred_language',
       // Cache user language
       caches: ['localStorage'],
-    },
-    react: {
-      useSuspense: false, // Disable suspense for better compatibility
-    },
-  })
+    }
+  } catch (e) {
+    // LanguageDetector not available, continue without it
+    console.warn('LanguageDetector not available, using default language')
+  }
+}
+
+i18n.use(initReactI18next).init(initConfig)
 
 export default i18n
 
