@@ -145,7 +145,3 @@ studio/public/pages/
 tatus*
 tudio
 
-# Markdown files in root directory (except README.md)
-/*.md
-!README.md
-

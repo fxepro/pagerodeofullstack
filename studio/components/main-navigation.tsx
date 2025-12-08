@@ -5,8 +5,10 @@ import { cn } from "@/lib/utils";
 import { Activity, BarChart3, Zap, Shield, Code, Link2, Gauge, Eye, Lock, FileText, Menu, X, Server, Type } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function MainNavigation() {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -49,7 +51,7 @@ export function MainNavigation() {
                   "h-4 w-4 mr-1.5 transition-transform duration-300",
                   pathname === "/performance" || pathname.startsWith("/performance") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                Performance
+                {t('navigation.performance')}
               </Link>
               <Link
                 href="/monitor"
@@ -64,7 +66,7 @@ export function MainNavigation() {
                   "h-4 w-4 mr-1.5 transition-transform duration-300",
                   pathname === "/monitor" || pathname.startsWith("/monitor") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                Monitor
+                {t('navigation.monitor')}
               </Link>
               <Link
                 href="/ssl"
@@ -79,7 +81,7 @@ export function MainNavigation() {
                   "h-4 w-4 mr-1.5 transition-transform duration-300",
                   pathname === "/ssl" || pathname.startsWith("/ssl") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                SSL
+                {t('navigation.ssl')}
               </Link>
               <Link
                 href="/dns"
@@ -94,7 +96,7 @@ export function MainNavigation() {
                   "h-4 w-4 mr-1.5 transition-transform duration-300",
                   pathname === "/dns" || pathname.startsWith("/dns") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                DNS
+                {t('navigation.dns')}
               </Link>
               <Link
                 href="/sitemap"
@@ -109,7 +111,7 @@ export function MainNavigation() {
                   "h-4 w-4 mr-1.5 transition-transform duration-300",
                   pathname === "/sitemap" || pathname.startsWith("/sitemap") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                Sitemap
+                {t('navigation.sitemap')}
               </Link>
               <Link
                 href="/api"
@@ -124,7 +126,7 @@ export function MainNavigation() {
                   "h-4 w-4 mr-1.5 transition-transform duration-300",
                   pathname === "/api" || pathname.startsWith("/api") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                API
+                {t('navigation.api')}
               </Link>
               <Link
                 href="/links"
@@ -139,7 +141,7 @@ export function MainNavigation() {
                   "h-4 w-4 mr-1.5 transition-transform duration-300",
                   pathname === "/links" || pathname.startsWith("/links") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                Links
+                {t('navigation.links')}
               </Link>
               <Link
                 href="/typography"
@@ -154,7 +156,7 @@ export function MainNavigation() {
                   "h-4 w-4 mr-1.5 transition-transform duration-300",
                   pathname === "/typography" || pathname.startsWith("/typography") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                Typography
+                {t('navigation.typography')}
               </Link>
             </div>
           </div>
@@ -190,7 +192,7 @@ export function MainNavigation() {
                     "h-4 w-4 transition-transform duration-300",
                     pathname === "/performance" || pathname.startsWith("/performance") ? "scale-110" : ""
                   )} />
-                  <span>Performance</span>
+                  <span>{t('navigation.performance')}</span>
                 </Link>
                 <Link
                   href="/monitor"
@@ -206,7 +208,7 @@ export function MainNavigation() {
                     "h-4 w-4 transition-transform duration-300",
                     pathname === "/monitor" || pathname.startsWith("/monitor") ? "scale-110" : ""
                   )} />
-                  <span>Monitor</span>
+                  <span>{t('navigation.monitor')}</span>
                 </Link>
                 <Link
                   href="/ssl"
@@ -222,7 +224,7 @@ export function MainNavigation() {
                     "h-4 w-4 transition-transform duration-300",
                     pathname === "/ssl" || pathname.startsWith("/ssl") ? "scale-110" : ""
                   )} />
-                  <span>SSL Check</span>
+                  <span>{t('navigation.sslCheck')}</span>
                 </Link>
                 <Link
                   href="/dns"
@@ -238,7 +240,7 @@ export function MainNavigation() {
                     "h-4 w-4 transition-transform duration-300",
                     pathname === "/dns" || pathname.startsWith("/dns") ? "scale-110" : ""
                   )} />
-                  <span>DNS Check</span>
+                  <span>{t('navigation.dnsCheck')}</span>
                 </Link>
                 <Link
                   href="/sitemap"
@@ -254,7 +256,7 @@ export function MainNavigation() {
                     "h-4 w-4 transition-transform duration-300",
                     pathname === "/sitemap" || pathname.startsWith("/sitemap") ? "scale-110" : ""
                   )} />
-                  <span>Sitemap</span>
+                  <span>{t('navigation.sitemap')}</span>
                 </Link>
                 <Link
                   href="/api"
@@ -270,7 +272,7 @@ export function MainNavigation() {
                     "h-4 w-4 transition-transform duration-300",
                     pathname === "/api" || pathname.startsWith("/api") ? "scale-110" : ""
                   )} />
-                  <span>API</span>
+                  <span>{t('navigation.api')}</span>
                 </Link>
                 <Link
                   href="/links"
@@ -286,7 +288,7 @@ export function MainNavigation() {
                     "h-4 w-4 transition-transform duration-300",
                     pathname === "/links" || pathname.startsWith("/links") ? "scale-110" : ""
                   )} />
-                  <span>Links</span>
+                  <span>{t('navigation.links')}</span>
                 </Link>
                 <Link
                   href="/typography"
@@ -302,7 +304,7 @@ export function MainNavigation() {
                     "h-4 w-4 transition-transform duration-300",
                     pathname === "/typography" || pathname.startsWith("/typography") ? "scale-110" : ""
                   )} />
-                  <span>Typography</span>
+                  <span>{t('navigation.typography')}</span>
                 </Link>
               </div>
             </div>

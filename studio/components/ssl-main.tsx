@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useSslAnalysis } from "@/hooks/use-ssl-analysis"
+import { useTranslation } from "react-i18next"
 import { ErrorDisplay } from "@/components/error-display"
 import { Shield, CheckCircle, AlertTriangle, XCircle, Globe, Clock, Activity, Eye, Server, Lock, Wifi, AlertCircle, Award, Zap, Key, FileText, Calendar, Users, Star, ChevronRight, Copy, ExternalLink } from "lucide-react"
 import { ConsultationCTA } from "@/components/consultation-cta"
@@ -54,6 +55,7 @@ interface SslMainProps {
 }
 
 export function SslMain({ url: initialUrl = "" }: SslMainProps) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const { url, setUrl, isChecking, sslData, handleCheck, error, isRetrying, clearError } = useSslAnalysis({ initialUrl, autoRun: !!initialUrl })
 
@@ -80,8 +82,8 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     toast({
-      title: "Copied to clipboard",
-      description: "Text has been copied to your clipboard",
+      title: t('ssl.copiedToClipboard'),
+      description: t('ssl.copiedToClipboardDesc'),
     })
   }
 
@@ -92,7 +94,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
         <div className="p-6">
           <div className="text-center py-8">
             <Activity className="animate-spin h-12 w-12 text-palette-primary mx-auto mb-4" />
-            <p className="text-slate-600">Checking SSL certificate for {initialUrl}...</p>
+            <p className="text-slate-600">{t('ssl.checkingFor', { url: initialUrl })}</p>
           </div>
         </div>
       );
@@ -123,10 +125,10 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
               <div>
                 <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                   <Shield className="h-6 w-6 text-palette-primary" />
-                  SSL & Domain Analysis for {sslData.domain}
+                  {t('ssl.sslDomainAnalysisFor', { domain: sslData.domain })}
                 </h2>
                 <p className="text-slate-600 mt-1">
-                  Comprehensive security and domain information
+                  {t('ssl.comprehensiveSecurity')}
                 </p>
               </div>
               <Button
@@ -136,7 +138,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                 className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
               >
                 <Activity className={`h-4 w-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
-                Re-check
+                {t('ssl.recheck')}
               </Button>
             </div>
           </div>
@@ -155,13 +157,13 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-slate-800 text-xl">SSL Certificate</CardTitle>
+                      <CardTitle className="text-slate-800 text-xl">{t('ssl.sslCertificate')}</CardTitle>
                       <Badge className={`${sslData.ssl.valid ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'} px-3 py-1 text-xs font-medium`}>
-                        {sslData.ssl.valid ? 'VALID' : 'INVALID'}
+                        {sslData.ssl.valid ? t('ssl.valid') : t('ssl.invalid')}
                       </Badge>
                     </div>
                     <CardDescription className="text-slate-600 mt-1">
-                      {sslData.ssl.valid ? "Certificate is valid and secure" : "Certificate issues detected"}
+                      {sslData.ssl.valid ? t('ssl.certificateValid') : t('ssl.certificateIssues')}
                     </CardDescription>
                   </div>
                 </div>
@@ -178,12 +180,12 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl p-5 border border-slate-200/50">
                     <div className="flex items-center gap-2 mb-4">
                       <Award className="h-5 w-5 text-palette-primary" />
-                      <h4 className="font-semibold text-slate-800">Certificate Authority</h4>
+                      <h4 className="font-semibold text-slate-800">{t('ssl.certificateAuthority')}</h4>
                     </div>
                     <div className="space-y-3">
                       <div className="group">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-600 text-sm">Issuer</span>
+                          <span className="text-slate-600 text-sm">{t('ssl.issuer')}</span>
                           <button 
                             onClick={() => copyToClipboard(sslData.ssl.issuer)}
                             className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -217,23 +219,23 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-5 border border-blue-200/50">
                     <div className="flex items-center gap-2 mb-4">
                       <Calendar className="h-5 w-5 text-blue-600" />
-                      <h4 className="font-semibold text-slate-800">Validity Period</h4>
+                      <h4 className="font-semibold text-slate-800">{t('ssl.validityPeriod')}</h4>
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-600 text-sm">Valid From</span>
+                        <span className="text-slate-600 text-sm">{t('ssl.validFrom')}</span>
                         <span className="text-slate-800 bg-white rounded-lg px-3 py-1 border text-sm">
                           {formatDate(sslData.ssl.validFrom)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-600 text-sm">Valid To</span>
+                        <span className="text-slate-600 text-sm">{t('ssl.validTo')}</span>
                         <span className="text-slate-800 bg-white rounded-lg px-3 py-1 border text-sm">
                           {formatDate(sslData.ssl.validTo)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-600 text-sm">Days Remaining</span>
+                        <span className="text-slate-600 text-sm">{t('ssl.daysRemaining')}</span>
                         <Badge className={`${getExpiryBadgeColor(sslData.ssl.daysUntilExpiry)} px-3 py-1 text-sm font-semibold`}>
                           <Clock className="h-3 w-3 mr-1" />
                           {sslData.ssl.daysUntilExpiry}
@@ -248,11 +250,11 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-5 border border-green-200/50">
                     <div className="flex items-center gap-2 mb-4">
                       <Key className="h-5 w-5 text-green-600" />
-                      <h4 className="font-semibold text-slate-800">Encryption Details</h4>
+                      <h4 className="font-semibold text-slate-800">{t('ssl.encryptionDetails')}</h4>
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-600 text-sm">Protocol</span>
+                        <span className="text-slate-600 text-sm">{t('ssl.protocol')}</span>
                         <Badge className="bg-green-100 text-green-800 border-green-200 px-3 py-1 text-sm font-medium">
                           <Zap className="h-3 w-3 mr-1" />
                           {sslData.ssl.protocol}
@@ -260,7 +262,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                       </div>
                       <div className="group">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-600 text-sm">Cipher Suite</span>
+                          <span className="text-slate-600 text-sm">{t('ssl.cipherSuite')}</span>
                           <button 
                             onClick={() => copyToClipboard(sslData.ssl.cipher)}
                             className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -285,13 +287,13 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   <div className="bg-gradient-to-br from-palette-accent-3 to-palette-accent-3/50 rounded-xl p-5 border border-palette-accent-2/50">
                     <div className="flex items-center gap-2 mb-4">
                       <FileText className="h-5 w-5 text-palette-primary" />
-                      <h4 className="font-semibold text-slate-800">Certificate Identifiers</h4>
+                      <h4 className="font-semibold text-slate-800">{t('ssl.certificateIdentifiers')}</h4>
                     </div>
                     <div className="space-y-3">
                       {sslData.ssl.serialNumber && (
                         <div className="group">
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-600 text-sm">Serial Number</span>
+                            <span className="text-slate-600 text-sm">{t('ssl.serialNumber')}</span>
                             <button 
                               onClick={() => copyToClipboard(sslData.ssl.serialNumber!)}
                               className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -328,9 +330,9 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                     <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-xl p-5 border border-orange-200/50">
                       <div className="flex items-center gap-2 mb-4">
                         <Globe className="h-5 w-5 text-orange-600" />
-                        <h4 className="font-semibold text-slate-800">Alternative Names</h4>
+                        <h4 className="font-semibold text-slate-800">{t('ssl.alternativeNames')}</h4>
                         <Badge className="bg-orange-100 text-orange-800 border-orange-200 px-2 py-1 text-xs">
-                          {sslData.ssl.altNames.length} domains
+                          {t('ssl.domains', { count: sslData.ssl.altNames.length })}
                         </Badge>
                       </div>
                       <div className="space-y-2">
@@ -349,7 +351,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                         ))}
                         {sslData.ssl.altNames.length > 6 && (
                           <div className="text-slate-500 text-sm text-center pt-2">
-                            ... and {sslData.ssl.altNames.length - 6} more domains
+                            {t('ssl.andMoreDomains', { count: sslData.ssl.altNames.length - 6 })}
                           </div>
                         )}
                       </div>
@@ -369,15 +371,15 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                     <Globe className="h-7 w-7 text-palette-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-slate-800 text-xl">Domain & Security</CardTitle>
+                    <CardTitle className="text-slate-800 text-xl">{t('ssl.domainSecurity')}</CardTitle>
                     <CardDescription className="text-slate-600 mt-1">
-                      Registration details and security configuration
+                      {t('ssl.registrationDetails')}
                     </CardDescription>
                   </div>
                 </div>
                 <Badge className="bg-palette-accent-3 text-purple-800 border-palette-accent-2 px-3 py-1 text-sm font-medium">
                   <Shield className="h-3 w-3 mr-1" />
-                  Secured
+                  {t('ssl.secured')}
                 </Badge>
               </div>
             </CardHeader>
@@ -388,12 +390,12 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   <div className="bg-gradient-to-br from-palette-accent-3 to-palette-accent-3/50 rounded-xl p-5 border border-palette-accent-2/50">
                     <div className="flex items-center gap-2 mb-4">
                       <Users className="h-5 w-5 text-palette-primary" />
-                      <h4 className="font-semibold text-slate-800">Domain Registration</h4>
+                      <h4 className="font-semibold text-slate-800">{t('ssl.domainRegistration')}</h4>
                     </div>
                     <div className="space-y-4">
                       <div className="group">
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-600 text-sm">Registrar</span>
+                          <span className="text-slate-600 text-sm">{t('ssl.registrar')}</span>
                           <button 
                             onClick={() => copyToClipboard(sslData.domain_info.registrar)}
                             className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -406,19 +408,19 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                         </div>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-600 text-sm">Registration Date</span>
+                        <span className="text-slate-600 text-sm">{t('ssl.registrationDate')}</span>
                         <span className="text-slate-800 bg-white rounded-lg px-3 py-1 border text-sm">
                           {formatDate(sslData.domain_info.created)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-600 text-sm">Expiry Date</span>
+                        <span className="text-slate-600 text-sm">{t('ssl.expiryDate')}</span>
                         <span className="text-slate-800 bg-white rounded-lg px-3 py-1 border text-sm">
                           {formatDate(sslData.domain_info.expires)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-600 text-sm">Days Until Expiry</span>
+                        <span className="text-slate-600 text-sm">{t('ssl.daysUntilExpiry')}</span>
                         <Badge className={`${getExpiryBadgeColor(sslData.domain_info.daysUntilExpiry)} px-3 py-1 text-sm font-semibold`}>
                           <Calendar className="h-3 w-3 mr-1" />
                           {sslData.domain_info.daysUntilExpiry}
@@ -432,9 +434,9 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                     <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl p-5 border border-slate-200/50">
                       <div className="flex items-center gap-2 mb-4">
                         <FileText className="h-5 w-5 text-slate-600" />
-                        <h4 className="font-semibold text-slate-800">Domain Status</h4>
+                        <h4 className="font-semibold text-slate-800">{t('ssl.domainStatus')}</h4>
                         <Badge className="bg-slate-100 text-slate-800 border-slate-200 px-2 py-1 text-xs">
-                          {sslData.domain_info.status.length} flags
+                          {t('ssl.flags', { count: sslData.domain_info.status.length })}
                         </Badge>
                       </div>
                       <div className="space-y-2">
@@ -461,7 +463,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-5 border border-green-200/50">
                     <div className="flex items-center gap-2 mb-4">
                       <Shield className="h-5 w-5 text-green-600" />
-                      <h4 className="font-semibold text-slate-800">Security Features</h4>
+                      <h4 className="font-semibold text-slate-800">{t('ssl.securityFeatures')}</h4>
                     </div>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
@@ -471,10 +473,10 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                           ) : (
                             <XCircle className="h-5 w-5 text-red-500" />
                           )}
-                          <span className="text-slate-700 font-medium">HSTS Enabled</span>
+                          <span className="text-slate-700 font-medium">{t('ssl.hstsEnabled')}</span>
                         </div>
                         <Badge className={`${sslData.security.hsts ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'} px-2 py-1 text-xs`}>
-                          {sslData.security.hsts ? 'Active' : 'Disabled'}
+                          {sslData.security.hsts ? t('ssl.active') : t('ssl.disabled')}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between">
@@ -484,10 +486,10 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                           ) : (
                             <XCircle className="h-5 w-5 text-red-500" />
                           )}
-                          <span className="text-slate-700 font-medium">HTTPS Redirect</span>
+                          <span className="text-slate-700 font-medium">{t('ssl.httpsRedirect')}</span>
                         </div>
                         <Badge className={`${sslData.security.redirectsToHttps ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'} px-2 py-1 text-xs`}>
-                          {sslData.security.redirectsToHttps ? 'Enabled' : 'Disabled'}
+                          {sslData.security.redirectsToHttps ? t('ssl.enabled') : t('ssl.disabled')}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between">
@@ -497,10 +499,10 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                           ) : (
                             <AlertTriangle className="h-5 w-5 text-yellow-500" />
                           )}
-                          <span className="text-slate-700 font-medium">Mixed Content</span>
+                          <span className="text-slate-700 font-medium">{t('ssl.mixedContent')}</span>
                         </div>
                         <Badge className={`${!sslData.security.mixedContent ? 'bg-green-100 text-green-800 border-green-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200'} px-2 py-1 text-xs`}>
-                          {!sslData.security.mixedContent ? 'Secure' : 'Warning'}
+                          {!sslData.security.mixedContent ? t('ssl.secure') : t('ssl.warning')}
                         </Badge>
                       </div>
                     </div>
@@ -510,9 +512,9 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-5 border border-blue-200/50">
                     <div className="flex items-center gap-2 mb-4">
                       <Lock className="h-5 w-5 text-blue-600" />
-                      <h4 className="font-semibold text-slate-800">Security Headers</h4>
+                      <h4 className="font-semibold text-slate-800">{t('ssl.securityHeaders')}</h4>
                       <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-2 py-1 text-xs">
-                        {sslData.security.securityHeaders.length} headers
+                        {t('ssl.headers', { count: sslData.security.securityHeaders.length })}
                       </Badge>
                     </div>
                     <div className="space-y-2">
@@ -536,7 +538,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                       ) : (
                         <div className="text-slate-500 text-sm text-center py-4 bg-white rounded-lg border border-dashed">
                           <AlertTriangle className="h-4 w-4 mx-auto mb-2 text-yellow-500" />
-                          No security headers detected
+                          {t('ssl.noSecurityHeaders')}
                         </div>
                       )}
                     </div>
@@ -546,7 +548,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   <div className="bg-gradient-to-br from-yellow-50 to-yellow-100/50 rounded-xl p-5 border border-yellow-200/50">
                     <div className="flex items-center gap-2 mb-4">
                       <Star className="h-5 w-5 text-yellow-600" />
-                      <h4 className="font-semibold text-slate-800">Security Score</h4>
+                      <h4 className="font-semibold text-slate-800">{t('ssl.securityScore')}</h4>
                     </div>
                     <div className="text-center">
                       {(() => {
@@ -565,10 +567,10 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                               {score}%
                             </div>
                             <Badge className={`${scoreBg} px-4 py-2 text-sm font-medium`}>
-                              {score >= 75 ? 'Excellent' : score >= 50 ? 'Good' : 'Needs Improvement'}
+                              {score >= 75 ? t('ssl.excellent') : score >= 50 ? t('ssl.good') : t('ssl.needsImprovement')}
                             </Badge>
                             <div className="text-slate-600 text-xs mt-2">
-                              Based on HTTPS, HSTS, headers, and content security
+                              {t('ssl.scoreBasedOn')}
                             </div>
                           </>
                         );
@@ -605,17 +607,16 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
           <div className="mb-6">
             <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
               <Shield className="h-4 w-4 mr-2" />
-              SSL & Domain Security
+              {t('ssl.heroBadge')}
             </Badge>
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            SSL & Domain Checker
+            {t('ssl.heroTitle')}
           </h1>
           
           <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed">
-            Analyze SSL certificates, domain information, DNS records, and security headers. 
-            Monitor expiration dates and security configurations.
+            {t('ssl.heroDescription')}
           </p>
 
           {/* URL Input Section - Glassmorphism style */}
@@ -625,7 +626,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                 <Input
                   id="ssl-domain"
                   type="text"
-                  placeholder="example.com or https://example.com"
+                  placeholder={t('ssl.urlPlaceholder')}
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   className="flex-1 h-14 text-lg px-4 bg-white/90 border-0 rounded-xl placeholder:text-gray-500 focus:ring-2 focus:ring-white/50"
@@ -639,12 +640,12 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   {isChecking ? (
                     <>
                       <Activity className="h-5 w-5 mr-2 animate-spin" />
-                      Checking...
+                      {t('ssl.checking')}
                     </>
                   ) : (
                     <>
                       <Zap className="h-5 w-5 mr-2" />
-                      Analyze
+                      {t('ssl.analyze')}
                     </>
                   )}
               </Button>
@@ -652,7 +653,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
             </div>
             
             <p className="text-center text-white/80 mt-4 text-sm">
-              We'll check SSL certificates, DNS records, domain registration, and security headers
+              {t('ssl.helperText')}
             </p>
           </div>
         </div>
@@ -686,22 +687,22 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                     <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                       <Lock className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3 text-slate-800">SSL Certificate</h3>
+                    <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('ssl.sslCertificateFeature')}</h3>
                     <p className="text-slate-600 mb-4">
-                      Complete SSL certificate analysis and validation with detailed security insights.
+                      {t('ssl.sslCertificateDesc')}
                     </p>
                     <ul className="space-y-2 text-sm text-slate-500">
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Certificate validity & expiration
+                        {t('ssl.certificateValidity')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Issuer and chain validation
+                        {t('ssl.issuerChainValidation')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Encryption strength analysis
+                        {t('ssl.encryptionStrength')}
                       </li>
                     </ul>
                   </div>
@@ -715,22 +716,22 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                     <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                       <Globe className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3 text-slate-800">Domain Info</h3>
+                    <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('ssl.domainInfo')}</h3>
                     <p className="text-slate-600 mb-4">
-                      Domain registration and security details for comprehensive domain analysis.
+                      {t('ssl.domainInfoDesc')}
                     </p>
                     <ul className="space-y-2 text-sm text-slate-500">
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Registration & expiry dates
+                        {t('ssl.registrationExpiryDates')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Security headers analysis
+                        {t('ssl.securityHeadersAnalysis')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        HTTPS & HSTS status
+                        {t('ssl.httpsHstsStatus')}
                       </li>
                     </ul>
                   </div>
@@ -748,10 +749,10 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                   <div>
                     <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                       <Shield className="h-6 w-6 text-palette-primary" />
-                      SSL & Domain Analysis for {sslData.domain}
+                      {t('ssl.sslDomainAnalysisFor', { domain: sslData.domain })}
                     </h2>
                     <p className="text-slate-600 mt-1">
-                      Comprehensive security and domain information
+                      {t('ssl.comprehensiveSecurity')}
                     </p>
                   </div>
                   <Button
@@ -761,7 +762,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                     className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                   >
                     <Activity className={`h-4 w-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
-                    Re-check
+                    {t('ssl.recheck')}
                   </Button>
                 </div>
               </div>
@@ -792,7 +793,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                     </div>
                     <Badge className={`${getExpiryBadgeColor(sslData.ssl.daysUntilExpiry)} px-3 py-1 text-sm font-semibold border`}>
                       <Calendar className="h-3 w-3 mr-1" />
-                      {sslData.ssl.daysUntilExpiry} days
+                      {t('ssl.days', { days: sslData.ssl.daysUntilExpiry })}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -803,12 +804,12 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                       <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl p-5 border border-slate-200/50">
                         <div className="flex items-center gap-2 mb-4">
                           <Award className="h-5 w-5 text-palette-primary" />
-                          <h4 className="font-semibold text-slate-800">Certificate Authority</h4>
+                          <h4 className="font-semibold text-slate-800">{t('ssl.certificateAuthority')}</h4>
                         </div>
                         <div className="space-y-3">
                           <div className="group">
                             <div className="flex items-center justify-between">
-                              <span className="text-slate-600 text-sm">Issuer</span>
+                              <span className="text-slate-600 text-sm">{t('ssl.issuer')}</span>
                               <button 
                                 onClick={() => copyToClipboard(sslData.ssl.issuer)}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -823,7 +824,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                           {sslData.ssl.subject && (
                             <div className="group">
                               <div className="flex items-center justify-between">
-                                <span className="text-slate-600 text-sm">Subject</span>
+                                <span className="text-slate-600 text-sm">{t('ssl.subject')}</span>
                                 <button 
                                   onClick={() => copyToClipboard(sslData.ssl.subject!)}
                                   className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -842,23 +843,23 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                       <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-5 border border-blue-200/50">
                         <div className="flex items-center gap-2 mb-4">
                           <Calendar className="h-5 w-5 text-blue-600" />
-                          <h4 className="font-semibold text-slate-800">Validity Period</h4>
+                          <h4 className="font-semibold text-slate-800">{t('ssl.validityPeriod')}</h4>
                         </div>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-600 text-sm">Valid From</span>
+                            <span className="text-slate-600 text-sm">{t('ssl.validFrom')}</span>
                             <span className="text-slate-800 bg-white rounded-lg px-3 py-1 border text-sm">
                               {formatDate(sslData.ssl.validFrom)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-600 text-sm">Valid To</span>
+                            <span className="text-slate-600 text-sm">{t('ssl.validTo')}</span>
                             <span className="text-slate-800 bg-white rounded-lg px-3 py-1 border text-sm">
                               {formatDate(sslData.ssl.validTo)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-600 text-sm">Days Remaining</span>
+                            <span className="text-slate-600 text-sm">{t('ssl.daysRemaining')}</span>
                             <Badge className={`${getExpiryBadgeColor(sslData.ssl.daysUntilExpiry)} px-3 py-1 text-sm font-semibold`}>
                               <Clock className="h-3 w-3 mr-1" />
                               {sslData.ssl.daysUntilExpiry}
@@ -873,11 +874,11 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                       <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-5 border border-green-200/50">
                         <div className="flex items-center gap-2 mb-4">
                           <Key className="h-5 w-5 text-green-600" />
-                          <h4 className="font-semibold text-slate-800">Encryption Details</h4>
+                          <h4 className="font-semibold text-slate-800">{t('ssl.encryptionDetails')}</h4>
                         </div>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-600 text-sm">Protocol</span>
+                            <span className="text-slate-600 text-sm">{t('ssl.protocol')}</span>
                             <Badge className="bg-green-100 text-green-800 border-green-200 px-3 py-1 text-sm font-medium">
                               <Zap className="h-3 w-3 mr-1" />
                               {sslData.ssl.protocol}
@@ -885,7 +886,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                           </div>
                           <div className="group">
                             <div className="flex items-center justify-between">
-                              <span className="text-slate-600 text-sm">Cipher Suite</span>
+                              <span className="text-slate-600 text-sm">{t('ssl.cipherSuite')}</span>
                               <button 
                                 onClick={() => copyToClipboard(sslData.ssl.cipher)}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -898,9 +899,9 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                             </div>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-600 text-sm">Key Size</span>
+                            <span className="text-slate-600 text-sm">{t('ssl.keySize')}</span>
                             <Badge className="bg-white text-slate-800 border px-3 py-1 text-sm font-semibold">
-                              {sslData.ssl.keySize} bits
+                              {t('ssl.bits', { bits: sslData.ssl.keySize })}
                             </Badge>
                           </div>
                         </div>
@@ -910,13 +911,13 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                       <div className="bg-gradient-to-br from-palette-accent-3 to-palette-accent-3/50 rounded-xl p-5 border border-palette-accent-2/50">
                         <div className="flex items-center gap-2 mb-4">
                           <FileText className="h-5 w-5 text-palette-primary" />
-                          <h4 className="font-semibold text-slate-800">Certificate Identifiers</h4>
+                          <h4 className="font-semibold text-slate-800">{t('ssl.certificateIdentifiers')}</h4>
                         </div>
                         <div className="space-y-3">
                           {sslData.ssl.serialNumber && (
                             <div className="group">
                               <div className="flex items-center justify-between">
-                                <span className="text-slate-600 text-sm">Serial Number</span>
+                                <span className="text-slate-600 text-sm">{t('ssl.serialNumber')}</span>
                                 <button 
                                   onClick={() => copyToClipboard(sslData.ssl.serialNumber!)}
                                   className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -932,7 +933,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                           {sslData.ssl.fingerprint && (
                             <div className="group">
                               <div className="flex items-center justify-between">
-                                <span className="text-slate-600 text-sm">SHA1 Fingerprint</span>
+                                <span className="text-slate-600 text-sm">{t('ssl.sha1Fingerprint')}</span>
                                 <button 
                                   onClick={() => copyToClipboard(sslData.ssl.fingerprint!)}
                                   className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -953,9 +954,9 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                         <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-xl p-5 border border-orange-200/50">
                           <div className="flex items-center gap-2 mb-4">
                             <Globe className="h-5 w-5 text-orange-600" />
-                            <h4 className="font-semibold text-slate-800">Alternative Names</h4>
+                            <h4 className="font-semibold text-slate-800">{t('ssl.alternativeNames')}</h4>
                             <Badge className="bg-orange-100 text-orange-800 border-orange-200 px-2 py-1 text-xs">
-                              {sslData.ssl.altNames.length} domains
+                              {t('ssl.domains', { count: sslData.ssl.altNames.length })}
                             </Badge>
                           </div>
                           <div className="space-y-2">
@@ -974,7 +975,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                             ))}
                             {sslData.ssl.altNames.length > 6 && (
                               <div className="text-slate-500 text-sm text-center pt-2">
-                                ... and {sslData.ssl.altNames.length - 6} more domains
+                                {t('ssl.andMoreDomains', { count: sslData.ssl.altNames.length - 6 })}
                               </div>
                             )}
                           </div>
@@ -994,15 +995,15 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                         <Globe className="h-7 w-7 text-palette-primary" />
                       </div>
                       <div>
-                        <CardTitle className="text-slate-800 text-xl">Domain & Security</CardTitle>
+                        <CardTitle className="text-slate-800 text-xl">{t('ssl.domainSecurity')}</CardTitle>
                         <CardDescription className="text-slate-600 mt-1">
-                          Registration details and security configuration
+                          {t('ssl.registrationDetails')}
                         </CardDescription>
                       </div>
                     </div>
                     <Badge className="bg-palette-accent-3 text-purple-800 border-palette-accent-2 px-3 py-1 text-sm font-medium">
                       <Shield className="h-3 w-3 mr-1" />
-                      Secured
+                      {t('ssl.secured')}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -1013,12 +1014,12 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                       <div className="bg-gradient-to-br from-palette-accent-3 to-palette-accent-3/50 rounded-xl p-5 border border-palette-accent-2/50">
                         <div className="flex items-center gap-2 mb-4">
                           <Users className="h-5 w-5 text-palette-primary" />
-                          <h4 className="font-semibold text-slate-800">Domain Registration</h4>
+                          <h4 className="font-semibold text-slate-800">{t('ssl.domainRegistration')}</h4>
                         </div>
                         <div className="space-y-4">
                           <div className="group">
                             <div className="flex items-center justify-between">
-                              <span className="text-slate-600 text-sm">Registrar</span>
+                              <span className="text-slate-600 text-sm">{t('ssl.registrar')}</span>
                               <button 
                                 onClick={() => copyToClipboard(sslData.domain_info.registrar)}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1031,19 +1032,19 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                             </div>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-600 text-sm">Registration Date</span>
+                            <span className="text-slate-600 text-sm">{t('ssl.registrationDate')}</span>
                             <span className="text-slate-800 bg-white rounded-lg px-3 py-1 border text-sm">
                               {formatDate(sslData.domain_info.created)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-600 text-sm">Expiry Date</span>
+                            <span className="text-slate-600 text-sm">{t('ssl.expiryDate')}</span>
                             <span className="text-slate-800 bg-white rounded-lg px-3 py-1 border text-sm">
                               {formatDate(sslData.domain_info.expires)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-600 text-sm">Days Until Expiry</span>
+                            <span className="text-slate-600 text-sm">{t('ssl.daysUntilExpiry')}</span>
                             <Badge className={`${getExpiryBadgeColor(sslData.domain_info.daysUntilExpiry)} px-3 py-1 text-sm font-semibold`}>
                               <Calendar className="h-3 w-3 mr-1" />
                               {sslData.domain_info.daysUntilExpiry}
@@ -1057,9 +1058,9 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                         <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl p-5 border border-slate-200/50">
                           <div className="flex items-center gap-2 mb-4">
                             <FileText className="h-5 w-5 text-slate-600" />
-                            <h4 className="font-semibold text-slate-800">Domain Status</h4>
+                            <h4 className="font-semibold text-slate-800">{t('ssl.domainStatus')}</h4>
                             <Badge className="bg-slate-100 text-slate-800 border-slate-200 px-2 py-1 text-xs">
-                              {sslData.domain_info.status.length} flags
+                              {t('ssl.flags', { count: sslData.domain_info.status.length })}
                             </Badge>
                           </div>
                           <div className="space-y-2">
@@ -1086,7 +1087,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                       <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-5 border border-green-200/50">
                         <div className="flex items-center gap-2 mb-4">
                           <Shield className="h-5 w-5 text-green-600" />
-                          <h4 className="font-semibold text-slate-800">Security Features</h4>
+                          <h4 className="font-semibold text-slate-800">{t('ssl.securityFeatures')}</h4>
                         </div>
                         <div className="space-y-4">
                           <div className="flex items-center justify-between">
@@ -1096,10 +1097,10 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                               ) : (
                                 <XCircle className="h-5 w-5 text-red-500" />
                               )}
-                              <span className="text-slate-700 font-medium">HSTS Enabled</span>
+                              <span className="text-slate-700 font-medium">{t('ssl.hstsEnabled')}</span>
                             </div>
                             <Badge className={`${sslData.security.hsts ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'} px-2 py-1 text-xs`}>
-                              {sslData.security.hsts ? 'Active' : 'Disabled'}
+                              {sslData.security.hsts ? t('ssl.active') : t('ssl.disabled')}
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between">
@@ -1109,10 +1110,10 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                               ) : (
                                 <XCircle className="h-5 w-5 text-red-500" />
                               )}
-                              <span className="text-slate-700 font-medium">HTTPS Redirect</span>
+                              <span className="text-slate-700 font-medium">{t('ssl.httpsRedirect')}</span>
                             </div>
                             <Badge className={`${sslData.security.redirectsToHttps ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'} px-2 py-1 text-xs`}>
-                              {sslData.security.redirectsToHttps ? 'Enabled' : 'Disabled'}
+                              {sslData.security.redirectsToHttps ? t('ssl.enabled') : t('ssl.disabled')}
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between">
@@ -1122,10 +1123,10 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                               ) : (
                                 <AlertTriangle className="h-5 w-5 text-yellow-500" />
                               )}
-                              <span className="text-slate-700 font-medium">Mixed Content</span>
+                              <span className="text-slate-700 font-medium">{t('ssl.mixedContent')}</span>
                             </div>
                             <Badge className={`${!sslData.security.mixedContent ? 'bg-green-100 text-green-800 border-green-200' : 'bg-yellow-100 text-yellow-800 border-yellow-200'} px-2 py-1 text-xs`}>
-                              {!sslData.security.mixedContent ? 'Secure' : 'Warning'}
+                              {!sslData.security.mixedContent ? t('ssl.secure') : t('ssl.warning')}
                             </Badge>
                           </div>
                         </div>
@@ -1135,9 +1136,9 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                       <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-5 border border-blue-200/50">
                         <div className="flex items-center gap-2 mb-4">
                           <Lock className="h-5 w-5 text-blue-600" />
-                          <h4 className="font-semibold text-slate-800">Security Headers</h4>
+                          <h4 className="font-semibold text-slate-800">{t('ssl.securityHeaders')}</h4>
                           <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-2 py-1 text-xs">
-                            {sslData.security.securityHeaders.length} headers
+                            {t('ssl.headers', { count: sslData.security.securityHeaders.length })}
                           </Badge>
                         </div>
                         <div className="space-y-2">
@@ -1161,7 +1162,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                           ) : (
                             <div className="text-slate-500 text-sm text-center py-4 bg-white rounded-lg border border-dashed">
                               <AlertTriangle className="h-4 w-4 mx-auto mb-2 text-yellow-500" />
-                              No security headers detected
+                              {t('ssl.noSecurityHeaders')}
                             </div>
                           )}
                         </div>
@@ -1171,7 +1172,7 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                       <div className="bg-gradient-to-br from-yellow-50 to-yellow-100/50 rounded-xl p-5 border border-yellow-200/50">
                         <div className="flex items-center gap-2 mb-4">
                           <Star className="h-5 w-5 text-yellow-600" />
-                          <h4 className="font-semibold text-slate-800">Security Score</h4>
+                          <h4 className="font-semibold text-slate-800">{t('ssl.securityScore')}</h4>
                         </div>
                         <div className="text-center">
                           {(() => {
@@ -1190,10 +1191,10 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
                                   {score}%
                                 </div>
                                 <Badge className={`${scoreBg} px-4 py-2 text-sm font-medium`}>
-                                  {score >= 75 ? 'Excellent' : score >= 50 ? 'Good' : 'Needs Improvement'}
+                                  {score >= 75 ? t('ssl.excellent') : score >= 50 ? t('ssl.good') : t('ssl.needsImprovement')}
                                 </Badge>
                                 <div className="text-slate-600 text-xs mt-2">
-                                  Based on HTTPS, HSTS, headers, and content security
+                                  {t('ssl.scoreBasedOn')}
                                 </div>
                               </>
                             );
@@ -1210,8 +1211,8 @@ export function SslMain({ url: initialUrl = "" }: SslMainProps) {
           {/* Call to Action Section - Only show after results */}
           {sslData && (
             <ConsultationCTA
-              title="Need Help Securing Your Website?"
-              description="Our expert consultants can help you improve your SSL configuration, implement security best practices, and optimize your domain setup."
+              title={t('ssl.ctaTitle')}
+              description={t('ssl.ctaDescription')}
               secondaryButtonHref="/ssl-info"
             />
           )}

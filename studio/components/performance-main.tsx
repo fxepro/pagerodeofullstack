@@ -2,6 +2,7 @@
 
 import React from "react"
 import { useState, useEffect } from "react"
+import { useTranslation, Trans } from "react-i18next"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -85,6 +86,7 @@ interface AnalysisData {
 }
 
 export function PerformanceMain({ url: initialUrl = "" }: PerformanceMainProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const {
     url,
@@ -144,28 +146,28 @@ export function PerformanceMain({ url: initialUrl = "" }: PerformanceMainProps) 
   const getScoreBadge = (score: number) => {
     if (score >= 90) return { 
       variant: "default" as const, 
-      text: "Excellent", 
+      text: t('performance.excellent'), 
       icon: CheckCircle,
       bgColor: "bg-green-500",
       textColor: "text-white"
     };
     if (score >= 70) return { 
       variant: "secondary" as const, 
-      text: "Good", 
+      text: t('performance.good'), 
       icon: CheckCircle,
       bgColor: "bg-green-500",
       textColor: "text-white"
     };
     if (score >= 50) return { 
       variant: "default" as const, 
-      text: "Needs Improvement", 
+      text: t('performance.needsImprovement'), 
       icon: AlertTriangle,
       bgColor: "bg-orange-500",
       textColor: "text-white"
     };
     return { 
       variant: "destructive" as const, 
-      text: "Poor", 
+      text: t('performance.poor'), 
       icon: AlertTriangle,
       bgColor: "bg-red-500",
       textColor: "text-white"
@@ -225,49 +227,44 @@ export function PerformanceMain({ url: initialUrl = "" }: PerformanceMainProps) 
     URL.revokeObjectURL(url);
     
     // Show success message
-    toast({ title: "Download Complete!", description: "Performance report has been downloaded" });
+    toast({ title: t('performance.downloadComplete'), description: t('performance.reportDownloaded') });
   };
 
   const shareResultsLocal = async (data: AnalysisData) => {
     // Create a shareable summary
-    const summary = `🚀 Performance Report for ${data.url}
-
-📊 Overall Score: ${data.performanceScore}/100
-⚡ Load Time: ${data.loadTime.toFixed(2)}s
-📦 Page Size: ${data.pageSize.toFixed(2)} MB
-🔗 Requests: ${data.requests}
-
-🎯 Core Web Vitals:
-• LCP: ${data.coreWebVitals.lcp.toFixed(2)}s
-• FID: ${data.coreWebVitals.fid.toFixed(0)}ms  
-• CLS: ${data.coreWebVitals.cls.toFixed(3)}
-
-💡 Key Recommendations:
-${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
-
-🔍 Test your website at pagerodeo.com`;
+    const summary = t('performance.shareSummary', {
+      url: data.url,
+      score: data.performanceScore,
+      loadTime: data.loadTime.toFixed(2),
+      pageSize: data.pageSize.toFixed(2),
+      requests: data.requests,
+      lcp: data.coreWebVitals.lcp.toFixed(2),
+      fid: data.coreWebVitals.fid.toFixed(0),
+      cls: data.coreWebVitals.cls.toFixed(3),
+      recommendations: data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')
+    });
 
     try {
       if (navigator.share) {
         // Use native sharing if available (mobile)
         await navigator.share({
-          title: `Performance Report - ${data.url}`,
+          title: t('performance.reportTitle', { url: data.url }),
           text: summary,
           url: window.location.href
         });
       } else {
         // Fallback to clipboard copy
         await navigator.clipboard.writeText(summary);
-        toast({ title: "Success!", description: "Performance summary copied to clipboard" });
+        toast({ title: t('common.success'), description: t('performance.summaryCopied') });
       }
     } catch (error) {
       console.error('Error sharing results:', error);
       try {
         await navigator.clipboard.writeText(summary);
-        toast({ title: "Success!", description: "Performance summary copied to clipboard" });
+        toast({ title: t('common.success'), description: t('performance.summaryCopied') });
       } catch (clipboardError) {
         console.error('Clipboard error:', clipboardError);
-        toast({ title: "Error", description: "Failed to share results. Please copy manually.", variant: "destructive" });
+        toast({ title: t('common.error'), description: t('performance.shareFailed'), variant: "destructive" });
       }
     }
   };
@@ -279,7 +276,7 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
         <div className="p-6">
           <div className="text-center py-8">
             <RefreshCw className="animate-spin h-12 w-12 text-palette-primary mx-auto mb-4" />
-            <p className="text-slate-600">Analyzing performance for {initialUrl}...</p>
+            <p className="text-slate-600">{t('performance.analyzingFor', { url: initialUrl })}</p>
           </div>
         </div>
       );
@@ -321,22 +318,22 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
                   className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3 hover:text-palette-primary"
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                  Re-analyze
+                  {t('performance.reAnalyze')}
                 </Button>
               </div>
               
               <div className="flex items-center gap-4 flex-wrap">
                 <Badge className="bg-palette-accent-3 text-slate-700 border-0 px-3 py-1 text-sm">
-                  {data.requests} requests
+                  {data.requests} {t('performance.requests')}
                 </Badge>
                 <Badge className="bg-palette-accent-3 text-slate-700 border-0 px-3 py-1 text-sm">
-                  {(data.pageSize * 1024).toFixed(1)} KB total
+                  {(data.pageSize * 1024).toFixed(1)} KB {t('performance.total')}
                 </Badge>
                 <Badge className="bg-palette-accent-3 text-slate-700 border-0 px-3 py-1 text-sm">
-                  {data.loadTime.toFixed(1)}s load time
+                  {data.loadTime.toFixed(1)}s {t('performance.loadTime')}
                 </Badge>
                 <span className="text-purple-200 text-sm ml-auto">
-                  Analyzed {new Date(data.timestamp).toLocaleDateString()} at {new Date(data.timestamp).toLocaleTimeString()}
+                  {t('performance.analyzedAt', { date: new Date(data.timestamp).toLocaleDateString(), time: new Date(data.timestamp).toLocaleTimeString() })}
                 </span>
               </div>
             </div>
@@ -599,32 +596,37 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
           <div className="mb-8">
             <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
               <Zap className="h-4 w-4 mr-2" />
-              Performance Analysis
+              {t('performance.title')}
             </Badge>
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            Test Your Website Performance
+            {t('performance.testYourWebsite')}
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-8 leading-relaxed">
-            Get comprehensive performance analysis with <span className="text-white font-semibold">lightning-fast analysis</span>, 
-            <span className="text-white/90 font-semibold"> AI-powered insights</span>, and 
-            <span className="text-white/95 font-semibold"> actionable recommendations</span>.
+            <Trans
+              i18nKey="performance.heroDescription"
+              components={[
+                <span key="1" className="text-white font-semibold" />, // <1>
+                <span key="3" className="text-white/90 font-semibold" />, // <3>
+                <span key="5" className="text-white/95 font-semibold" /> // <5>
+              ]}
+            />
           </p>
           
           <div className="flex flex-wrap justify-center gap-3 mb-8">
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Load Time
+              {t('performance.loadTime')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Page Size
+              {t('performance.pageSize')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Requests
+              {t('performance.requests')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Core Web Vitals
+              {t('performance.coreWebVitals')}
             </div>
           </div>
 
@@ -644,33 +646,33 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
               {loading ? (
                 <>
                   <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
-                  Analyzing...
+                  {t('performance.analyzing')}
                 </>
               ) : (
                 <>
                   <Play className="mr-2 h-5 w-5" />
-                  Analyze Now - It's Free
+                  {t('performance.analyzeNow')}
                 </>
               )}
             </Button>
             <Button size="lg" className="bg-white/20 text-white border border-white/30 hover:bg-white/30 px-8 py-4 text-lg rounded-xl backdrop-blur-sm font-semibold">
               <Eye className="mr-2 h-5 w-5" />
-              Watch Demo
+              {t('performance.watchDemo')}
             </Button>
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-8 text-white/80">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-300" />
-              <span className="font-medium">No Credit Card Required</span>
+              <span className="font-medium">{t('performance.noCreditCard')}</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-300" />
-              <span className="font-medium">Instant Results</span>
+              <span className="font-medium">{t('performance.instantResults')}</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-300" />
-              <span className="font-medium">Enterprise Grade</span>
+              <span className="font-medium">{t('performance.enterpriseGrade')}</span>
             </div>
           </div>
         </div>
@@ -692,16 +694,15 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
           <div className="text-center mb-20">
             <Badge variant="outline" className="mb-6 px-4 py-2 border-palette-accent-2 text-palette-primary">
               <Target className="h-4 w-4 mr-2" />
-              Professional Grade Tools
+              {t('performance.professionalTools')}
             </Badge>
             <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-              Everything You Need to
+              {t('performance.everythingYouNeed')}
               <br className="hidden md:block" />
-              <span className="bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">Dominate Performance</span>
+              <span className="bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">{t('performance.dominatePerformance')}</span>
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              From deep technical analysis to actionable business insights, we've built the most comprehensive 
-              performance testing platform for modern websites.
+              {t('performance.platformDescription')}
             </p>
           </div>
 
@@ -714,22 +715,22 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Activity className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Lightning Analysis</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('performance.lightningAnalysis')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Get comprehensive Core Web Vitals, performance metrics, and optimization insights in under 30 seconds.
+                    {t('performance.lightningAnalysisDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Sub-second analysis time
+                      {t('performance.subSecondAnalysis')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Real lighthouse scores
+                      {t('performance.realLighthouseScores')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Mobile & desktop testing
+                      {t('performance.mobileDesktopTesting')}
                     </li>
                   </ul>
                 </div>
@@ -744,22 +745,22 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Sparkles className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">AI-Powered Insights</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('performance.aiPoweredInsights')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Advanced machine learning algorithms provide personalized optimization recommendations that actually work.
+                    {t('performance.aiPoweredInsightsDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Smart priority ranking
+                      {t('performance.smartPriorityRanking')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Code-level suggestions
+                      {t('performance.codeLevelSuggestions')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Impact predictions
+                      {t('performance.impactPredictions')}
                     </li>
                   </ul>
                 </div>
@@ -774,23 +775,23 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Monitor className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Visual Waterfalls</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('performance.visualWaterfalls')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Interactive waterfall charts reveal exactly where your site slows down with pixel-perfect precision.
+                    {t('performance.visualWaterfallsDesc')}
                   </p>
                   
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Resource timeline view
+                      {t('performance.resourceTimelineView')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Bottleneck identification
+                      {t('performance.bottleneckIdentification')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Download & share reports
+                      {t('performance.downloadShareReports')}
                     </li>
                   </ul>
                 </div>
@@ -807,7 +808,7 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
       {loading && (
         <div className="text-center py-8">
           <RefreshCw className="animate-spin h-12 w-12 text-palette-primary mx-auto mb-4" />
-          <p className="text-slate-600">Analyzing performance for {url}...</p>
+          <p className="text-slate-600">{t('performance.analyzingFor', { url })}</p>
         </div>
       )}
 
@@ -840,22 +841,22 @@ ${data.recommendations.slice(0, 3).map(rec => `• ${rec}`).join('\n')}
                   className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3 hover:text-palette-primary"
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                  Re-analyze
+                  {t('performance.reAnalyze')}
                 </Button>
               </div>
               
               <div className="flex items-center gap-4 flex-wrap">
                 <Badge className="bg-palette-accent-3 text-slate-700 border-0 px-3 py-1 text-sm">
-                  {data.requests} requests
+                  {data.requests} {t('performance.requests')}
                 </Badge>
                 <Badge className="bg-palette-accent-3 text-slate-700 border-0 px-3 py-1 text-sm">
-                  {(data.pageSize * 1024).toFixed(1)} KB total
+                  {(data.pageSize * 1024).toFixed(1)} KB {t('performance.total')}
                 </Badge>
                 <Badge className="bg-palette-accent-3 text-slate-700 border-0 px-3 py-1 text-sm">
-                  {data.loadTime.toFixed(1)}s load time
+                  {data.loadTime.toFixed(1)}s {t('performance.loadTime')}
                 </Badge>
                 <span className="text-purple-200 text-sm ml-auto">
-                  Analyzed {new Date(data.timestamp).toLocaleDateString()} at {new Date(data.timestamp).toLocaleTimeString()}
+                  {t('performance.analyzedAt', { date: new Date(data.timestamp).toLocaleDateString(), time: new Date(data.timestamp).toLocaleTimeString() })}
                 </span>
               </div>
             </div>

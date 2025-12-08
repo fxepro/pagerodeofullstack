@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { 
   FileText,
   Activity,
@@ -37,6 +38,7 @@ interface MonitoredSite {
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState({
     totalAudits: 0,
     monitoredSites: 0,
@@ -123,8 +125,8 @@ export default function DashboardPage() {
         .forEach(report => {
           alertsList.push({
             type: 'audit_failure',
-            title: `Audit failed for ${report.url}`,
-            description: `${report.audit_data?.failed?.length || 0} tool(s) failed`,
+            title: `${t('dashboard.auditFailedFor')} ${report.url}`,
+            description: `${report.audit_data?.failed?.length || 0} ${t('dashboard.toolsFailed')}`,
             timestamp: report.created_at,
             url: report.url
           });
@@ -136,8 +138,8 @@ export default function DashboardPage() {
         .forEach(site => {
           alertsList.push({
             type: 'site_down',
-            title: `${site.url} is down`,
-            description: 'Website is currently offline',
+            title: `${site.url} ${t('dashboard.siteIsDown')}`,
+            description: t('dashboard.websiteOffline'),
             timestamp: new Date().toISOString(),
             url: site.url
           });
@@ -149,7 +151,7 @@ export default function DashboardPage() {
 
     } catch (error: any) {
       console.error('Error fetching dashboard data:', error);
-      setError(error.message || 'Failed to load dashboard data');
+      setError(error.message || t('dashboard.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -164,6 +166,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-palette-primary" />
+        <span className="ml-2 text-slate-600">{t('common.loading')}</span>
       </div>
     );
   }
@@ -176,7 +179,7 @@ export default function DashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Total Audits</p>
+                <p className="text-sm font-medium text-slate-600">{t('dashboard.reports')}</p>
                 <p className="text-3xl font-bold text-slate-800">{stats.totalAudits}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
@@ -190,7 +193,7 @@ export default function DashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Monitored Sites</p>
+                <p className="text-sm font-medium text-slate-600">{t('monitoring.title')}</p>
                 <p className="text-3xl font-bold text-slate-800">{stats.monitoredSites}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
@@ -204,7 +207,7 @@ export default function DashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Reports with Errors</p>
+                <p className="text-sm font-medium text-slate-600">{t('monitoring.alerts')}</p>
                 <p className="text-3xl font-bold text-orange-600">{stats.reportsWithErrors}</p>
               </div>
               <div className="p-3 bg-orange-100 rounded-lg">
@@ -218,7 +221,7 @@ export default function DashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Unique Sites</p>
+                <p className="text-sm font-medium text-slate-600">{t('monitoring.siteName')}</p>
                 <p className="text-3xl font-bold text-purple-600">{stats.uniqueSites}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
@@ -234,14 +237,14 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-orange-600" />
-            Alerts & Failures
+            {t('monitoring.alerts')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {alerts.length === 0 ? (
             <div className="text-center py-8 text-slate-600">
               <CheckCircle className="h-12 w-12 mx-auto mb-3 text-green-500" />
-              <p>No alerts. All systems operational.</p>
+              <p>{t('monitoring.noSites')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -275,7 +278,7 @@ export default function DashboardPage() {
       {/* Quick Links Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Links</CardTitle>
+          <CardTitle>{t('dashboard.quickActions')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -286,8 +289,8 @@ export default function DashboardPage() {
                     <FileText className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Site Audit</h3>
-                    <p className="text-sm text-white/90">Comprehensive site analysis</p>
+                    <h3 className="font-semibold text-lg">{t('dashboard.siteAudit')}</h3>
+                    <p className="text-sm text-white/90">{t('dashboard.siteAuditDesc')}</p>
                   </div>
                 </div>
               </div>
@@ -300,8 +303,8 @@ export default function DashboardPage() {
                     <Activity className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Monitoring</h3>
-                    <p className="text-sm text-white/90">Website uptime tracking</p>
+                    <h3 className="font-semibold text-lg">{t('monitoring.title')}</h3>
+                    <p className="text-sm text-white/90">{t('dashboard.monitoringDesc')}</p>
                   </div>
                 </div>
               </div>
@@ -314,8 +317,8 @@ export default function DashboardPage() {
                     <BarChart3 className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Reports</h3>
-                    <p className="text-sm text-white/90">View audit history</p>
+                    <h3 className="font-semibold text-lg">{t('dashboard.reports')}</h3>
+                    <p className="text-sm text-white/90">{t('dashboard.reportsDesc')}</p>
                   </div>
                 </div>
               </div>
@@ -327,7 +330,7 @@ export default function DashboardPage() {
       {/* Coming Soon Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Coming Soon</CardTitle>
+          <CardTitle>{t('dashboard.comingSoon')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -337,8 +340,8 @@ export default function DashboardPage() {
                   <Package className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">Wordpress Integration</h3>
-                  <p className="text-sm text-white/90">Connect your WordPress site</p>
+                  <h3 className="font-semibold text-lg">{t('dashboard.wordpressIntegration')}</h3>
+                  <p className="text-sm text-white/90">{t('dashboard.connectWordpress')}</p>
                 </div>
               </div>
             </div>
@@ -349,8 +352,8 @@ export default function DashboardPage() {
                   <Search className="h-6 w-6" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">SEO Monitoring</h3>
-                  <p className="text-sm text-white/90">Track rankings and keywords</p>
+                  <h3 className="font-semibold text-lg">{t('dashboard.seoMonitoring')}</h3>
+                  <p className="text-sm text-white/90">{t('dashboard.trackRankings')}</p>
                 </div>
               </div>
             </div>
@@ -363,15 +366,15 @@ export default function DashboardPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-slate-600" />
-            Recent Activity
+            {t('dashboard.recentActivity')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {recentActivity.length === 0 ? (
             <div className="text-center py-8 text-slate-600">
               <FileText className="h-12 w-12 mx-auto mb-3 text-slate-400" />
-              <p>No recent activity</p>
-              <p className="text-sm mt-1">Run a site audit to see activity here</p>
+              <p>{t('dashboard.noRecentActivity')}</p>
+              <p className="text-sm mt-1">{t('dashboard.runAudit')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -388,7 +391,7 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium text-slate-800">
-                            Audit completed for{' '}
+                            {t('dashboard.auditCompleted')}{' '}
                             <a
                               href={`https://${report.url}`}
                               target="_blank"
@@ -402,13 +405,13 @@ export default function DashboardPage() {
                             {successCount > 0 && (
                               <Badge className="bg-green-100 text-green-800">
                                 <CheckCircle className="h-3 w-3 mr-1" />
-                                {successCount} successful
+                                {successCount} {t('dashboard.successful')}
                               </Badge>
                             )}
                             {failedCount > 0 && (
                               <Badge className="bg-red-100 text-red-800">
                                 <AlertCircle className="h-3 w-3 mr-1" />
-                                {failedCount} failed
+                                {failedCount} {t('dashboard.failed')}
                               </Badge>
                             )}
                           </div>

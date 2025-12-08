@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { Network, Globe, Download, RefreshCw, ExternalLink, ChevronRight, ChevronDown, Zap, Eye, BarChart3, ArrowRight, Wifi, Server, Shield, CheckCircle } from "lucide-react";
 import { ConsultationCTA } from "@/components/consultation-cta";
 import { useSitemapAnalysis } from "@/hooks/use-sitemap-analysis";
@@ -26,6 +27,7 @@ interface SitemapMainProps {
 }
 
 export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const {
     url,
@@ -96,11 +98,11 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
             }`} />
             <span className="font-medium">{node.title}</span>
             <Badge variant="outline" className="text-xs">
-              Depth {node.depth}
+              {t('sitemap.depth')} {node.depth}
             </Badge>
             {node.priority && (
               <Badge variant="secondary" className="text-xs">
-                Priority: {node.priority}
+                {t('sitemap.priority')}: {node.priority}
               </Badge>
             )}
           </div>
@@ -174,8 +176,8 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                 node.status === 'error' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
               }`}
             >
-              {node.status === 'success' ? 'Success' : 
-               node.status === 'error' ? 'Error' : 'Pending'}
+              {node.status === 'success' ? t('sitemap.success') : 
+               node.status === 'error' ? t('sitemap.error') : t('sitemap.pending')}
             </Badge>
           </td>
           <td className="p-4">
@@ -219,7 +221,7 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
         <div className="p-6">
           <div className="text-center py-8">
             <RefreshCw className="animate-spin h-12 w-12 text-palette-primary mx-auto mb-4" />
-            <p className="text-slate-600">Generating sitemap for {initialUrl}...</p>
+            <p className="text-slate-600">{t('sitemap.generatingFor', { url: initialUrl })}</p>
           </div>
         </div>
       );
@@ -257,10 +259,10 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
               <div>
                 <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                   <Network className="h-6 w-6 text-palette-primary" />
-                  Sitemap Structure
+                  {t('sitemap.sitemapStructure')}
                 </h2>
                 <p className="text-slate-600 mt-1">
-                  Found {totalPages} pages in sitemap hierarchy
+                  {t('sitemap.foundPages', { count: totalPages })}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -271,7 +273,7 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                   className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                  Re-analyze
+                  {t('sitemap.reanalyze')}
                 </Button>
                 <Button
                   onClick={exportSitemap}
@@ -279,7 +281,7 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                   className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('sitemap.export')}
                 </Button>
               </div>
             </div>
@@ -292,11 +294,11 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-purple-100">
-                      <th className="text-left p-4 font-semibold text-slate-700">Page</th>
-                      <th className="text-left p-4 font-semibold text-slate-700">Status</th>
-                      <th className="text-left p-4 font-semibold text-slate-700">Depth</th>
-                      <th className="text-left p-4 font-semibold text-slate-700">Priority</th>
-                      <th className="text-right p-4 font-semibold text-slate-700">Actions</th>
+                      <th className="text-left p-4 font-semibold text-slate-700">{t('sitemap.page')}</th>
+                      <th className="text-left p-4 font-semibold text-slate-700">{t('sitemap.status')}</th>
+                      <th className="text-left p-4 font-semibold text-slate-700">{t('sitemap.depth')}</th>
+                      <th className="text-left p-4 font-semibold text-slate-700">{t('sitemap.priority')}</th>
+                      <th className="text-right p-4 font-semibold text-slate-700">{t('sitemap.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -332,16 +334,16 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
           <div className="mb-6">
             <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg mb-6">
               <Network className="h-4 w-4 mr-2" />
-              Sitemap Generation
+              {t('sitemap.heroBadge')}
             </Badge>
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Sitemap Generator
+            {t('sitemap.heroTitle')}
           </h1>
           
           <p className="text-xl md:text-2xl text-purple-100 max-w-3xl mx-auto leading-relaxed mb-8">
-            Generate and visualize your website's sitemap structure. Crawl your site and export as XML.
+            {t('sitemap.heroDescription')}
           </p>
           
           {/* URL Input in Hero Section */}
@@ -351,7 +353,7 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                 <div className="flex-1">
                   <Input
                     type="text"
-                    placeholder="example.com or https://example.com"
+                    placeholder={t('sitemap.urlPlaceholder')}
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     className="text-lg h-14 bg-white/90 border-0 rounded-xl px-4 placeholder:text-gray-500 focus:ring-2 focus:ring-white/50"
@@ -365,12 +367,12 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                   {loading ? (
                     <>
                       <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                      Generating...
+                      {t('sitemap.generating')}
                     </>
                   ) : (
                     <>
                       <Zap className="h-5 w-5 mr-2" />
-                      Analyze
+                      {t('sitemap.analyze')}
                     </>
                   )}
                 </Button>
@@ -407,7 +409,7 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
               <CardHeader>
                 <CardTitle className="text-xl font-bold text-gray-900 flex items-center">
                   <Globe className="h-5 w-5 mr-2 text-palette-primary" />
-                  Sitemap Analysis
+                  {t('sitemap.sitemapAnalysis')}
                 </CardTitle>
                 <CardDescription className="text-gray-600 text-xl font-semibold">
                   {url}
@@ -420,9 +422,9 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
           {sitemap.length > 0 && (
             <Card className="border-palette-accent-2 shadow-xl">
               <div className="p-6">
-                <CardTitle className="text-xl font-bold text-slate-800 text-center mb-2">Sitemap Structure</CardTitle>
+                <CardTitle className="text-xl font-bold text-slate-800 text-center mb-2">{t('sitemap.sitemapStructure')}</CardTitle>
                 <CardDescription className="text-slate-600 text-center mb-4">
-                  {countTotalPages(sitemap)} total pages found. Click any page to visit it directly.
+                  {t('sitemap.totalPagesFound', { count: countTotalPages(sitemap) })}
                 </CardDescription>
                 <div className="flex justify-center gap-3 mb-6">
                   <Button
@@ -432,14 +434,14 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                     className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                   >
                     <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                    Re-analyze
+                    {t('sitemap.reanalyze')}
                   </Button>
                   <Button 
                     onClick={exportSitemap} 
                     className="bg-gradient-to-r from-palette-primary to-palette-primary-hover hover:from-purple-700 hover:to-palette-secondary text-white px-6 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     <Download className="h-5 w-5 mr-2" />
-                    Export XML
+                    {t('sitemap.exportXml')}
                   </Button>
                 </div>
               </div>
@@ -448,11 +450,11 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                   <table className="w-full">
                     <thead className="border-b border-slate-200">
                       <tr>
-                        <th className="text-left p-3 font-semibold text-slate-700">Page Title</th>
-                        <th className="text-center p-3 font-semibold text-slate-700 w-20">Depth</th>
-                        <th className="text-center p-3 font-semibold text-slate-700 w-24">Priority</th>
-                        <th className="text-center p-3 font-semibold text-slate-700 w-20">Status</th>
-                        <th className="text-center p-3 font-semibold text-slate-700 w-32">URL</th>
+                        <th className="text-left p-3 font-semibold text-slate-700">{t('sitemap.pageTitle')}</th>
+                        <th className="text-center p-3 font-semibold text-slate-700 w-20">{t('sitemap.depth')}</th>
+                        <th className="text-center p-3 font-semibold text-slate-700 w-24">{t('sitemap.priority')}</th>
+                        <th className="text-center p-3 font-semibold text-slate-700 w-20">{t('sitemap.status')}</th>
+                        <th className="text-center p-3 font-semibold text-slate-700 w-32">{t('sitemap.url')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -568,22 +570,22 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Globe className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Automatic Crawling</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('sitemap.automaticCrawling')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Automatically discover and crawl all pages on your website to build a complete sitemap.
+                    {t('sitemap.automaticCrawlingDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Intelligent page discovery
+                      {t('sitemap.intelligentDiscovery')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Complete site mapping
+                      {t('sitemap.completeMapping')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Real-time crawling
+                      {t('sitemap.realtimeCrawling')}
                     </li>
                   </ul>
                 </div>
@@ -597,22 +599,22 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Network className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Visual Structure</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('sitemap.visualStructure')}</h3>
                   <p className="text-slate-600 mb-4">
-                    View your website structure in an interactive tree format with expandable nodes.
+                    {t('sitemap.visualStructureDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Interactive tree view
+                      {t('sitemap.interactiveTree')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Expandable nodes
+                      {t('sitemap.expandableNodes')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Hierarchical display
+                      {t('sitemap.hierarchicalDisplay')}
                     </li>
                   </ul>
                 </div>
@@ -626,22 +628,22 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Download className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">XML Export</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('sitemap.xmlExport')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Export your sitemap as a standard XML file for search engines and SEO tools.
+                    {t('sitemap.xmlExportDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Standard XML format
+                      {t('sitemap.standardXml')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      SEO tool compatible
+                      {t('sitemap.seoToolCompatible')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Search engine ready
+                      {t('sitemap.searchEngineReady')}
                     </li>
                   </ul>
                 </div>
@@ -653,8 +655,8 @@ export default function SitemapMain({ url: initialUrl = "" }: SitemapMainProps) 
           {/* Call to Action Section - Only show after results */}
           {sitemap.length > 0 && (
             <ConsultationCTA
-              title="Need Help Optimizing Your Website Structure?"
-              description="Our expert consultants can help you improve your sitemap structure, enhance SEO, and optimize your website's navigation and organization."
+              title={t('sitemap.ctaTitle')}
+              description={t('sitemap.ctaDescription')}
               secondaryButtonHref="/sitemap-info"
             />
           )}

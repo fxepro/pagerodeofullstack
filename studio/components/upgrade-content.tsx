@@ -21,6 +21,7 @@ import {
 interface TierData {
   name: string
   price: string
+  priceValue?: number
   tagline: string
   description: string
   icon: React.ReactNode
@@ -34,11 +35,12 @@ interface TierData {
 
 export function UpgradeContent() {
 
-  // Pricing Plans from Document
+  // Pricing Plans - Sorted by Price (Ascending)
   const pricingPlans: TierData[] = [
     {
       name: "Free",
       price: "$0/mo",
+      priceValue: 0,
       tagline: "Instant insights. Zero cost. A perfect starting point to understand your site.",
       description: "The Free Plan gives anyone immediate visibility into their website's core health. It's designed as a no-risk introduction, delivering essential assessments and WordPress compatibility so users can start improving their site right away.",
       icon: <Zap className="h-8 w-8" />,
@@ -58,35 +60,15 @@ export function UpgradeContent() {
       isHighlighted: false
     },
     {
-      name: "Auditor",
-      price: "$9.99/mo",
-      tagline: "The perfect entry point for anyone who wants fast, reliable insight into their website's health.",
-      description: "The Auditor Plan gives you essential visibility into how your site is performing. Get instant audits, basic monitoring, and the peace of mind that your digital presence is under watch — without any complexity or high costs.",
-      icon: <Search className="h-8 w-8" />,
-      color: "#3B82F6",
-      features: [
-        "Comprehensive Site Audit to reveal performance, security, and structural issues",
-        "Ongoing Monitoring to ensure your site stays online and responsive",
-        "Actionable recommendations for improving site speed and stability",
-        "Alerts for basic downtime or accessibility issues",
-        "Lightweight tools ideal for blogs, small business websites, and early-stage SaaS",
-        "Clear reporting designed for non-technical users",
-        "No long-term commitment — pay monthly, cancel anytime"
-      ],
-      idealFor: "Perfect low-risk starter tier to understand your site's health.",
-      ctaText: "Start Auditor Plan",
-      ctaAction: () => window.location.href = "/login",
-      isHighlighted: false
-    },
-    {
       name: "Analyst",
       price: "$29.99/mo",
+      priceValue: 29.99,
       tagline: "Step into smart monitoring with deeper insights, code tracking, and intelligent alerts.",
       description: "The Analyst Plan adds intelligence to your monitoring — bringing visibility into code changes, advanced alerts, and integrations that keep you connected to what really matters.",
       icon: <BarChart3 className="h-8 w-8" />,
       color: "#8B5CF6",
       features: [
-        "Everything in Auditor, plus:",
+        "Everything in Free, plus:",
         "Build & Code Tracking to connect site issues with actual changes in your repository",
         "Deeper Monitoring Analytics to understand trends and hidden problems",
         "Essential Integrations (Slack, Telegram, Email, SMS, GitHub Webhooks, etc.)",
@@ -97,18 +79,42 @@ export function UpgradeContent() {
       ],
       idealFor: "Ideal for teams maintaining active websites, SaaS products, or application platforms.",
       ctaText: "Start Analyst Plan",
-      ctaAction: () => window.location.href = "/login",
+      ctaAction: () => handlePlanSelect("Analyst", 29.99),
       isHighlighted: true
+    },
+    {
+      name: "Auditor",
+      price: "$99/mo",
+      priceValue: 99,
+      tagline: "The perfect entry point for anyone who wants fast, reliable insight into their website's health.",
+      description: "The Auditor Plan gives you essential visibility into how your site is performing. Get instant audits, basic monitoring, and the peace of mind that your digital presence is under watch — without any complexity or high costs.",
+      icon: <Search className="h-8 w-8" />,
+      color: "#3B82F6",
+      features: [
+        "Everything in Analyst, plus:",
+        "Comprehensive Site Audit to reveal performance, security, and structural issues",
+        "Ongoing Monitoring to ensure your site stays online and responsive",
+        "Actionable recommendations for improving site speed and stability",
+        "Alerts for basic downtime or accessibility issues",
+        "Lightweight tools ideal for blogs, small business websites, and early-stage SaaS",
+        "Clear reporting designed for non-technical users",
+        "No long-term commitment — pay monthly, cancel anytime"
+      ],
+      idealFor: "Perfect low-risk starter tier to understand your site's health.",
+      ctaText: "Start Auditor Plan",
+      ctaAction: () => handlePlanSelect("Auditor", 99),
+      isHighlighted: false
     },
     {
       name: "Manager",
       price: "$249/mo",
+      priceValue: 249,
       tagline: "A powerful, AI-enhanced monitoring suite built for growing teams and mission-critical systems.",
       description: "The Manager Plan introduces AI-driven analysis, automated insights, and powerful intelligence layers that help your team prevent issues before they appear. Perfect for scaling businesses, busy software teams, and production SaaS environments.",
       icon: <Users className="h-8 w-8" />,
       color: "#F59E0B",
       features: [
-        "Everything in Analyst, plus:",
+        "Everything in Auditor, plus:",
         "Advanced AI Analysis of your site's performance, errors, and user experience",
         "Intelligent AI-Powered Insights that highlight root causes, anomalies, and optimizations",
         "High-frequency monitoring for production-level reliability",
@@ -118,13 +124,14 @@ export function UpgradeContent() {
         "Predictive performance scoring based on machine learning"
       ],
       idealFor: "Great for organizations ready to scale from reactive monitoring to proactive intelligence.",
-      ctaText: "Coming Soon",
-      ctaAction: () => window.location.href = "/login",
+      ctaText: "Start Manager Plan",
+      ctaAction: () => handlePlanSelect("Manager", 249),
       isHighlighted: false
     },
     {
       name: "Director",
       price: "$499/mo",
+      priceValue: 499,
       tagline: "Enterprise-level capabilities for full-stack observability, security scanning, and automated quality assurance.",
       description: "The Director Plan gives you a comprehensive, end-to-end view of your entire digital ecosystem — including security, SaaS dependencies, UI testing, and maintenance automation. Designed for companies where uptime, security, and reliability are non-negotiable.",
       icon: <Shield className="h-8 w-8" />,
@@ -140,13 +147,14 @@ export function UpgradeContent() {
         "Extended reports for compliance, incident analysis, and QA cycles"
       ],
       idealFor: "Ideal for CTOs, engineering directors, and teams responsible for enterprise-grade uptime.",
-      ctaText: "Coming Soon",
-      ctaAction: () => window.location.href = "/login",
+      ctaText: "Start Director Plan",
+      ctaAction: () => handlePlanSelect("Director", 499),
       isHighlighted: false
     },
     {
       name: "Executive",
       price: "$999/mo",
+      priceValue: 999,
       tagline: "The ultimate all-inclusive digital assurance suite — intelligence, automation, insights, and everything you need to run flawless systems at scale.",
       description: "The Executive Plan is built for leaders who cannot afford failures — delivering full-stack observability, AI-powered insights, enterprise automation, SEO monitoring, analytics, and integrated intelligence across your entire platform.",
       icon: <Crown className="h-8 w-8" />,
@@ -162,11 +170,23 @@ export function UpgradeContent() {
         "Custom reporting tailored to business KPIs and SLAs"
       ],
       idealFor: "Crafted for enterprises, high-traffic platforms, agencies, and mission-critical apps.",
-      ctaText: "Coming Soon",
-      ctaAction: () => window.location.href = "/login",
+      ctaText: "Start Executive Plan",
+      ctaAction: () => handlePlanSelect("Executive", 999),
       isHighlighted: false
     }
   ]
+
+  // Handle plan selection - redirect to checkout
+  const handlePlanSelect = (planName: string, price: number) => {
+    // Store selected plan in sessionStorage for checkout page
+    sessionStorage.setItem('selectedPlan', JSON.stringify({
+      name: planName,
+      price: price,
+      billingPeriod: 'monthly'
+    }))
+    // Redirect to checkout page
+    window.location.href = `/checkout?plan=${encodeURIComponent(planName)}&price=${price}`
+  }
 
 
   return (
@@ -208,7 +228,7 @@ export function UpgradeContent() {
               Start Free Forever
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Plans from $9.99/mo
+              Plans from $29.99/mo
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
               Cancel Anytime

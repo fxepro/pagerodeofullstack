@@ -67,42 +67,63 @@ def save_links_analysis(request):
                     links = []
             else:
                 links = [] if links is None else (links if isinstance(links, list) else [])
+        
+        # Check if links contains strings (URLs) or dicts (link objects)
+        # If strings, try to get link objects from full_results.results
+        link_objects = []
+        if links and isinstance(links[0], str):
+            # links is a list of URL strings, get actual link data from full_results
+            full_results = data.get('full_results', {})
+            if isinstance(full_results, dict) and 'results' in full_results:
+                link_objects = full_results.get('results', [])
+                print(f"[SaveLinks] Using full_results.results for link objects: {len(link_objects)} items")
+            else:
+                print(f"[SaveLinks] WARNING: links are strings but no full_results.results found")
+                link_objects = []
+        elif links and isinstance(links[0], dict):
+            # links is already a list of link objects
+            link_objects = links
+            print(f"[SaveLinks] Links are already objects: {len(link_objects)} items")
+        
+        # Use link_objects for calculations if available, otherwise use links for count only
         if links:
             if not data.get('total_links'):
                 data['total_links'] = len(links)
             
-            if not data.get('internal_links'):
-                data['internal_links'] = sum(1 for link in links if link.get('is_internal', False))
-            
-            if not data.get('external_links'):
-                data['external_links'] = sum(1 for link in links if link.get('is_external', False))
-            
-            if not data.get('broken_links'):
-                broken = [link for link in links if link.get('status', 0) >= 400 or link.get('status', 0) == 0]
-                data['broken_links'] = len(broken)
-                if not data.get('broken_links_list'):
-                    data['broken_links_list'] = broken
-            
-            if not data.get('redirect_links'):
-                data['redirect_links'] = sum(1 for link in links if 300 <= link.get('status', 0) < 400)
-            
-            # Calculate links_by_status
-            if not data.get('links_by_status'):
-                status_counts = {}
-                for link in links:
-                    status_code = link.get('status', 0)
-                    status_counts[status_code] = status_counts.get(status_code, 0) + 1
-                data['links_by_status'] = status_counts
-            
-            # Calculate response time statistics
-            response_times = [link.get('response_time', 0) for link in links if link.get('response_time', 0) > 0]
-            if response_times:
-                if not data.get('avg_response_time'):
-                    data['avg_response_time'] = sum(response_times) / len(response_times)
-                if not data.get('min_response_time'):
-                    data['min_response_time'] = min(response_times)
-                if not data.get('max_response_time'):
-                    data['max_response_time'] = max(response_times)
+            if link_objects:
+                # Use link objects for detailed calculations
+                if not data.get('internal_links'):
+                    data['internal_links'] = sum(1 for link in link_objects if link.get('isInternal', False) or link.get('is_internal', False))
+                
+                if not data.get('external_links'):
+                    data['external_links'] = sum(1 for link in link_objects if not (link.get('isInternal', False) or link.get('is_internal', False)))
+                
+                if not data.get('broken_links'):
+                    broken = [link for link in link_objects if link.get('status', 0) >= 400 or link.get('status', 0) == 0]
+                    data['broken_links'] = len(broken)
+                    if not data.get('broken_links_list'):
+                        data['broken_links_list'] = broken
+                
+                if not data.get('redirect_links'):
+                    data['redirect_links'] = sum(1 for link in link_objects if 300 <= link.get('status', 0) < 400)
+                
+                # Calculate links_by_status
+                if not data.get('links_by_status'):
+                    status_counts = {}
+                    for link in link_objects:
+                        status_code = link.get('status', 0)
+                        status_counts[status_code] = status_counts.get(status_code, 0) + 1
+                    data['links_by_status'] = status_counts
+                
+                # Calculate response time statistics
+                response_times = [link.get('responseTime', 0) or link.get('response_time', 0) for link in link_objects if (link.get('responseTime', 0) or link.get('response_time', 0)) > 0]
+                if response_times:
+                    if not data.get('avg_response_time'):
+                        data['avg_response_time'] = sum(response_times) / len(response_times)
+                    if not data.get('min_response_time'):
+                        data['min_response_time'] = min(response_times)
+                    if not data.get('max_response_time'):
+                        data['max_response_time'] = max(response_times)
         
         analysis = LinksAnalysis.objects.create(
             url=url,

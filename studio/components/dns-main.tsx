@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useDnsAnalysis } from "@/hooks/use-dns-analysis";
+import { useTranslation } from "react-i18next";
 import { ErrorDisplay } from "@/components/error-display";
 import { 
   Server, 
@@ -56,6 +57,7 @@ interface DnsMainProps {
 }
 
 export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const {
     domain,
@@ -73,8 +75,8 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     toast({
-      title: "Copied",
-      description: "Text copied to clipboard",
+      title: t('dns.copied'),
+      description: t('dns.copiedDesc'),
     })
   }
 
@@ -92,11 +94,11 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'success':
-        return <Badge className="bg-green-100 text-green-800">✓ Found</Badge>
+        return <Badge className="bg-green-100 text-green-800">✓ {t('dns.found')}</Badge>
       case 'error':
-        return <Badge className="bg-red-100 text-red-800">✗ Error</Badge>
+        return <Badge className="bg-red-100 text-red-800">✗ {t('dns.error')}</Badge>
       default:
-        return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>
+        return <Badge className="bg-gray-100 text-gray-800">{t('dns.unknown')}</Badge>
     }
   }
 
@@ -111,7 +113,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
         <div className="p-6">
           <div className="text-center py-8">
             <RefreshCw className="animate-spin h-12 w-12 text-palette-primary mx-auto mb-4" />
-            <p className="text-slate-600">Checking DNS records for {initialUrl}...</p>
+            <p className="text-slate-600">{t('dns.checkingFor', { url: initialUrl })}</p>
           </div>
         </div>
       );
@@ -144,10 +146,10 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
               <div>
                 <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                   <Globe className="h-6 w-6 text-palette-primary" />
-                  DNS Records for {dnsData.domain}
+                  {t('dns.dnsRecordsFor', { domain: dnsData.domain })}
                 </h2>
                 <p className="text-slate-600 mt-1">
-                  Last checked: {formatTimestamp(dnsData.timestamp)} • Total records: {totalRecords}
+                  {t('dns.lastChecked', { date: formatTimestamp(dnsData.timestamp), count: totalRecords })}
                 </p>
               </div>
               <Button
@@ -157,7 +159,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                 className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
-                Re-check
+                {t('dns.recheck')}
               </Button>
             </div>
           </div>
@@ -167,10 +169,10 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
             <CardHeader>
               <CardTitle className="text-slate-800 flex items-center gap-2">
                 <Server className="h-5 w-5 text-palette-primary" />
-                DNS Records
+                {t('dns.dnsRecords')}
               </CardTitle>
               <CardDescription className="text-slate-600">
-                Complete DNS configuration for {dnsData.domain}
+                {t('dns.completeDnsConfig', { domain: dnsData.domain })}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -180,20 +182,20 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                       <Globe className="h-4 w-4 text-blue-600" />
-                      IP Addresses
+                      {t('dns.ipAddresses')}
                     </h3>
                     {(dnsData.dns.ipv4.length > 0 || dnsData.dns.ipv6.length > 0) ? (
                       <Badge className="bg-green-100 text-green-800 border-green-200">
-                        {dnsData.dns.ipv4.length + dnsData.dns.ipv6.length} records
+                        {t('dns.records', { count: dnsData.dns.ipv4.length + dnsData.dns.ipv6.length })}
                       </Badge>
                     ) : (
-                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">None</Badge>
+                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">{t('dns.none')}</Badge>
                     )}
                   </div>
                   <div className="space-y-2">
                     {dnsData.dns.ipv4.length > 0 ? (
                       <>
-                        <div className="text-xs text-slate-600 font-medium mb-1">IPv4 (A Records)</div>
+                        <div className="text-xs text-slate-600 font-medium mb-1">{t('dns.ipv4Records')}</div>
                         {dnsData.dns.ipv4.map((ip, i) => (
                           <div key={i} className="flex items-center justify-between group bg-white rounded px-3 py-2 border border-blue-100">
                             <code className="text-sm text-slate-700 font-mono">{ip}</code>
@@ -206,7 +208,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     ) : null}
                     {dnsData.dns.ipv6.length > 0 ? (
                       <>
-                        <div className="text-xs text-slate-600 font-medium mb-1 mt-3">IPv6 (AAAA Records)</div>
+                        <div className="text-xs text-slate-600 font-medium mb-1 mt-3">{t('dns.ipv6Records')}</div>
                         {dnsData.dns.ipv6.map((ip, i) => (
                           <div key={i} className="flex items-center justify-between group bg-white rounded px-3 py-2 border border-blue-100">
                             <code className="text-sm text-slate-700 font-mono break-all">{ip}</code>
@@ -218,7 +220,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                       </>
                     ) : null}
                     {dnsData.dns.ipv4.length === 0 && dnsData.dns.ipv6.length === 0 && (
-                      <div className="text-slate-500 text-sm text-center py-2">None</div>
+                      <div className="text-slate-500 text-sm text-center py-2">{t('dns.none')}</div>
                     )}
                   </div>
                 </div>
@@ -228,14 +230,14 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                       <Server className="h-4 w-4 text-palette-primary" />
-                      Name Servers
+                      {t('dns.nameServers')}
                     </h3>
                     {dnsData.dns.ns.length > 0 ? (
                       <Badge className="bg-green-100 text-green-800 border-green-200">
-                        {dnsData.dns.ns.length} servers
+                        {t('dns.servers', { count: dnsData.dns.ns.length })}
                       </Badge>
                     ) : (
-                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">None</Badge>
+                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">{t('dns.none')}</Badge>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -249,7 +251,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                         </div>
                       ))
                     ) : (
-                      <div className="text-slate-500 text-sm text-center py-2">None</div>
+                      <div className="text-slate-500 text-sm text-center py-2">{t('dns.none')}</div>
                     )}
                   </div>
                 </div>
@@ -259,14 +261,14 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                       <Wifi className="h-4 w-4 text-green-600" />
-                      Mail Servers
+                      {t('dns.mailServers')}
                     </h3>
                     {dnsData.dns.mx.length > 0 ? (
                       <Badge className="bg-green-100 text-green-800 border-green-200">
-                        {dnsData.dns.mx.length} servers
+                        {t('dns.servers', { count: dnsData.dns.mx.length })}
                       </Badge>
                     ) : (
-                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">None</Badge>
+                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">{t('dns.none')}</Badge>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -280,7 +282,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                         </div>
                       ))
                     ) : (
-                      <div className="text-slate-500 text-sm text-center py-2">None</div>
+                      <div className="text-slate-500 text-sm text-center py-2">{t('dns.none')}</div>
                     )}
                   </div>
                 </div>
@@ -290,14 +292,14 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                       <FileText className="h-4 w-4 text-yellow-600" />
-                      TXT Records
+                      {t('dns.txtRecords')}
                     </h3>
                     {dnsData.dns.txt.length > 0 ? (
                       <Badge className="bg-green-100 text-green-800 border-green-200">
-                        {dnsData.dns.txt.length} records
+                        {t('dns.records', { count: dnsData.dns.txt.length })}
                       </Badge>
                     ) : (
-                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">None</Badge>
+                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">{t('dns.none')}</Badge>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -318,12 +320,12 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                             onClick={() => setShowAllTxt(!showAllTxt)}
                             className="text-sm text-palette-primary hover:text-palette-primary font-medium mt-2 w-full text-center"
                           >
-                            {showAllTxt ? 'Show Less' : `Show All (${dnsData.dns.txt.length} records)`}
+                            {showAllTxt ? t('dns.showLess') : t('dns.showAll', { count: dnsData.dns.txt.length })}
                           </button>
                         )}
                       </>
                     ) : (
-                      <div className="text-slate-500 text-sm text-center py-2">None</div>
+                      <div className="text-slate-500 text-sm text-center py-2">{t('dns.none')}</div>
                     )}
                   </div>
                 </div>
@@ -333,38 +335,38 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                       <Clock className="h-4 w-4 text-orange-600" />
-                      SOA Record
+                      {t('dns.soaRecord')}
                     </h3>
                     {dnsData.dns.soa ? (
-                      <Badge className="bg-green-100 text-green-800 border-green-200">Found</Badge>
+                      <Badge className="bg-green-100 text-green-800 border-green-200">{t('dns.found')}</Badge>
                     ) : (
-                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">None</Badge>
+                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">{t('dns.none')}</Badge>
                     )}
                   </div>
                   <div className="space-y-2">
                     {dnsData.dns.soa ? (
                       <>
                         <div className="flex items-center justify-between group bg-white rounded px-3 py-2 border border-orange-100">
-                          <div className="text-xs text-slate-600">Primary NS</div>
+                          <div className="text-xs text-slate-600">{t('dns.primaryNs')}</div>
                           <code className="text-sm text-slate-700 font-mono">{dnsData.dns.soa.nsname}</code>
                           <button onClick={() => copyToClipboard(dnsData.dns.soa?.nsname || '')} className="opacity-0 group-hover:opacity-100 transition-opacity">
                             <Copy className="h-3 w-3 text-slate-400 hover:text-slate-600" />
                           </button>
                         </div>
                         <div className="flex items-center justify-between group bg-white rounded px-3 py-2 border border-orange-100">
-                          <div className="text-xs text-slate-600">Admin</div>
+                          <div className="text-xs text-slate-600">{t('dns.admin')}</div>
                           <code className="text-sm text-slate-700 font-mono">{dnsData.dns.soa.hostmaster}</code>
                           <button onClick={() => copyToClipboard(dnsData.dns.soa?.hostmaster || '')} className="opacity-0 group-hover:opacity-100 transition-opacity">
                             <Copy className="h-3 w-3 text-slate-400 hover:text-slate-600" />
                           </button>
                         </div>
                         <div className="flex items-center justify-between bg-white rounded px-3 py-2 border border-orange-100">
-                          <div className="text-xs text-slate-600">Serial</div>
+                          <div className="text-xs text-slate-600">{t('dns.serial')}</div>
                           <code className="text-sm text-slate-700 font-mono">{dnsData.dns.soa.serial}</code>
                         </div>
                       </>
                     ) : (
-                      <div className="text-slate-500 text-sm text-center py-2">None</div>
+                      <div className="text-slate-500 text-sm text-center py-2">{t('dns.none')}</div>
                     )}
                   </div>
                 </div>
@@ -374,14 +376,14 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                       <FileText className="h-4 w-4 text-indigo-600" />
-                      CNAME Records
+                      {t('dns.cnameRecords')}
                     </h3>
                     {dnsData.dns.cname.length > 0 ? (
                       <Badge className="bg-green-100 text-green-800 border-green-200">
-                        {dnsData.dns.cname.length} records
+                        {t('dns.records', { count: dnsData.dns.cname.length })}
                       </Badge>
                     ) : (
-                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">None</Badge>
+                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">{t('dns.none')}</Badge>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -395,7 +397,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                         </div>
                       ))
                     ) : (
-                      <div className="text-slate-500 text-sm text-center py-2">None</div>
+                      <div className="text-slate-500 text-sm text-center py-2">{t('dns.none')}</div>
                     )}
                   </div>
                 </div>
@@ -405,14 +407,14 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                       <Server className="h-4 w-4 text-teal-600" />
-                      SRV Records
+                      {t('dns.srvRecords')}
                     </h3>
                     {dnsData.dns.srv.length > 0 ? (
                       <Badge className="bg-green-100 text-green-800 border-green-200">
-                        {dnsData.dns.srv.length} services
+                        {t('dns.services', { count: dnsData.dns.srv.length })}
                       </Badge>
                     ) : (
-                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">None</Badge>
+                      <Badge className="bg-gray-100 text-gray-600 border-gray-200">{t('dns.none')}</Badge>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -421,26 +423,26 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                         <div key={i} className="bg-white rounded px-4 py-3 border border-teal-100">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                             <div>
-                              <div className="text-xs text-slate-600">Service</div>
+                              <div className="text-xs text-slate-600">{t('dns.service')}</div>
                               <code className="text-slate-700 font-mono">{srv.name}</code>
                             </div>
                             <div>
-                              <div className="text-xs text-slate-600">Target</div>
+                              <div className="text-xs text-slate-600">{t('dns.target')}</div>
                               <code className="text-slate-700 font-mono">{srv.target}:{srv.port}</code>
                             </div>
                             <div>
-                              <div className="text-xs text-slate-600">Priority</div>
+                              <div className="text-xs text-slate-600">{t('dns.priority')}</div>
                               <code className="text-slate-700 font-mono">{srv.priority}</code>
                             </div>
                             <div>
-                              <div className="text-xs text-slate-600">Weight</div>
+                              <div className="text-xs text-slate-600">{t('dns.weight')}</div>
                               <code className="text-slate-700 font-mono">{srv.weight}</code>
                             </div>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div className="text-slate-500 text-sm text-center py-2">None</div>
+                      <div className="text-slate-500 text-sm text-center py-2">{t('dns.none')}</div>
                     )}
                   </div>
                 </div>
@@ -473,16 +475,16 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
           <div className="mb-6">
             <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
               <Server className="h-4 w-4 mr-2" />
-              DNS Record Analysis
+              {t('dns.heroBadge')}
             </Badge>
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            DNS Checker
+            {t('dns.heroTitle')}
           </h1>
           
           <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed">
-            Analyze DNS records for any domain. Get A, AAAA, MX, TXT, NS, SOA, CNAME, and SRV records instantly.
+            {t('dns.heroDescription')}
           </p>
 
           {/* Domain Input Section - Glassmorphism style */}
@@ -492,7 +494,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                 <Input
                   id="dns-domain"
                   type="text"
-                  placeholder="example.com or https://example.com"
+                  placeholder={t('dns.urlPlaceholder')}
                   value={domain}
                   onChange={(e) => setDomain(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleCheck()}
@@ -507,12 +509,12 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                   {isChecking ? (
                     <>
                       <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                      Checking...
+                      {t('dns.checking')}
                     </>
                   ) : (
                     <>
                       <Search className="h-5 w-5 mr-2" />
-                      Check DNS
+                      {t('dns.checkDns')}
                     </>
                   )}
                 </Button>
@@ -520,7 +522,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
             </div>
             
           <p className="text-center text-white/80 mt-4 text-sm">
-            We'll check A, AAAA, MX, TXT, NS, SOA, CNAME, and SRV records for your domain
+            {t('dns.helperText')}
           </p>
         </div>
       </div>
@@ -554,10 +556,10 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                   <div>
                     <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                       <Globe className="h-6 w-6 text-palette-primary" />
-                      DNS Records for {dnsData.domain}
+                      {t('dns.dnsRecordsFor', { domain: dnsData.domain })}
                     </h2>
                     <p className="text-slate-600 mt-1">
-                      Checked on {formatTimestamp(dnsData.timestamp)}
+                      {t('dns.checkedOn', { date: formatTimestamp(dnsData.timestamp) })}
                     </p>
                   </div>
                   <Button
@@ -567,7 +569,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                   >
                     <RefreshCw className={`h-4 w-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
-                    Refresh
+                    {t('dns.refresh')}
                   </Button>
                 </div>
               </div>
@@ -581,12 +583,12 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                         <Server className="h-6 w-6 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="text-2xl font-bold text-slate-800">DNS Records</h3>
-                        <p className="text-slate-600">Complete DNS record analysis for {dnsData.domain}</p>
+                        <h3 className="text-2xl font-bold text-slate-800">{t('dns.dnsRecords')}</h3>
+                        <p className="text-slate-600">{t('dns.completeDnsAnalysis', { domain: dnsData.domain })}</p>
                       </div>
                     </div>
                     <Badge className="bg-green-100 text-green-800 border-green-200 px-3 py-1">
-                      Active
+                      {t('dns.active')}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -596,15 +598,15 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-5 border border-blue-200/50">
                       <div className="flex items-center gap-2 mb-4">
                         <Globe className="h-5 w-5 text-blue-600" />
-                        <h4 className="font-semibold text-slate-800">IP Addresses</h4>
+                        <h4 className="font-semibold text-slate-800">{t('dns.ipAddresses')}</h4>
                         <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-2 py-1 text-xs">
-                          {dnsData.dns.ipv4.length + dnsData.dns.ipv6.length} records
+                          {t('dns.records', { count: dnsData.dns.ipv4.length + dnsData.dns.ipv6.length })}
                         </Badge>
                       </div>
                       <div className="space-y-4">
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-slate-600 text-sm font-medium">IPv4 Addresses</span>
+                            <span className="text-slate-600 text-sm font-medium">{t('dns.ipv4Addresses')}</span>
                             <Badge className="bg-white text-slate-700 border px-2 py-0.5 text-xs">
                               {dnsData.dns.ipv4.length}
                             </Badge>
@@ -625,14 +627,14 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                                 </div>
                               ))
                             ) : (
-                              <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">None</div>
+                              <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">{t('dns.none')}</div>
                             )}
                           </div>
                         </div>
                         {true && (
                           <div>
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="text-slate-600 text-sm font-medium">IPv6 Addresses</span>
+                              <span className="text-slate-600 text-sm font-medium">{t('dns.ipv6Addresses')}</span>
                               <Badge className="bg-white text-slate-700 border px-2 py-0.5 text-xs">
                                 {dnsData.dns.ipv6.length}
                             </Badge>
@@ -653,7 +655,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                                 </div>
                               ))
                             ) : (
-                              <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">None</div>
+                              <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">{t('dns.none')}</div>
                             )}
                           </div>
                         </div>
@@ -665,9 +667,9 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     <div className="bg-gradient-to-br from-palette-accent-3 to-palette-accent-3/50 rounded-xl p-5 border border-palette-accent-2/50">
                       <div className="flex items-center gap-2 mb-4">
                         <Wifi className="h-5 w-5 text-palette-primary" />
-                        <h4 className="font-semibold text-slate-800">Name Servers</h4>
+                        <h4 className="font-semibold text-slate-800">{t('dns.nameServers')}</h4>
                         <Badge className="bg-palette-accent-3 text-purple-800 border-palette-accent-2 px-2 py-1 text-xs">
-                          {dnsData.dns.ns.length} NS
+                          {t('dns.ns', { count: dnsData.dns.ns.length })}
                         </Badge>
                       </div>
                       <div className="space-y-2">
@@ -686,7 +688,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                             </div>
                           ))
                         ) : (
-                          <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">None</div>
+                          <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">{t('dns.none')}</div>
                         )}
                       </div>
                     </div>
@@ -695,9 +697,9 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-5 border border-green-200/50">
                       <div className="flex items-center gap-2 mb-4">
                         <Server className="h-5 w-5 text-green-600" />
-                        <h4 className="font-semibold text-slate-800">Mail Servers</h4>
+                        <h4 className="font-semibold text-slate-800">{t('dns.mailServers')}</h4>
                         <Badge className="bg-green-100 text-green-800 border-green-200 px-2 py-1 text-xs">
-                          {dnsData.dns.mx.length} MX
+                          {t('dns.mx', { count: dnsData.dns.mx.length })}
                         </Badge>
                       </div>
                       <div className="space-y-2">
@@ -716,7 +718,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                             </div>
                           ))
                         ) : (
-                          <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">None</div>
+                          <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">{t('dns.none')}</div>
                         )}
                       </div>
                     </div>
@@ -725,9 +727,9 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-xl p-5 border border-orange-200/50">
                         <div className="flex items-center gap-2 mb-4">
                           <FileText className="h-5 w-5 text-orange-600" />
-                          <h4 className="font-semibold text-slate-800">TXT Records</h4>
+                          <h4 className="font-semibold text-slate-800">{t('dns.txtRecords')}</h4>
                           <Badge className="bg-orange-100 text-orange-800 border-orange-200 px-2 py-1 text-xs">
-                            {dnsData.dns.txt.length} records
+                            {t('dns.records', { count: dnsData.dns.txt.length })}
                           </Badge>
                         </div>
                         <div className="space-y-2">
@@ -757,16 +759,16 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                                     className="text-palette-primary hover:text-palette-primary hover:bg-palette-accent-3"
                                   >
                                     {showAllTxt ? (
-                                      <>Show Less</>
+                                      <>{t('dns.showLess')}</>
                                     ) : (
-                                      <>Show All {dnsData.dns.txt.length} TXT Records</>
+                                      <>{t('dns.showAllTxt', { count: dnsData.dns.txt.length })}</>
                                     )}
                                   </Button>
                                 </div>
                               )}
                             </>
                           ) : (
-                            <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">None</div>
+                            <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">{t('dns.none')}</div>
                           )}
                         </div>
                       </div>
@@ -775,9 +777,9 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl p-5 border border-indigo-200/50">
                         <div className="flex items-center gap-2 mb-4">
                           <Clock className="h-5 w-5 text-indigo-600" />
-                          <h4 className="font-semibold text-slate-800">SOA Records</h4>
+                          <h4 className="font-semibold text-slate-800">{t('dns.soaRecords')}</h4>
                           <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 px-2 py-1 text-xs">
-                            {dnsData.dns.soa ? '1' : '0'} record
+                            {t('dns.record', { count: dnsData.dns.soa ? 1 : 0 })}
                           </Badge>
                         </div>
                         <div className="space-y-2">
@@ -785,7 +787,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                             <>
                               <div className="flex items-center justify-between group">
                                 <div className="text-slate-800 font-mono text-sm bg-white rounded-lg px-3 py-2 border flex-1 mr-2">
-                                  <span className="text-slate-600 text-xs">Primary NS:</span> {dnsData.dns.soa.nsname}
+                                  <span className="text-slate-600 text-xs">{t('dns.primaryNs')}:</span> {dnsData.dns.soa.nsname}
                                 </div>
                                 <button 
                                   onClick={() => copyToClipboard(dnsData.dns.soa?.nsname || '')}
@@ -796,7 +798,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                               </div>
                               <div className="flex items-center justify-between group">
                                 <div className="text-slate-800 font-mono text-sm bg-white rounded-lg px-3 py-2 border flex-1 mr-2">
-                                  <span className="text-slate-600 text-xs">Hostmaster:</span> {dnsData.dns.soa.hostmaster}
+                                  <span className="text-slate-600 text-xs">{t('dns.hostmaster')}:</span> {dnsData.dns.soa.hostmaster}
                                 </div>
                                 <button 
                                   onClick={() => copyToClipboard(dnsData.dns.soa?.hostmaster || '')}
@@ -807,7 +809,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                               </div>
                               <div className="flex items-center justify-between group">
                                 <div className="text-slate-800 font-mono text-sm bg-white rounded-lg px-3 py-2 border flex-1 mr-2">
-                                  <span className="text-slate-600 text-xs">Serial:</span> {dnsData.dns.soa.serial} | <span className="text-slate-600 text-xs">Refresh:</span> {dnsData.dns.soa.refresh}s
+                                  <span className="text-slate-600 text-xs">{t('dns.serial')}:</span> {dnsData.dns.soa.serial} | <span className="text-slate-600 text-xs">{t('dns.refresh')}:</span> {t('dns.seconds', { seconds: dnsData.dns.soa.refresh })}
                                 </div>
                                 <button 
                                   onClick={() => copyToClipboard(`${dnsData.dns.soa?.serial || ''} ${dnsData.dns.soa?.refresh || ''}`)}
@@ -818,7 +820,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                               </div>
                             </>
                           ) : (
-                            <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">None</div>
+                            <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">{t('dns.none')}</div>
                           )}
                         </div>
                       </div>
@@ -827,9 +829,9 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     <div className="bg-gradient-to-br from-pink-50 to-pink-100/50 rounded-xl p-5 border border-pink-200/50">
                       <div className="flex items-center gap-2 mb-4">
                         <Globe className="h-5 w-5 text-pink-600" />
-                        <h4 className="font-semibold text-slate-800">CNAME Records</h4>
+                        <h4 className="font-semibold text-slate-800">{t('dns.cnameRecords')}</h4>
                         <Badge className="bg-pink-100 text-pink-800 border-pink-200 px-2 py-1 text-xs">
-                          {dnsData.dns.cname.length} records
+                          {t('dns.records', { count: dnsData.dns.cname.length })}
                         </Badge>
                       </div>
                       <div className="space-y-2">
@@ -848,7 +850,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                             </div>
                           ))
                         ) : (
-                          <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">None</div>
+                          <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">{t('dns.none')}</div>
                         )}
                       </div>
                     </div>
@@ -857,9 +859,9 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     <div className="bg-gradient-to-br from-teal-50 to-teal-100/50 rounded-xl p-5 border border-teal-200/50">
                       <div className="flex items-center gap-2 mb-4">
                         <Server className="h-5 w-5 text-teal-600" />
-                        <h4 className="font-semibold text-slate-800">SRV Records</h4>
+                        <h4 className="font-semibold text-slate-800">{t('dns.srvRecords')}</h4>
                         <Badge className="bg-teal-100 text-teal-800 border-teal-200 px-2 py-1 text-xs">
-                          {dnsData.dns.srv.length} records
+                          {t('dns.records', { count: dnsData.dns.srv.length })}
                         </Badge>
                       </div>
                       <div className="space-y-2">
@@ -868,7 +870,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                             <div key={index} className="group">
                               <div className="flex items-center justify-between mb-1">
                                 <div className="text-slate-800 font-mono text-sm bg-white rounded-lg px-3 py-2 border flex-1 mr-2">
-                                  <span className="text-slate-600 text-xs">Service:</span> {srv.name}
+                                  <span className="text-slate-600 text-xs">{t('dns.service')}:</span> {srv.name}
                                 </div>
                                 <button 
                                   onClick={() => copyToClipboard(srv.name)}
@@ -879,7 +881,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                               </div>
                               <div className="flex items-center justify-between mb-1">
                                 <div className="text-slate-800 font-mono text-sm bg-white rounded-lg px-3 py-2 border flex-1 mr-2">
-                                  <span className="text-slate-600 text-xs">Target:</span> {srv.target}:{srv.port}
+                                  <span className="text-slate-600 text-xs">{t('dns.target')}:</span> {srv.target}:{srv.port}
                                 </div>
                                 <button 
                                   onClick={() => copyToClipboard(`${srv.target}:${srv.port}`)}
@@ -890,7 +892,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                               </div>
                               <div className="flex items-center justify-between">
                                 <div className="text-slate-800 font-mono text-sm bg-white rounded-lg px-3 py-2 border flex-1 mr-2">
-                                  <span className="text-slate-600 text-xs">Priority:</span> {srv.priority} | <span className="text-slate-600 text-xs">Weight:</span> {srv.weight}
+                                  <span className="text-slate-600 text-xs">{t('dns.priority')}:</span> {srv.priority} | <span className="text-slate-600 text-xs">{t('dns.weight')}:</span> {srv.weight}
                                 </div>
                                 <button 
                                   onClick={() => copyToClipboard(`${srv.priority} ${srv.weight}`)}
@@ -902,7 +904,7 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                             </div>
                           ))
                         ) : (
-                          <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">None</div>
+                          <div className="text-slate-400 text-xs text-center py-2 bg-white/50 rounded border border-dashed">{t('dns.none')}</div>
                         )}
                       </div>
                     </div>
@@ -923,22 +925,22 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                       <Server className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3 text-slate-800">All Record Types</h3>
+                    <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('dns.allRecordTypes')}</h3>
                     <p className="text-slate-600 mb-4">
-                      Comprehensive DNS analysis covering all major record types.
+                      {t('dns.allRecordTypesDesc')}
                     </p>
                     <ul className="space-y-2 text-sm text-slate-500">
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        A, AAAA, MX, TXT records
+                        {t('dns.aAaaaMxTxt')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        NS, SOA, CNAME records
+                        {t('dns.nsSoaCname')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        SRV records for services
+                        {t('dns.srvForServices')}
                       </li>
                     </ul>
                   </div>
@@ -952,22 +954,22 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                       <Clock className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3 text-slate-800">Instant Analysis</h3>
+                    <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('dns.instantAnalysis')}</h3>
                     <p className="text-slate-600 mb-4">
-                      Get real-time DNS information with our fast lookup service.
+                      {t('dns.instantAnalysisDesc')}
                     </p>
                     <ul className="space-y-2 text-sm text-slate-500">
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Real-time DNS resolution
+                        {t('dns.realtimeResolution')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Multiple DNS servers
+                        {t('dns.multipleDnsServers')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Instant results display
+                        {t('dns.instantResults')}
                       </li>
                     </ul>
                   </div>
@@ -981,22 +983,22 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
                     <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                       <Copy className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3 text-slate-800">Easy Management</h3>
+                    <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('dns.easyManagement')}</h3>
                     <p className="text-slate-600 mb-4">
-                      Copy and manage DNS records with convenient tools.
+                      {t('dns.easyManagementDesc')}
                     </p>
                     <ul className="space-y-2 text-sm text-slate-500">
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        One-click copy to clipboard
+                        {t('dns.oneClickCopy')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Clean, organized display
+                        {t('dns.cleanDisplay')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Empty state indicators
+                        {t('dns.emptyStateIndicators')}
                       </li>
                     </ul>
                   </div>
@@ -1008,8 +1010,8 @@ export function DnsMain({ url: initialUrl = "" }: DnsMainProps) {
           {/* Call to Action Section - Only show after results */}
           {dnsData && (
             <ConsultationCTA
-              title="Need Help with DNS Configuration?"
-              description="Our expert consultants can help you optimize your DNS setup, improve propagation times, and troubleshoot DNS issues."
+              title={t('dns.ctaTitle')}
+              description={t('dns.ctaDescription')}
               secondaryButtonHref="/dns-info"
             />
           )}

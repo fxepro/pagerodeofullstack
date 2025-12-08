@@ -256,6 +256,221 @@ Sent from PageRodeo Consultation Form
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+def send_demo_request(request):
+    """Handle demo request form submissions - send to pagerodeo25@gmail.com"""
+    try:
+        data = request.data
+        
+        # Validate required fields
+        required_fields = ['name', 'email', 'role', 'useCase']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        if missing_fields:
+            return Response({
+                'error': f'Missing required fields: {", ".join(missing_fields)}'
+            }, status=400)
+        
+        # Get client IP address
+        ip_address = get_client_ip(request)
+        
+        # Save to database
+        EmailCapture.objects.create(
+            email=data.get('email', ''),
+            form_type='demo_request',
+            metadata={
+                'name': data.get('name', ''),
+                'company': data.get('company', ''),
+                'role': data.get('role', ''),
+                'useCase': data.get('useCase', ''),
+                'message': data.get('message', ''),
+                'user_id': data.get('user_id'),
+                'username': data.get('username'),
+            },
+            ip_address=ip_address
+        )
+        
+        # Create email content for admin
+        email_subject = "PageRodeo Demo Request"
+        email_body = f"""
+New demo request from PageRodeo:
+
+Name: {data.get('name', 'N/A')}
+Email: {data.get('email', 'N/A')}
+Company: {data.get('company', 'N/A')}
+Role: {data.get('role', 'N/A')}
+Use Case: {data.get('useCase', 'N/A')}
+
+Additional Information:
+{data.get('message', 'N/A')}
+
+User Account: {data.get('username', 'Not logged in')} (ID: {data.get('user_id', 'N/A')})
+
+---
+Sent from PageRodeo Demo Request Form
+        """.strip()
+        
+        # Send email to your Gmail inbox
+        send_mail(
+            subject=email_subject,
+            message=email_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=['pagerodeo25@gmail.com'],
+            fail_silently=False,
+        )
+        
+        logger.info(f"Demo request email sent successfully from {data.get('email', 'unknown')}")
+        
+        return Response({
+            'success': True,
+            'message': 'Demo request submitted successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error sending demo request email: {str(e)}")
+        return Response({
+            'error': 'Failed to submit demo request',
+            'details': str(e)
+        }, status=500)
+
+def send_demo_credentials_email(user_email, user_name, plan_name):
+    """
+    Send demo account credentials to a user who requested demo access during signup.
+    
+    Args:
+        user_email: Email address of the user who requested demo
+        user_name: Name of the user
+        plan_name: One of 'analyst', 'auditor', 'manager', 'director', 'executive'
+    
+    Returns:
+        bool: True if email sent successfully, False otherwise
+    """
+    try:
+        from django.core.cache import cache
+        from users.demo_utils import get_or_create_demo_account, reset_demo_password, DEMO_ACCOUNTS
+        
+        if plan_name not in DEMO_ACCOUNTS:
+            logger.error(f"Invalid plan name for demo: {plan_name}")
+            return False
+        
+        config = DEMO_ACCOUNTS[plan_name]
+        
+        # Ensure demo account exists
+        demo_user, _ = get_or_create_demo_account(plan_name)
+        
+        # Get password from cache (stored when reset via cron/manual command)
+        # Cache key: demo_password_{plan_name}
+        # Cache expires in 48 hours (172800 seconds)
+        cache_key = f"demo_password_{plan_name}"
+        demo_password = cache.get(cache_key)
+        
+        # If password not in cache (expired or never set), reset it
+        if not demo_password:
+            demo_password = reset_demo_password(plan_name)
+            # Store in cache for 48 hours (172800 seconds)
+            cache.set(cache_key, demo_password, 172800)
+            logger.info(f"Reset and cached password for {plan_name} demo account")
+        else:
+            logger.info(f"Using cached password for {plan_name} demo account")
+        
+        # Plan display names
+        plan_display_names = {
+            'analyst': 'Analyst',
+            'auditor': 'Auditor',
+            'manager': 'Manager',
+            'director': 'Director',
+            'executive': 'Executive',
+        }
+        
+        plan_display = plan_display_names.get(plan_name, plan_name.title())
+        
+        # Plan-specific features (simplified)
+        plan_features = {
+            'analyst': [
+                'Build & Code Tracking',
+                'Deeper Monitoring Analytics',
+                'Essential Integrations (Slack, Telegram, Email, SMS)',
+                'Developer-focused insights',
+            ],
+            'auditor': [
+                'Comprehensive Site Audit',
+                'Ongoing Monitoring',
+                'Actionable recommendations',
+                'Basic downtime alerts',
+            ],
+            'manager': [
+                'Advanced AI Analysis',
+                'Intelligent AI-Powered Insights',
+                'High-frequency monitoring',
+                'Predictive performance scoring',
+            ],
+            'director': [
+                'Full Security Testing & Scanning',
+                'Automated Site Maintenance Tools',
+                'Complete SaaS Monitoring',
+                'UI Testing / Automated Interface Testing',
+            ],
+            'executive': [
+                'Full SEO Monitoring',
+                'Comprehensive Analytics & Reporting',
+                'Multi-layer monitoring',
+                'AI-driven performance modeling',
+            ],
+        }
+        
+        features = plan_features.get(plan_name, [])
+        
+        # Create email content
+        email_subject = f"Your PageRodeo {plan_display} Demo Account Access"
+        
+        email_body = f"""Hi {user_name},
+
+Thank you for signing up! As requested, here are your demo account credentials for the {plan_display} plan:
+
+Demo Account Username: {config['username']}
+Demo Account Password: {demo_password}
+
+Login URL: {settings.FRONTEND_URL or 'https://yourdomain.com'}/workspace/login
+
+IMPORTANT: This password resets automatically every 48 hours for security reasons.
+
+What you'll see in the {plan_display} demo:
+- Pre-loaded sample monitoring data
+- Example websites being monitored
+- Performance reports and analytics
+- All features available in the {plan_display} plan:
+{chr(10).join(f'  • {feature}' for feature in features)}
+
+To get started:
+1. Go to the login page: {settings.FRONTEND_URL or 'https://yourdomain.com'}/workspace/login
+2. Enter the demo credentials above
+3. Explore all {plan_display} features with sample data
+
+Ready to upgrade? Visit {settings.FRONTEND_URL or 'https://yourdomain.com'}/upgrade
+
+Need help? Contact us at support@pagerodeo.com
+
+Best regards,
+The PageRodeo Team
+        """.strip()
+        
+        # Send email
+        send_mail(
+            subject=email_subject,
+            message=email_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user_email],
+            fail_silently=False,
+        )
+        
+        logger.info(f"Demo credentials email sent successfully to {user_email} for {plan_name} plan")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error sending demo credentials email to {user_email}: {str(e)}", exc_info=True)
+        return False
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def send_update_signup(request):
     """Handle update signup form submissions - send to pagerodeo25@gmail.com with role info"""
     try:

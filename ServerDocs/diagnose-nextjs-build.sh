@@ -44,10 +44,6 @@ if [ -d ".next" ]; then
         echo "❌ .next/server directory missing!"
     fi
     
-    # Check for standalone if enabled
-    if [ -d ".next/standalone" ]; then
-        echo "✅ .next/standalone directory exists (standalone mode)"
-    fi
 else
     echo "❌ .next directory NOT FOUND!"
     echo "   → Build has not been run. Run: npm run build"

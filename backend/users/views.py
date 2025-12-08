@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from .permission_classes import HasFeaturePermission
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.db.models import Q
@@ -42,6 +43,7 @@ from .serializers import (
 )
 import json
 from rest_framework_simplejwt.tokens import RefreshToken
+from .permission_utils import get_user_permissions
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -69,6 +71,9 @@ def user_info(request):
             # Get role from UserProfile for non-superusers, default to viewer
             role = profile.role if profile else 'viewer'
         
+        # Get user permissions
+        permissions = get_user_permissions(user)
+        
         response_data = {
             'username': user.username,
             'email': user.email or '',  # Return empty string if email is None
@@ -77,6 +82,7 @@ def user_info(request):
             'role': role,
             'is_active': profile.is_active if profile else user.is_active,
             'roles': [role],  # Keep for compatibility
+            'permissions': permissions,  # Add permissions list
         }
         
         # Add profile personal info if profile exists
@@ -111,9 +117,17 @@ def user_info(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def list_users(request):
     """List all users with filtering and search"""
+    # Check permission
+    from .permission_utils import has_permission
+    if not has_permission(request.user, 'users.view'):
+        return Response(
+            {'error': 'You do not have permission to view users.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
     search = request.GET.get('search', '')
     role = request.GET.get('role', '')
     
@@ -254,6 +268,26 @@ def register_user(request):
             # Don't fail registration if email sending fails
             # User and profile are already created, so registration should succeed
         
+        # Handle demo access request
+        demo_plan = data.get('demo_plan') or data.get('request_demo')  # Support both field names
+        if demo_plan and demo_plan != 'none' and demo_plan != '':
+            try:
+                from emails.views import send_demo_credentials_email
+                # Send demo credentials email (async - don't block registration)
+                try:
+                    send_demo_credentials_email(
+                        user_email=user.email,
+                        user_name=f"{user.first_name} {user.last_name}".strip() or user.username,
+                        plan_name=demo_plan.lower()
+                    )
+                    logger.info(f"Demo credentials email sent to {user.email} for {demo_plan} plan")
+                except Exception as email_error:
+                    # Log error but don't fail registration
+                    logger.error(f"Failed to send demo credentials email to {user.email}: {str(email_error)}", exc_info=True)
+            except Exception as e:
+                # Log error but don't fail registration
+                logger.error(f"Error processing demo request for {user.email}: {str(e)}", exc_info=True)
+        
         serializer = UserSerializer(user)
         response_data = serializer.data
         response_data['email_verified'] = profile.email_verified
@@ -331,9 +365,16 @@ def assign_role(request, user_id):
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def user_stats(request):
     """Get user statistics"""
+    # Check permission
+    from .permission_utils import has_permission
+    if not has_permission(request.user, 'users.view'):
+        return Response(
+            {'error': 'You do not have permission to view user statistics.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
     total_users = User.objects.count()
     active_users = User.objects.filter(profile__is_active=True).count()
     admin_users = User.objects.filter(is_superuser=True).count()

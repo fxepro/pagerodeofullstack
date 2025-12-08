@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,6 +105,7 @@ const applyStatusToSite = (site: MonitoredSite, status: SiteStatusData): Monitor
 });
 
 export default function MonitoringPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [sites, setSites] = useState<MonitoredSite[]>([]);
   const [newUrl, setNewUrl] = useState('');
@@ -140,7 +142,7 @@ export default function MonitoringPage() {
       }
 
       if (!response.ok) {
-        throw new Error(`Failed to load monitored sites (${response.status})`);
+        throw new Error(t('monitoring.noSites'));
       }
 
       const data: ApiMonitoredSite[] = await response.json();
@@ -450,10 +452,10 @@ export default function MonitoringPage() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
         <p className="text-slate-600 max-w-md">
-          Your session has expired or you are not logged in. Please sign in to manage monitored sites.
+          {t('errors.unauthorized')}
         </p>
         <Link href="/login" className="mt-4">
-          <Button className="bg-palette-primary hover:bg-palette-primary-hover">Go to Login</Button>
+          <Button className="bg-palette-primary hover:bg-palette-primary-hover">{t('navigation.login')}</Button>
         </Link>
       </div>
     );
@@ -470,7 +472,7 @@ export default function MonitoringPage() {
           className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
         >
           <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh All
+          {t('common.update')}
         </Button>
       </div>
 
@@ -487,7 +489,7 @@ export default function MonitoringPage() {
                 onClick={() => setError(null)}
                 className="ml-auto"
               >
-                Dismiss
+                {t('common.close')}
               </Button>
             </div>
           </CardContent>
@@ -497,14 +499,14 @@ export default function MonitoringPage() {
       {/* Add URL Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Add Website to Monitor</CardTitle>
+          <CardTitle className="text-lg">{t('monitoring.addSite')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-3">
             <div className="relative flex-1">
               <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="example.com or https://example.com"
+                placeholder={t('monitoring.siteUrl')}
                 value={newUrl}
                 onChange={(e) => setNewUrl(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddSite()}
@@ -518,7 +520,7 @@ export default function MonitoringPage() {
               className="bg-palette-primary hover:bg-palette-primary-hover"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Site
+              {t('monitoring.addSite')}
             </Button>
           </div>
         </CardContent>
@@ -531,7 +533,7 @@ export default function MonitoringPage() {
             <div className="text-2xl font-bold text-slate-800">
               {sites.length}
             </div>
-            <p className="text-sm text-slate-600">Total Sites</p>
+            <p className="text-sm text-slate-600">{t('dashboard.totalSites')}</p>
           </CardContent>
         </Card>
         <Card>
@@ -539,7 +541,7 @@ export default function MonitoringPage() {
             <div className="text-2xl font-bold text-green-600">
               {sites.filter(s => s.status === 'up').length}
             </div>
-            <p className="text-sm text-slate-600">Up</p>
+            <p className="text-sm text-slate-600">{t('monitoring.online')}</p>
           </CardContent>
         </Card>
         <Card>
@@ -547,7 +549,7 @@ export default function MonitoringPage() {
             <div className="text-2xl font-bold text-red-600">
               {sites.filter(s => s.status === 'down').length}
             </div>
-            <p className="text-sm text-slate-600">Down</p>
+            <p className="text-sm text-slate-600">{t('monitoring.offline')}</p>
           </CardContent>
         </Card>
         <Card>
@@ -555,7 +557,7 @@ export default function MonitoringPage() {
             <div className="text-2xl font-bold text-palette-primary">
               {sites.length > 0 ? (sites.reduce((sum, s) => sum + s.uptime, 0) / sites.length).toFixed(1) : 0}%
             </div>
-            <p className="text-sm text-slate-600">Avg Uptime</p>
+            <p className="text-sm text-slate-600">{t('monitoring.uptime')}</p>
           </CardContent>
         </Card>
       </div>
@@ -563,28 +565,28 @@ export default function MonitoringPage() {
       {/* Monitored Sites Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Monitored Websites</CardTitle>
+          <CardTitle>{t('monitoring.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           {sites.length === 0 ? (
             <div className="text-center py-12 text-slate-600">
               <TrendingUp className="h-12 w-12 mx-auto mb-3 text-slate-400" />
-              <p>No websites being monitored</p>
-              <p className="text-sm mt-1">Add a URL above to start monitoring</p>
+              <p>{t('monitoring.noSites')}</p>
+              <p className="text-sm mt-1">{t('monitoring.addSite')}</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Screenshot</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Website</TableHead>
-                  <TableHead>Uptime</TableHead>
-                  <TableHead>Response Time</TableHead>
+                  <TableHead>{t('dashboard.screenshot')}</TableHead>
+                  <TableHead>{t('monitoring.status')}</TableHead>
+                  <TableHead>{t('dashboard.website')}</TableHead>
+                  <TableHead>{t('monitoring.uptime')}</TableHead>
+                  <TableHead>{t('monitoring.responseTime')}</TableHead>
                   <TableHead>SSL</TableHead>
-                  <TableHead>Last Check</TableHead>
-                  <TableHead className="text-center">Detail</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('monitoring.lastCheck')}</TableHead>
+                  <TableHead className="text-center">{t('dashboard.detail')}</TableHead>
+                  <TableHead className="text-right">{t('dashboard.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -627,7 +629,9 @@ export default function MonitoringPage() {
                             site.status === 'up' ? 'bg-green-100 text-green-800' : 
                             'bg-red-100 text-red-800'
                           }>
-                            {site.status.toUpperCase()}
+                            {site.status === 'up' ? t('monitoring.online') : 
+                             site.status === 'down' ? t('monitoring.offline') : 
+                             t('monitoring.unknown')}
                           </Badge>
                         </div>
                       </TableCell>
@@ -695,7 +699,7 @@ export default function MonitoringPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">        
-                        {site.lastCheck ? new Date(site.lastCheck).toLocaleTimeString() : 'Never'}
+                        {site.lastCheck ? new Date(site.lastCheck).toLocaleTimeString() : t('common.never')}
                       </TableCell>
                       <TableCell className="text-center">
                         <Link 
@@ -721,7 +725,7 @@ export default function MonitoringPage() {
                             className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                           >
                             <RefreshCw className={`w-3 h-3 mr-1 ${site.status === 'checking' ? 'animate-spin' : ''}`} />
-                            Check
+                            {t('dashboard.checkNow')}
                           </Button>
                           <Button
                             size="sm"

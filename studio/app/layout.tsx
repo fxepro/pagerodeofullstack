@@ -8,6 +8,8 @@ import { ConditionalFooter } from "@/components/conditional-footer"
 import { ToasterProvider } from "@/components/toaster-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PostHogProviderWrapper } from "@/lib/posthog"
+import { LanguageProvider } from "@/components/language-provider"
+import { I18nProvider } from "@/components/i18n-provider"
 
 const defaultPalette = {
   name: 'Default Purple',
@@ -69,8 +71,9 @@ const paletteHydrationScript = `(() => {
   }
 })();`
 
+// Multi-language font support: Latin, Latin Extended, Cyrillic, Greek for European languages
 const inter = Inter({ 
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext", "greek", "greek-ext"],
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-inter',
   display: 'swap',
@@ -78,7 +81,7 @@ const inter = Inter({
 })
 
 const montserrat = Montserrat({ 
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-montserrat',
   display: 'swap',
@@ -86,7 +89,7 @@ const montserrat = Montserrat({
 })
 
 const lato = Lato({ 
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   weight: ['400', '700', '900'],
   style: ['normal', 'italic'],
   variable: '--font-lato',
@@ -95,7 +98,7 @@ const lato = Lato({
 })
 
 const sourceSans3 = Source_Sans_3({ 
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext", "greek", "greek-ext", "vietnamese"],
   weight: ['400', '600', '700'],
   variable: '--font-source-sans-3',
   display: 'swap',
@@ -103,7 +106,7 @@ const sourceSans3 = Source_Sans_3({
 })
 
 const archivo = Archivo({ 
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   weight: ['400', '500', '600', '700'],
   variable: '--font-archivo',
   display: 'swap',
@@ -147,6 +150,8 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: paletteHydrationScript }} />
       </head>
       <body className={`${montserrat.className} ${inter.variable} ${lato.variable} ${sourceSans3.variable} ${archivo.variable}`}>
+        <LanguageProvider />
+        <I18nProvider>
         <PostHogProviderWrapper>
           <ThemeProvider>
             {/* Conditional navigation - hidden for dashboard routes */}
@@ -160,6 +165,7 @@ export default function RootLayout({
             <ToasterProvider />
           </ThemeProvider>
         </PostHogProviderWrapper>
+        </I18nProvider>
       </body>
     </html>
   )

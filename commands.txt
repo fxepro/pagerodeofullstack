@@ -1,0 +1,189 @@
+https://pagerodeo.com/api/auth/verify-email/
+
+{
+  "token": "b42ff6a5-750c-4777-850b-5ae7b6a769a6"
+}
+
+{
+  "code": "WRQ-928-EBN"
+}
+--------------------------------------------
+
+VM IP
+129.146.57.158
+
+Reserved Public IP
+129.153.208.79
+--------------------------------------------
+# Navigate to backend directory
+cd backend
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+.\venv\Scripts\Activate.ps1
+
+.\venv\Scripts\Activate.ps1
+
+# Upgrade pip (recommended)
+python -m pip install --upgrade pip
+
+# Install requirements
+pip install -r requirements.txt
+
+-----------------------------------------------------------
+Simplest option — run this on the VM:
+cd /opt/pagerodeofullstack/backend && python manage.py shell -c "from django.contrib.auth.hashers import make_password; print(make_password('YOUR_PASSWORD'))"
+
+python manage.py setup_default_palette
+python manage.py setup_default_typography
+
+
+python manage.py shell -c "from django.core.mail import send_mail; n = send_mail('Test', 'Body', 'pagerodeo25@gmail.com', ['fxepro@gmail.com']); print('sent:', n)"
+
+
+python manage.py shell -c "from django.core.mail import send_mail; n = send_mail('Test', 'Body', 'pagerodeo25@gmail.com', ['satish@redcloudsystems.com']); print('sent:', n)"
+
+
+python manage.py shell -c "from django.core.mail import send_mail; n = send_mail('Test', 'Body', 'pagerodeo25@gmail.com', ['satishd1@gmail.com']); print('sent:', n)"
+
+python .\test_scripts\test_email_verification_flow.py --api http://localhost:8000 --email youre@exemail.com --username testuser1563876 --password "StrongPass123!"
+
+
+python ..\scripts\backend_test_scripts\test_email_sending_complete.py --api http://localhost:8000 --email satishd1@gmail.com --username testuserX45341 --password "StrongPass123!"
+
+
+curl -X POST http://129.146.57.158/api/analyze -H 'Content-Type: application/json' -d '{"url":"https://redcloudsystems.com"}'
+
+http://129.146.57.158/login/
+http://129.146.57.158/admin/dashboard
+http://129.146.57.158/admin
+
+sudo systemctl restart pagerodeo-backend
+sudo systemctl restart pagerodeo-frontend
+sudo systemctl restart nginx
+
+cd "C:\Users\fxepro\AIProjects\pagerodeo\pagerodeo-v21 - fullstack-Liveprep"
+
+git push
+----------------------------------------------------------
+git status --short
+git add -A
+git commit -m "Fix admin role redirect logic"
+git push origin main
+
+sudo nano /var/lib/pgsql/14/data/postgresql.conf
+
+Remove-Item -Recurse -Force .next
+Remove-Item -Recurse -Force node_modules\.cache -ErrorAction SilentlyContinue
+
+Test Endpoints
+C:\Users\fxepro\AIProjects\pagerodeo\pagerodeo-v21 - fullstarep> .\scripts\test-exact-match-endpoints.ps1 129.146.57.158
+curl -i http://129.146.57.158/api/palettes/active/
+
+
+npm run devnpm run build
+npm run start -- -p 3001
+
+
+cd /opt/pagerodeofullstack/backend
+source venv/bin/activate
+python manage.py migrate
+
+Quick Deployment Commands:
+# 1. SSH to VMssh opc@129.146.57.158# 
+
+2. Navigate and pull
+cd /opt/pagerodeofullstack
+git pull origin main# 
+
+3. Apply migrations
+cd backend
+source venv/bin/activate
+python manage.py migrate users# 
+4. Rebuild frontend
+cd ../studionpm install 
+npm run build# 
+
+5. Restart services
+sudo systemctl restart pagerodeo-backend
+sudo systemctl restart pagerodeo-frontend# '
+
+6. Verify
+sudo systemctl status pagerodeo-backend
+sudo systemctl status pagerodeo-frontend
+
+
+
+Run Celery worker:
+    celery -A core worker --loglevel=info
+Run Celery Beat (scheduler):
+    celery -A core beat --loglevel=info
+
+----------------------------------------------------------
+Redis Setup (Required for Celery):
+Windows - Option 1 (Docker - Recommended):
+    docker run -d -p 6379:6379 --name redis redis:latest
+    docker start redis  (if already created)
+
+Windows - Option 2 (WSL):
+    wsl
+    sudo apt-get update
+    sudo apt-get install redis-server
+    redis-server
+
+Windows - Option 3 (Download):
+    Download from: https://github.com/microsoftarchive/redis/releases
+    Extract and run: redis-server.exe
+
+Verify Redis is running:
+    redis-cli ping  (should return PONG)
+    Or: docker exec redis redis-cli ping
+
+Start Celery (after Redis is running):
+    Terminal 1: celery -A core worker --loglevel=info
+    Terminal 2: celery -A core beat --loglevel=info
+
+Production Setup (No Docker):
+    On production server, run:
+    sudo bash scripts/setup-celery-services.sh
+    
+    This will:
+    - Install Redis as systemd service
+    - Create Celery Worker systemd service
+    - Create Celery Beat systemd service
+    - Enable all services to start on boot
+    
+    See: docs/Working/Celery-Production-Setup.md
+
+Local Development (No Celery):
+    App works without Celery/Redis running!
+    - Django server starts normally
+    - API endpoints work (return empty data until Celery collects it)
+    - Frontend works (shows "No data" until Celery collects it)
+    
+    To run monitoring checks manually:
+    python manage.py run_monitoring_check
+    
+    See: docs/Working/Celery-Local-Development.md
+
+PowerShell Venv Activation:
+    Correct path (venv, not .venv):
+    cd backend
+    .\venv\Scripts\Activate.ps1
+    
+    If you get "The module '.venv' could not be loaded" error:
+    
+    Option 1 - Change execution policy (one-time):
+    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+    
+    Option 2 - Use CMD instead:
+    cmd
+    cd backend
+    venv\Scripts\activate.bat
+    
+    Option 3 - Use helper script:
+    .\activate-venv.ps1
+    
+    See: docs/Working/PowerShell-Venv-Activation-Fix.md

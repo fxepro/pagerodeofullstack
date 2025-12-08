@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslation, Trans } from "react-i18next"
 import { useApiAnalysis } from "@/hooks/use-api-analysis"
 import { ConsultationCTA } from "@/components/consultation-cta"
 import { ErrorDisplay } from "@/components/error-display"
@@ -40,6 +41,7 @@ interface ApiMainProps {
 }
 
 export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const {
     domain,
@@ -271,8 +273,8 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
     URL.revokeObjectURL(url)
     
     toast({
-      title: "Results Exported",
-      description: "API test results have been downloaded.",
+      title: t('api.resultsExported'),
+      description: t('api.resultsExportedDesc'),
     })
   }
 
@@ -292,17 +294,17 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
         // Fallback to clipboard
         navigator.clipboard.writeText(summary)
         toast({
-          title: "Results Copied",
-          description: "API test summary has been copied to clipboard.",
+          title: t('api.resultsCopied'),
+          description: t('api.resultsCopiedDesc'),
         })
       }
-    } else {
-      navigator.clipboard.writeText(summary)
-      toast({
-        title: "Results Copied", 
-        description: "API test summary has been copied to clipboard.",
-      })
-    }
+      } else {
+        navigator.clipboard.writeText(summary)
+        toast({
+          title: t('api.resultsCopied'), 
+          description: t('api.resultsCopiedDesc'),
+        })
+      }
   }
 
   // When used in Site Audit (has initialUrl), show ONLY results
@@ -312,7 +314,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
         <div className="p-6">
           <div className="text-center py-8">
             <Activity className="animate-spin h-12 w-12 text-palette-primary mx-auto mb-4" />
-            <p className="text-slate-600">Testing API endpoints for {initialUrl}...</p>
+            <p className="text-slate-600">{t('api.testingFor', { url: initialUrl })}</p>
           </div>
         </div>
       );
@@ -347,10 +349,10 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
               <div>
                 <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                   <Code className="h-6 w-6 text-palette-primary" />
-                  API Health Check Results
+                  {t('api.apiHealthCheckResults')}
                 </h2>
                 <p className="text-slate-600 mt-1">
-                  {passedTests}/{totalTests} endpoints passed ({successRate}% success rate)
+                  {t('api.endpointsPassed', { passed: passedTests, total: totalTests, rate: successRate })}
                 </p>
               </div>
               <Button
@@ -360,7 +362,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                 className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
               >
                 <Activity className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Re-test
+                {t('api.retest')}
               </Button>
             </div>
           </div>
@@ -372,7 +374,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                 <div className="flex items-center gap-3">
                   <Activity className="h-5 w-5 text-palette-primary" />
                   <div>
-                    <h3 className="font-semibold text-slate-800">Discovery Status</h3>
+                    <h3 className="font-semibold text-slate-800">{t('api.discoveryStatus')}</h3>
                     <p className="text-slate-600 text-sm">{statusMessage}</p>
                   </div>
                 </div>
@@ -388,7 +390,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="text-2xl font-bold text-slate-800">{passedTests}</div>
-                <div className="text-sm text-slate-600">Passed Tests</div>
+                <div className="text-sm text-slate-600">{t('api.passedTests')}</div>
               </CardContent>
             </Card>
 
@@ -398,7 +400,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                   <XCircle className="h-6 w-6 text-red-600" />
                 </div>
                 <div className="text-2xl font-bold text-slate-800">{totalTests - passedTests}</div>
-                <div className="text-sm text-slate-600">Failed Tests</div>
+                <div className="text-sm text-slate-600">{t('api.failedTests')}</div>
               </CardContent>
             </Card>
 
@@ -408,7 +410,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                   <BarChart3 className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="text-2xl font-bold text-slate-800">{successRate}%</div>
-                <div className="text-sm text-slate-600">Success Rate</div>
+                <div className="text-sm text-slate-600">{t('api.successRate')}</div>
               </CardContent>
             </Card>
 
@@ -418,7 +420,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                   <Globe className="h-6 w-6 text-palette-primary" />
                 </div>
                 <div className="text-2xl font-bold text-slate-800">{discovered.length}</div>
-                <div className="text-sm text-slate-600">Endpoints Found</div>
+                <div className="text-sm text-slate-600">{t('api.endpointsFound')}</div>
               </CardContent>
             </Card>
           </div>
@@ -428,10 +430,10 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
             <CardHeader>
               <CardTitle className="text-slate-800 flex items-center gap-2">
                 <Server className="h-5 w-5 text-palette-primary" />
-                API Endpoint Test Results
+                {t('api.apiEndpointTestResults')}
               </CardTitle>
               <CardDescription className="text-slate-600">
-                Detailed results for each discovered API endpoint
+                {t('api.detailedResultsDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -474,13 +476,13 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                     </div>
                     {result.error && (
                       <div className="text-sm text-red-600 mt-2">
-                        Error: {result.error}
+                        {t('api.error')}: {result.error}
                       </div>
                     )}
                     {result.body && (
                       <details className="mt-2">
                         <summary className="text-sm text-slate-600 cursor-pointer hover:text-slate-800">
-                          View Response Body
+                          {t('api.viewResponseBody')}
                         </summary>
                         <pre className="mt-2 text-xs bg-white p-2 rounded border overflow-x-auto">
                           {JSON.stringify(result.body, null, 2)}
@@ -499,10 +501,10 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
               <CardHeader>
                 <CardTitle className="text-slate-800 flex items-center gap-2">
                   <Wifi className="h-5 w-5 text-palette-primary" />
-                  Discovered API Endpoints
+                  {t('api.discoveredApiEndpoints')}
                 </CardTitle>
                 <CardDescription className="text-slate-600">
-                  Endpoints found during website crawling
+                  {t('api.endpointsFoundCrawling')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -542,32 +544,37 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
           <div className="mb-6">
             <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
               <Code className="h-4 w-4 mr-2" />
-              Automated API Health Checking
+              {t('api.heroBadge')}
             </Badge>
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            API Health Checker
+            {t('api.heroTitle')}
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-8 leading-relaxed">
-            Test your API endpoints with <span className="text-white font-semibold">automated discovery</span>, 
-            <span className="text-purple-100 font-semibold"> comprehensive testing</span>, and 
-            <span className="text-purple-50 font-semibold"> detailed performance metrics</span>.
+            <Trans
+              i18nKey="api.heroDescription"
+              components={{
+                1: <span className="text-white font-semibold" />,
+                3: <span className="text-purple-100 font-semibold" />,
+                5: <span className="text-purple-50 font-semibold" />,
+              }}
+            />
           </p>
           
           <div className="flex flex-wrap justify-center gap-3 mb-8">
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Sitemap Discovery
+              {t('api.sitemapDiscovery')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Status Codes
+              {t('api.statusCodes')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Response Times
+              {t('api.responseTimes')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Error Analysis
+              {t('api.errorAnalysis')}
             </div>
           </div>
 
@@ -578,7 +585,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                 <div>
                   <Input
                     type="text"
-                    placeholder="example.com or https://example.com"
+                    placeholder={t('api.urlPlaceholder')}
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
                     className="h-14 text-lg px-4 bg-white/90 border-0 rounded-xl placeholder:text-gray-500 focus:ring-2 focus:ring-white/50"
@@ -588,7 +595,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                 <div>
                   <Input
                     type="text"
-                    placeholder="/api/hello,/api/status (optional - custom endpoints)"
+                    placeholder={t('api.customEndpointsPlaceholder')}
                     value={customEndpoints}
                     onChange={(e) => setCustomEndpoints(e.target.value)}
                     className="h-12 text-base px-4 bg-white/90 border-0 rounded-xl placeholder:text-gray-500 focus:ring-2 focus:ring-white/50"
@@ -604,12 +611,12 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                     {loading ? (
                       <>
                         <Activity className="mr-2 h-5 w-5 animate-spin" />
-                        Testing APIs...
+                        {t('api.testingApis')}
                       </>
                     ) : (
                       <>
                         <Zap className="mr-2 h-5 w-5" />
-                        Run API Tests
+                        {t('api.runApiTests')}
                       </>
                     )}
                   </Button>
@@ -621,7 +628,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                       className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3 px-6 py-3 h-14 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300 flex items-center"
                     >
                       <XCircle className="mr-2 h-5 w-5" />
-                      Clear Results
+                      {t('api.clearResults')}
                     </Button>
                   )}
                 </div>
@@ -656,7 +663,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                 <div className="flex items-center justify-center gap-3">
                   <div className="text-3xl">🔍</div>
                   <div className="text-center">
-                    <h3 className="font-semibold text-slate-800 text-lg">Discovery Status</h3>
+                    <h3 className="font-semibold text-slate-800 text-lg">{t('api.discoveryStatus')}</h3>
                     <p className="text-sm text-blue-700 mt-1">{statusMessage}</p>
                   </div>
                 </div>
@@ -677,22 +684,22 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Globe className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Auto Discovery</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('api.autoDiscovery')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Automatically discovers API endpoints through sitemap analysis, web crawling, and pattern matching.
+                    {t('api.autoDiscoveryDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Sitemap.xml parsing
+                      {t('api.sitemapParsing')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Web crawling
+                      {t('api.webCrawling')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Pattern matching
+                      {t('api.patternMatching')}
                     </li>
                   </ul>
                 </div>
@@ -706,22 +713,22 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Zap className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Real-Time Testing</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('api.realtimeTesting')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Tests endpoints with live HTTP requests, measuring response times and status codes.
+                    {t('api.realtimeTestingDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Live HTTP requests
+                      {t('api.liveHttpRequests')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Response time tracking
+                      {t('api.responseTimeTracking')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Data integrity checks
+                      {t('api.dataIntegrityChecks')}
                     </li>
                   </ul>
                 </div>
@@ -735,22 +742,22 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <BarChart3 className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Detailed Analytics</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('api.detailedAnalytics')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Comprehensive reports with latency metrics, success rates, and response analysis.
+                    {t('api.detailedAnalyticsDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Latency metrics
+                      {t('api.latencyMetrics')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Success rate analysis
+                      {t('api.successRateAnalysis')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Response body inspection
+                      {t('api.responseBodyInspection')}
                     </li>
                   </ul>
                 </div>
@@ -773,8 +780,8 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                   <div className="flex items-center justify-center gap-3">
                     <Globe className="h-6 w-6 text-palette-primary" />
                     <div className="text-center">
-                      <h3 className="font-semibold text-slate-800">Discovered Endpoints</h3>
-                      <p className="text-sm text-slate-600">Testing {discovered.length} API endpoints</p>
+                      <h3 className="font-semibold text-slate-800">{t('api.discoveredEndpoints')}</h3>
+                      <p className="text-sm text-slate-600">{t('api.testingEndpoints', { count: discovered.length })}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -795,7 +802,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                     <div className="text-2xl font-bold text-green-600">
                       {results.filter(r => r.pass).length}
                     </div>
-                    <p className="text-sm text-slate-600">Passed</p>
+                    <p className="text-sm text-slate-600">{t('api.passed')}</p>
                   </CardContent>
                 </Card>
 
@@ -807,7 +814,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                     <div className="text-2xl font-bold text-red-600">
                       {results.filter(r => !r.pass).length}
                     </div>
-                    <p className="text-sm text-slate-600">Failed</p>
+                    <p className="text-sm text-slate-600">{t('api.failed')}</p>
                   </CardContent>
                 </Card>
 
@@ -819,7 +826,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                     <div className="text-2xl font-bold text-blue-600">
                       {results.length > 0 ? Math.round(results.reduce((acc, r) => acc + (r.latency || 0), 0) / results.length) : 0}ms
                     </div>
-                    <p className="text-sm text-slate-600">Avg Latency</p>
+                    <p className="text-sm text-slate-600">{t('api.avgLatency')}</p>
                   </CardContent>
                 </Card>
 
@@ -831,7 +838,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                     <div className="text-2xl font-bold text-palette-primary">
                       {results.length}
                     </div>
-                    <p className="text-sm text-slate-600">Total Endpoints</p>
+                    <p className="text-sm text-slate-600">{t('api.totalEndpoints')}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -843,14 +850,14 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                   className="bg-white text-palette-primary border border-palette-accent-2 hover:bg-palette-accent-3 px-6 py-3"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Export Results
+                  {t('api.exportResults')}
                 </Button>
                 <Button 
                   onClick={shareResults}
                   className="bg-white text-palette-primary border border-palette-accent-2 hover:bg-palette-accent-3 px-6 py-3"
                 >
                   <Share2 className="mr-2 h-4 w-4" />
-                  Share Summary
+                  {t('api.shareSummary')}
                 </Button>
               </div>
 
@@ -859,10 +866,10 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                 <CardHeader className="bg-white py-6">
                   <CardTitle className="flex items-center justify-center gap-2 text-xl text-slate-800">
                     <Code className="h-6 w-6" />
-                    API Test Results
+                    {t('api.apiTestResults')}
                   </CardTitle>
                   <CardDescription className="text-slate-600 mt-2 text-center">
-                    Detailed analysis of all discovered API endpoints
+                    {t('api.detailedAnalysisDesc')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -870,11 +877,11 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                     <table className="w-full">
                       <thead>
                         <tr>
-                          <th className="text-left p-3 font-semibold text-slate-700 border-b border-slate-200">Endpoint</th>
-                          <th className="text-center p-3 font-semibold text-slate-700 border-b border-slate-200">Code</th>
-                          <th className="text-center p-3 font-semibold text-slate-700 border-b border-slate-200">Status</th>
-                          <th className="text-center p-3 font-semibold text-slate-700 border-b border-slate-200">Latency</th>
-                          <th className="text-left p-3 font-semibold text-slate-700 border-b border-slate-200">Response / Error</th>
+                          <th className="text-left p-3 font-semibold text-slate-700 border-b border-slate-200">{t('api.endpoint')}</th>
+                          <th className="text-center p-3 font-semibold text-slate-700 border-b border-slate-200">{t('api.code')}</th>
+                          <th className="text-center p-3 font-semibold text-slate-700 border-b border-slate-200">{t('api.status')}</th>
+                          <th className="text-center p-3 font-semibold text-slate-700 border-b border-slate-200">{t('api.latency')}</th>
+                          <th className="text-left p-3 font-semibold text-slate-700 border-b border-slate-200">{t('api.responseError')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -907,12 +914,12 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                               {result.pass ? (
                                 <div className="flex items-center justify-center gap-1">
                                   <CheckCircle className="h-4 w-4 text-green-600" />
-                                  <span className="text-green-700 font-medium text-sm">Success</span>
+                                  <span className="text-green-700 font-medium text-sm">{t('api.success')}</span>
                                 </div>
                               ) : (
                                 <div className="flex items-center justify-center gap-1">
                                   <XCircle className="h-4 w-4 text-red-600" />
-                                  <span className="text-red-700 font-medium text-sm">Failed</span>
+                                  <span className="text-red-700 font-medium text-sm">{t('api.failed')}</span>
                                 </div>
                               )}
                             </td>
@@ -935,7 +942,7 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
                                     {result.error}
                                   </div>
                                 ) : (
-                                  <span className="text-xs text-slate-500">No response body</span>
+                                  <span className="text-xs text-slate-500">{t('api.noResponseBody')}</span>
                                 )}
                               </div>
                             </td>
@@ -954,8 +961,8 @@ export function ApiMain({ url: initialUrl = "" }: ApiMainProps) {
           {/* Call to Action Section - Only show after results */}
           {(results.length > 0 || statusMessage) && (
             <ConsultationCTA
-              title="Need Help Optimizing Your API Performance?"
-              description="Our expert consultants can help you analyze your API endpoints, improve response times, and implement best practices for better performance."
+              title={t('api.ctaTitle')}
+              description={t('api.ctaDescription')}
               secondaryButtonHref="/api-info"
             />
           )}

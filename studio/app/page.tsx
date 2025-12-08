@@ -1,6 +1,7 @@
 "use client";
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslation } from "react-i18next"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,9 +10,27 @@ import { Zap, Clock, FileText, TrendingUp, Shield, BarChart3, Globe, Sparkles, A
 import { getDjangoApiUrl } from "@/lib/api-config";
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [featuredDeal, setFeaturedDeal] = useState<any>(null);
 
   useEffect(() => {
+    // Mark as mounted to prevent hydration mismatch
+    setMounted(true);
+    
+    // Fetch featured deal
+    fetch(getDjangoApiUrl('/api/deals/featured/'))
+      .then(res => res.json())
+      .then(data => {
+        if (data.has_deal && data.deal) {
+          setFeaturedDeal(data.deal);
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching featured deal:', err);
+      });
+    
     // Check if user is logged in and redirect to dashboard
     const token = localStorage.getItem("access_token");
     if (token) {
@@ -43,7 +62,7 @@ export default function HomePage() {
     }
   }, [router]);
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden" suppressHydrationWarning>
       {/* Hero Section - Uses Palette Colors */}
       <section className="relative min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(to bottom right, var(--color-accent-1), var(--color-primary), var(--color-secondary))' }}>
         {/* Balanced animated background elements */}
@@ -62,32 +81,32 @@ export default function HomePage() {
           <div className="mb-8">
             <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
               <Rocket className="h-4 w-4 mr-2" />
-              The Future of Web Performance
+              {t('homepage.heroBadge')}
             </Badge>
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            The Future of Web Performance
+            {t('homepage.heroTitle')}
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-8 leading-relaxed">
-            Enter your website URL to get comprehensive performance analysis with <span className="text-white font-semibold">lightning-fast analysis</span>, 
-            <span className="text-white/90 font-semibold"> AI-powered insights</span>, and 
-            <span className="text-white/95 font-semibold"> actionable recommendations</span>.
+            {t('homepage.heroDescription')} <span className="text-white font-semibold">{t('homepage.lightningFast')}</span>, 
+            <span className="text-white/90 font-semibold"> {t('homepage.aiPowered')}</span>, and 
+            <span className="text-white/95 font-semibold"> {t('homepage.actionable')}</span>.
           </p>
           
           <div className="flex flex-wrap justify-center gap-3 mb-8">
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Load Time
+              {t('homepage.loadTime')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Page Size
+              {t('homepage.pageSize')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Requests
+              {t('homepage.requests')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Core Web Vitals
+              {t('homepage.coreWebVitals')}
             </div>
       </div>
 
@@ -95,27 +114,27 @@ export default function HomePage() {
             <Button size="lg" className="bg-palette-primary hover:bg-palette-primary-hover text-white border-0 px-8 py-4 text-lg font-semibold rounded-xl shadow-xl transform hover:scale-105 transition-all duration-300" asChild>
               <Link href="/performance">
                 <Play className="mr-2 h-5 w-5" />
-                Analyze Now - It's Free
+                {t('homepage.analyzeNow')}
               </Link>
             </Button>
             <Button size="lg" className="bg-white/20 text-white border border-white/30 hover:bg-white/30 px-8 py-4 text-lg rounded-xl backdrop-blur-sm font-semibold">
               <Eye className="mr-2 h-5 w-5" />
-              Watch Demo
+              {t('homepage.watchDemo')}
             </Button>
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-8 text-white/80">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-300" />
-              <span className="font-medium">No Credit Card Required</span>
+              <span className="font-medium">{t('homepage.noCreditCard')}</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-300" />
-              <span className="font-medium">Instant Results</span>
+              <span className="font-medium">{t('homepage.instantResults')}</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-300" />
-              <span className="font-medium">Enterprise Grade</span>
+              <span className="font-medium">{t('homepage.enterpriseGrade')}</span>
             </div>
           </div>
         </div>
@@ -137,15 +156,15 @@ export default function HomePage() {
               <div className="flex items-center gap-4 flex-1">
                 <div className="flex items-center gap-2 bg-gradient-to-r from-palette-primary to-palette-secondary text-white px-4 py-2 rounded-full shadow-md">
                   <Tag className="h-5 w-5" />
-                  <span className="font-bold text-sm md:text-base">LIMITED TIME DEAL</span>
+                  <span className="font-bold text-sm md:text-base">{t('homepage.limitedTimeDeal')}</span>
                 </div>
                 <div className="hidden md:block h-8 w-px bg-palette-accent-2"></div>
                 <div>
                   <h3 className="text-lg md:text-xl font-bold" style={{ color: 'var(--theme-text-primary)' }}>
-                    Analyst Package - Annual Plan
+                    {t('homepage.analystPackage')}
                   </h3>
                   <p className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>
-                    Dec 01, 2025 - Dec 31, 2025
+                    {t('homepage.validUntil')}
                   </p>
                 </div>
               </div>
@@ -166,7 +185,7 @@ export default function HomePage() {
                       $199
                     </span>
                     <span className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>
-                      /year
+                      {t('homepage.perYear')}
                     </span>
                   </div>
                 </div>
@@ -178,7 +197,7 @@ export default function HomePage() {
                       44%
                     </span>
                   </div>
-                  <p className="text-xs font-semibold text-green-600">SAVINGS</p>
+                  <p className="text-xs font-semibold text-green-600">{t('homepage.savings')}</p>
                 </div>
               </div>
 
@@ -189,8 +208,8 @@ export default function HomePage() {
                   className="bg-gradient-to-r from-palette-primary to-palette-secondary hover:from-palette-primary-hover hover:to-palette-secondary-hover text-white px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   asChild
                 >
-                  <Link href="/upgrade">
-                    Claim Deal Now
+                  <Link href={featuredDeal ? `/checkout?deal=${featuredDeal.slug}` : '/upgrade'}>
+                    {t('homepage.claimDeal')}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -202,26 +221,26 @@ export default function HomePage() {
               <div className="flex flex-wrap items-center justify-center gap-4 text-sm mb-4" style={{ color: 'var(--theme-text-secondary)' }}>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>Valid: Dec 01 - Dec 31, 2025</span>
+                  <span>{t('homepage.valid')}: {t('homepage.validUntil')}</span>
                 </div>
                 <div className="hidden md:block">•</div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span>Cancel anytime</span>
+                  <span>{t('homepage.cancelAnytime')}</span>
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-3 max-w-2xl mx-auto">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>All 8 analysis tools included</span>
+                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>{t('homepage.allToolsIncluded')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>Test all tools in one click</span>
+                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>{t('homepage.testAllTools')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>Monitor and track 100 websites, all at once with historical data</span>
+                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>{t('homepage.monitor100Sites')}</span>
                 </div>
               </div>
             </div>
@@ -238,16 +257,15 @@ export default function HomePage() {
           <div className="text-center mb-20">
             <Badge variant="outline" className="mb-6 px-4 py-2 border-palette-accent-2 text-palette-primary">
               <Target className="h-4 w-4 mr-2" />
-              Professional Grade Tools
+              {t('homepage.professionalTools')}
             </Badge>
             <h2 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-              Everything You Need to
+              {t('homepage.everythingYouNeed')}
               <br className="hidden md:block" />
-              <span className="bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">Optimize Your Website</span>
+              <span className="bg-gradient-to-r from-palette-primary to-palette-secondary bg-clip-text text-transparent">{t('homepage.optimizeYourWebsite')}</span>
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              From performance analysis to security audits, we've built the most comprehensive 
-              website testing platform with 8 powerful tools: Performance, Monitor, SSL, DNS, Sitemap, API, Links, and Typography.
+              {t('homepage.comprehensivePlatform')}
             </p>
           </div>
 
@@ -260,22 +278,22 @@ export default function HomePage() {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Activity className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Performance & Monitoring</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('homepage.performanceMonitoring')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Comprehensive performance analysis, uptime monitoring, and real-time health checks for your website.
+                    {t('homepage.performanceDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Performance & Core Web Vitals
+                      {t('homepage.performanceVitals')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Uptime & Response Monitoring
+                      {t('homepage.uptimeMonitoring')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Real-time Status Tracking
+                      {t('homepage.realTimeTracking')}
                     </li>
                   </ul>
                 </div>
@@ -290,22 +308,22 @@ export default function HomePage() {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Sparkles className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Security & Infrastructure</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('homepage.securityInfrastructure')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Complete security audits, SSL certificate validation, DNS configuration analysis, and API health monitoring.
+                    {t('homepage.securityDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      SSL Certificate Analysis
+                      {t('homepage.sslAnalysis')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      DNS Configuration Review
+                      {t('homepage.dnsReview')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      API Endpoint Testing
+                      {t('homepage.apiTesting')}
                     </li>
                   </ul>
                 </div>
@@ -320,23 +338,23 @@ export default function HomePage() {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Monitor className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Content & Structure</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('homepage.contentStructure')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Analyze your website's structure, detect broken links, validate sitemaps, and optimize typography for better readability.
+                    {t('homepage.contentDesc')}
                   </p>
                   
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Sitemap Validation & Analysis
+                      {t('homepage.sitemapValidation')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Broken Link Detection
+                      {t('homepage.brokenLinkDetection')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Typography & Font Analysis
+                      {t('homepage.typographyAnalysis')}
                     </li>
                   </ul>
                 </div>
@@ -350,32 +368,32 @@ export default function HomePage() {
                   <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mx-auto mb-4">
                     <Globe className="h-6 w-6 text-white" />
                   </div>
-              <h4 className="font-semibold text-slate-800 mb-2">Global Testing</h4>
-              <p className="text-sm text-slate-600">Test from 12+ locations worldwide</p>
+              <h4 className="font-semibold text-slate-800 mb-2">{t('homepage.globalTesting')}</h4>
+              <p className="text-sm text-slate-600">{t('homepage.testFromLocations')}</p>
             </div>
             
             <div className="text-center p-6 rounded-2xl bg-white/60 backdrop-blur-sm border border-slate-200/50 hover:bg-white/80 transition-all duration-300 h-full flex flex-col justify-center">
                   <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mx-auto mb-4">
                     <Shield className="h-6 w-6 text-white" />
                   </div>
-              <h4 className="font-semibold text-slate-800 mb-2">Security Scan</h4>
-              <p className="text-sm text-slate-600">Vulnerability detection included</p>
+              <h4 className="font-semibold text-slate-800 mb-2">{t('homepage.securityScan')}</h4>
+              <p className="text-sm text-slate-600">{t('homepage.vulnerabilityDetection')}</p>
             </div>
             
             <div className="text-center p-6 rounded-2xl bg-white/60 backdrop-blur-sm border border-slate-200/50 hover:bg-white/80 transition-all duration-300 h-full flex flex-col justify-center">
                   <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mx-auto mb-4">
                     <Users className="h-6 w-6 text-white" />
                   </div>
-              <h4 className="font-semibold text-slate-800 mb-2">Team Sharing</h4>
-              <p className="text-sm text-slate-600">Collaborate with your team</p>
+              <h4 className="font-semibold text-slate-800 mb-2">{t('homepage.teamSharing')}</h4>
+              <p className="text-sm text-slate-600">{t('homepage.collaborateTeam')}</p>
             </div>
             
             <div className="text-center p-6 rounded-2xl bg-white/60 backdrop-blur-sm border border-slate-200/50 hover:bg-white/80 transition-all duration-300 h-full flex flex-col justify-center">
                   <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-palette-primary to-palette-secondary flex items-center justify-center mx-auto mb-4">
                     <Award className="h-6 w-6 text-white" />
                   </div>
-              <h4 className="font-semibold text-slate-800 mb-2">Expert Support</h4>
-              <p className="text-sm text-slate-600">Performance optimization help</p>
+              <h4 className="font-semibold text-slate-800 mb-2">{t('homepage.expertSupport')}</h4>
+              <p className="text-sm text-slate-600">{t('homepage.optimizationHelp')}</p>
             </div>
           </div>
         </div>
@@ -384,9 +402,9 @@ export default function HomePage() {
       <section className="py-24 px-4 bg-gradient-to-br from-gray-50 to-palette-accent-3">
         <div className="container mx-auto max-w-6xl px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">See Your Performance at a Glance</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('homepage.seePerformance')}</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Get instant insights with our comprehensive performance dashboard
+              {t('homepage.instantInsights')}
             </p>
           </div>
 
@@ -396,11 +414,11 @@ export default function HomePage() {
                 <Card className="p-6 bg-white/80 backdrop-blur border-0 shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Load Time</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('homepage.loadTime')}</p>
                       <p className="text-3xl font-bold text-palette-primary">1.2s</p>
                       <p className="text-xs text-green-600 flex items-center mt-1">
                         <TrendingUp className="h-3 w-3 mr-1" />
-                        15% faster
+                        15% {t('homepage.faster')}
                       </p>
                     </div>
                     <Clock className="h-8 w-8 text-palette-primary" />
@@ -410,11 +428,11 @@ export default function HomePage() {
                 <Card className="p-6 bg-white/80 backdrop-blur border-0 shadow-md">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Performance</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('performance.title')}</p>
                       <p className="text-3xl font-bold text-palette-primary">94</p>
                       <div className="flex items-center mt-1">
                         <Star className="h-3 w-3 text-yellow-500 mr-1" />
-                        <span className="text-xs text-muted-foreground">Excellent</span>
+                        <span className="text-xs text-muted-foreground">{t('homepage.excellent')}</span>
                       </div>
                 </div>
                     <BarChart3 className="h-8 w-8 text-palette-primary" />
@@ -424,9 +442,9 @@ export default function HomePage() {
                 <Card className="p-6 bg-white/80 backdrop-blur border-0 shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Page Size</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('homepage.pageSize')}</p>
                       <p className="text-3xl font-bold text-palette-primary">2.1MB</p>
-                      <p className="text-xs text-muted-foreground mt-1">Optimized</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('homepage.optimized')}</p>
                 </div>
                     <FileText className="h-8 w-8 text-palette-primary" />
               </div>
@@ -435,9 +453,9 @@ export default function HomePage() {
                 <Card className="p-6 bg-white/80 backdrop-blur border-0 shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Requests</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('homepage.requests')}</p>
                       <p className="text-3xl font-bold text-palette-primary">47</p>
-                      <p className="text-xs text-palette-primary mt-1">Good</p>
+                      <p className="text-xs text-palette-primary mt-1">{t('homepage.good')}</p>
                     </div>
                     <Globe className="h-8 w-8 text-palette-primary" />
                   </div>
@@ -447,20 +465,20 @@ export default function HomePage() {
               <Card className="p-6 bg-white/80 backdrop-blur border-0 shadow-md">
                 <h3 className="font-semibold mb-3 flex items-center">
                   <Sparkles className="h-5 w-5 mr-2 text-palette-primary" />
-                  AI Recommendations
+                  {t('homepage.aiRecommendations')}
                 </h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Optimize images for 30% faster loading
+                    {t('homepage.optimizeImages')}
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Enable compression for text resources
+                    {t('homepage.enableCompression')}
                   </li>
                   <li className="flex items-start">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                    Reduce unused JavaScript by 45KB
+                    {t('homepage.reduceJavaScript')}
                   </li>
                 </ul>
               </Card>
@@ -470,13 +488,13 @@ export default function HomePage() {
               <div className="aspect-video bg-gradient-to-br from-palette-accent-3 to-palette-accent-2 rounded-2xl shadow-xl p-6">
                 <div className="text-center mb-4">
                   <BarChart3 className="h-16 w-16 text-palette-primary mx-auto mb-4" />
-                  <p className="text-lg font-semibold text-gray-700">Interactive Performance Charts</p>
-                  <p className="text-sm text-muted-foreground">Detailed waterfall & timing analysis</p>
+                  <p className="text-lg font-semibold text-gray-700">{t('homepage.interactiveCharts')}</p>
+                  <p className="text-sm text-muted-foreground">{t('homepage.detailedAnalysis')}</p>
                 </div>
                 
                 {/* Waterfall Chart Preview */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-lg border p-4">
-                  <div className="text-xs text-gray-500 mb-2 font-medium">Resource Loading Waterfall</div>
+                  <div className="text-xs text-gray-500 mb-2 font-medium">{t('homepage.resourceLoading')}</div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs">
                       <div className="w-3 h-3 bg-yellow-400 rounded"></div>
@@ -508,7 +526,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div className="mt-2 text-xs text-gray-500">
-                    Timeline: 0s ——————————————————————— 2s
+                    {t('homepage.timeline')}: 0s ——————————————————————— 2s
                   </div>
                 </div>
               </div>
@@ -520,36 +538,36 @@ export default function HomePage() {
       <section className="py-24 px-4 mb-8 bg-white">
         <div className="container mx-auto max-w-4xl text-center px-4">
           <h2 className="text-3xl md:text-4xl font-bold mb-6" style={{ color: 'var(--theme-text-primary)' }}>
-            Ready to Wrangle Your Website's Performance?
+            {t('homepage.readyToWrangle')}
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto" style={{ color: 'var(--theme-text-secondary)' }}>
-            Join thousands of developers and businesses optimizing their websites with PageRodeo's AI-powered analysis.
+            {t('homepage.joinThousands')}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-3" asChild>
               <Link href="/performance">
-                Start Free Analysis
+                {t('homepage.startFreeAnalysis')}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="text-lg px-8 py-3 border-palette-primary text-palette-primary hover:bg-palette-primary hover:text-white">
-              View Sample Report
+              {t('homepage.viewSampleReport')}
             </Button>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
               <div className="text-3xl font-bold mb-2" style={{ color: 'var(--color-primary)' }}>50K+</div>
-              <div className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>Websites Analyzed</div>
+              <div className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>{t('homepage.websitesAnalyzed')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold mb-2" style={{ color: 'var(--color-primary)' }}>99.9%</div>
-              <div className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>Uptime Guarantee</div>
+              <div className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>{t('homepage.uptimeGuarantee')}</div>
             </div>
             <div>
               <div className="text-3xl font-bold mb-2" style={{ color: 'var(--color-primary)' }}>&lt; 30s</div>
-              <div className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>Average Analysis Time</div>
+              <div className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>{t('homepage.averageAnalysisTime')}</div>
             </div>
         </div>
       </div>

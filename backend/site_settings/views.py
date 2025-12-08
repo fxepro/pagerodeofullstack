@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from users.permission_utils import has_permission
 from .models import ThemePalette, TypographyPreset, SiteConfig
 from .serializers import (
     ThemePaletteSerializer,
@@ -20,9 +21,15 @@ from core.monitoring import theme_monitor
 # ==================== THEME PALETTE ENDPOINTS ====================
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def list_palettes(request):
-    """List all theme palettes (Admin only)"""
+    """List all theme palettes (Requires themes.view permission)"""
+    # Check permission
+    if not has_permission(request.user, 'themes.view'):
+        return Response(
+            {'error': 'You do not have permission to view themes.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
     try:
         palettes = ThemePalette.objects.all()
         serializer = ThemePaletteSerializer(palettes, many=True)

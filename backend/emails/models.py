@@ -10,6 +10,7 @@ class EmailCapture(models.Model):
         ('feedback', 'Feedback Form'),
         ('consultation', 'Consultation Form'),
         ('update_signup', 'Update Signup'),
+        ('demo_request', 'Demo Request'),
     ]
     
     email = models.EmailField(help_text="User's email address")

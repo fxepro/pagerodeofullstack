@@ -46,10 +46,11 @@ def update_role(request, role_id):
     """Update a role and its permissions"""
     role = get_object_or_404(Group, id=role_id)
     
-    # Prevent modification of system roles
-    if role.name in ['admin', 'viewer']:
+    # Prevent modification of system roles (capitalized names in Group model)
+    SYSTEM_ROLES = ['Viewer', 'Analyst', 'Manager', 'Director', 'Admin']
+    if role.name in SYSTEM_ROLES:
         return Response(
-            {'error': 'System roles cannot be modified'}, 
+            {'error': f'System role "{role.name}" cannot be modified'}, 
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -67,10 +68,11 @@ def delete_role(request, role_id):
     """Delete a role"""
     role = get_object_or_404(Group, id=role_id)
     
-    # Prevent deletion of system roles
-    if role.name in ['admin', 'viewer']:
+    # Prevent deletion of system roles (capitalized names in Group model)
+    SYSTEM_ROLES = ['Viewer', 'Analyst', 'Manager', 'Director', 'Admin']
+    if role.name in SYSTEM_ROLES:
         return Response(
-            {'error': 'System roles cannot be deleted'}, 
+            {'error': f'System role "{role.name}" cannot be deleted'}, 
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -110,12 +112,15 @@ def get_role_permissions(request, role_id):
 @permission_classes([IsAdminUser])
 def update_role_permissions(request, role_id):
     """Update permissions for a specific role"""
+    from django.db import transaction
+    
     role = get_object_or_404(Group, id=role_id)
     
-    # Prevent modification of system roles
-    if role.name in ['admin', 'viewer']:
+    # Prevent modification of system roles (capitalized names in Group model)
+    SYSTEM_ROLES = ['Viewer', 'Analyst', 'Manager', 'Director', 'Admin']
+    if role.name in SYSTEM_ROLES:
         return Response(
-            {'error': 'System roles cannot be modified'}, 
+            {'error': f'System role "{role.name}" cannot be modified'}, 
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -129,8 +134,11 @@ def update_role_permissions(request, role_id):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    # Update permissions
-    role.permissions.set(valid_permissions)
+    # Update permissions with transaction to ensure database save
+    with transaction.atomic():
+        role.permissions.set(valid_permissions)
+        # Explicitly refresh from database to ensure changes are saved
+        role.refresh_from_db()
     
     # Return updated role data
     serializer = RoleSerializer(role)

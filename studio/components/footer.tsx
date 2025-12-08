@@ -1,8 +1,12 @@
+"use client";
 import Link from "next/link"
 import { Facebook, Twitter } from "lucide-react"
 import Image from "next/image"
+import { useTranslation } from "react-i18next"
 
 export function Footer() {
+  const { t } = useTranslation();
+  
   // Debug: Check if CSS variables exist
   if (typeof window !== 'undefined') {
     console.log('CSS Vars:', {
@@ -27,47 +31,47 @@ export function Footer() {
               />
             </div>
             <p className="text-white/80 max-w-xs leading-relaxed mt-4">
-              Professional website performance testing and monitoring tool with detailed analytics and AI-powered recommendations.
+              {t('footer.description')}
             </p>
           </div>
 
           {/* Quick Links - All Main Features */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-white text-lg">Quick Links</h3>
+            <h3 className="font-semibold text-white text-lg">{t('footer.quickLinks')}</h3>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link href="/" className="text-white/80 hover:text-white transition-colors">
-                  Performance Test
+                  {t('footer.performanceTest')}
                 </Link>
               </li>
               <li>
                 <Link href="/monitor" className="text-white/80 hover:text-white transition-colors">
-                  Monitor
+                  {t('footer.monitor')}
                 </Link>
               </li>
               <li>
                 <Link href="/ssl" className="text-white/80 hover:text-white transition-colors">
-                  SSL Check
+                  {t('footer.sslCheck')}
                 </Link>
               </li>
               <li>
                 <Link href="/sitemap" className="text-white/80 hover:text-white transition-colors">
-                  Sitemap
+                  {t('footer.sitemap')}
                 </Link>
               </li>
               <li>
                 <Link href="/api" className="text-white/80 hover:text-white transition-colors">
-                  API Health Checker
+                  {t('footer.apiHealthChecker')}
                 </Link>
               </li>
               <li>
                 <Link href="/ai-info" className="text-white/80 hover:text-white transition-colors">
-                  AI Analysis
+                  {t('footer.aiAnalysis')}
                 </Link>
               </li>
               <li>
                 <Link href="/links" className="text-white/80 hover:text-white transition-colors">
-                  Links Checker
+                  {t('footer.linksChecker')}
                 </Link>
               </li>
             </ul>
@@ -79,21 +83,21 @@ export function Footer() {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Performance */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-white text-lg">Performance</h3>
+              <h3 className="font-semibold text-white text-lg">{t('footer.performance')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/performance" className="text-white/80 hover:text-white transition-colors">
-                    Lightning Analysis
+                    {t('footer.lightningAnalysis')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/performance" className="text-white/80 hover:text-white transition-colors">
-                    AI-Powered Insights
+                    {t('footer.aiPoweredInsights')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/performance" className="text-white/80 hover:text-white transition-colors">
-                    Visual Waterfalls
+                    {t('footer.visualWaterfalls')}
                   </Link>
                 </li>
               </ul>
@@ -101,21 +105,21 @@ export function Footer() {
 
             {/* Monitor */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-white text-lg">Monitor</h3>
+              <h3 className="font-semibold text-white text-lg">{t('footer.monitor')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/monitor-info" className="text-white/80 hover:text-white transition-colors">
-                    Status Monitoring
+                    {t('footer.statusMonitoring')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/monitor-info" className="text-white/80 hover:text-white transition-colors">
-                    Technical Analysis
+                    {t('footer.technicalAnalysis')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/monitor-info" className="text-white/80 hover:text-white transition-colors">
-                    Performance Metrics
+                    {t('footer.performanceMetrics')}
                   </Link>
                 </li>
               </ul>
@@ -123,21 +127,21 @@ export function Footer() {
 
             {/* SSL & Domain */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-white text-lg">SSL & Domain</h3>
+              <h3 className="font-semibold text-white text-lg">{t('footer.sslDomain')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/ssl-info" className="text-white/80 hover:text-white transition-colors">
-                    SSL Certificate
+                    {t('footer.sslCertificate')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/ssl-info" className="text-white/80 hover:text-white transition-colors">
-                    DNS Records
+                    {t('footer.dnsRecords')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/ssl-info" className="text-white/80 hover:text-white transition-colors">
-                    Domain Info
+                    {t('footer.domainInfo')}
                   </Link>
                 </li>
               </ul>
@@ -150,21 +154,21 @@ export function Footer() {
           <div className="grid md:grid-cols-4 gap-8">
             {/* API Health Checker */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-white text-lg">API Health Checker</h3>
+              <h3 className="font-semibold text-white text-lg">{t('footer.apiHealthChecker')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/api-info" className="text-white/80 hover:text-white transition-colors">
-                    Auto Discovery
+                    {t('footer.autoDiscovery')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/api-info" className="text-white/80 hover:text-white transition-colors">
-                    Real-Time Testing
+                    {t('footer.realTimeTesting')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/api-info" className="text-white/80 hover:text-white transition-colors">
-                    Performance Analytics
+                    {t('footer.performanceAnalytics')}
                   </Link>
                 </li>
               </ul>
@@ -172,21 +176,21 @@ export function Footer() {
 
             {/* AI Analysis */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-white text-lg">AI Analysis</h3>
+              <h3 className="font-semibold text-white text-lg">{t('footer.aiAnalysis')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/ai-info" className="text-white/80 hover:text-white transition-colors">
-                    AI Health Monitoring
+                    {t('footer.aiHealthMonitoring')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/ai-info" className="text-white/80 hover:text-white transition-colors">
-                    Model Performance
+                    {t('footer.modelPerformance')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/ai-info" className="text-white/80 hover:text-white transition-colors">
-                    Cost & Usage Tracking
+                    {t('footer.costUsageTracking')}
                   </Link>
                 </li>
               </ul>
@@ -194,21 +198,21 @@ export function Footer() {
 
             {/* Links Checker */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-white text-lg">Links Checker</h3>
+              <h3 className="font-semibold text-white text-lg">{t('footer.linksChecker')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/links-info" className="text-white/80 hover:text-white transition-colors">
-                    Auto Discovery
+                    {t('footer.autoDiscovery')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/links-info" className="text-white/80 hover:text-white transition-colors">
-                    Status Validation
+                    {t('footer.statusValidation')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/links-info" className="text-white/80 hover:text-white transition-colors">
-                    Troubleshooting Guide
+                    {t('footer.troubleshootingGuide')}
                   </Link>
                 </li>
               </ul>
@@ -216,21 +220,21 @@ export function Footer() {
 
             {/* Sitemap */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-white text-lg">Sitemap</h3>
+              <h3 className="font-semibold text-white text-lg">{t('footer.sitemap')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/sitemap-info" className="text-white/80 hover:text-white transition-colors">
-                    Automatic Crawling
+                    {t('footer.automaticCrawling')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/sitemap-info" className="text-white/80 hover:text-white transition-colors">
-                    Visual Structure
+                    {t('footer.visualStructure')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/sitemap-info" className="text-white/80 hover:text-white transition-colors">
-                    XML Export
+                    {t('footer.xmlExport')}
                   </Link>
                 </li>
               </ul>
@@ -242,7 +246,7 @@ export function Footer() {
         <div className="mt-8 pt-6 border-t border-white/20">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-6">
-              <h3 className="font-semibold text-white text-lg">Connect</h3>
+              <h3 className="font-semibold text-white text-lg">{t('footer.connect')}</h3>
               <div className="flex space-x-4">
                 <Link href="https://www.facebook.com/pagerodeo" target="_blank" rel="noopener noreferrer" className="text-white/80 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10">
                   <Facebook className="h-5 w-5" />
@@ -254,13 +258,16 @@ export function Footer() {
             </div>
             <div className="flex space-x-6">
               <Link href="/about" className="text-white/80 hover:text-white transition-colors font-medium">
-                About
+                {t('footer.about')}
+              </Link>
+              <Link href="/deals" className="text-white/80 hover:text-white transition-colors font-medium">
+                Deals
               </Link>
               <Link href="/feedback" className="text-white/80 hover:text-white transition-colors font-medium">
-                Feedback
+                {t('footer.feedback')}
               </Link>
               <Link href="/contact" className="text-white/80 hover:text-white transition-colors font-medium">
-                Contact
+                {t('footer.contact')}
               </Link>
             </div>
           </div>
@@ -269,12 +276,12 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-white/20 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <p className="text-white/80">
-            © 2024 PageRodeo. All rights reserved.
+            {t('footer.copyright')}
           </p>
           <div className="flex space-x-6 text-sm text-white/80">
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-            <Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">{t('footer.privacyPolicy')}</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">{t('footer.termsOfService')}</Link>
+            <Link href="/cookies" className="hover:text-white transition-colors">{t('footer.cookiePolicy')}</Link>
           </div>
         </div>
       </div>

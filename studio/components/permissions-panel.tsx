@@ -12,7 +12,7 @@ import { Role, Permission } from "@/lib/types/role";
 import axios from "axios";
 
 // Use relative URL in production (browser), localhost in dev (SSR)
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? 'http://localhost:8000' : 'http://localhost:8000');
 
 interface PermissionsPanelProps {
   selectedRole: Role | null;

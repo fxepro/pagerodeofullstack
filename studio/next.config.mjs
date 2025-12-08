@@ -1,24 +1,5 @@
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { platform } from 'os';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Only enable standalone on Linux in production
-// Windows requires admin privileges for symlinks
-const isWindows = platform() === 'win32';
-const isProduction = process.env.NODE_ENV === 'production';
-const enableStandalone = isProduction && !isWindows;
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Only use standalone output in production on Linux
-  // Windows requires admin privileges for symlinks, so disable for local dev
-  ...(enableStandalone ? {
-    output: "standalone",
-    outputFileTracingRoot: __dirname,
-  } : {}),
   eslint: {
     ignoreDuringBuilds: false, // Enable ESLint during builds
   },

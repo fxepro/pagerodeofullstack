@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useMonitorAnalysis } from "@/hooks/use-monitor-analysis"
+import { useTranslation } from "react-i18next"
 import Link from "next/link"
 import { ConsultationCTA } from "@/components/consultation-cta"
 import { ErrorDisplay } from "@/components/error-display"
@@ -47,6 +48,7 @@ interface MonitorMainProps {
 }
 
 export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const {
     url,
@@ -66,7 +68,7 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
         <div className="p-6">
           <div className="text-center py-8">
             <Activity className="animate-spin h-12 w-12 text-palette-primary mx-auto mb-4" />
-            <p className="text-slate-600">Checking website status for {initialUrl}...</p>
+            <p className="text-slate-600">{t('monitor.checkingFor', { url: initialUrl })}</p>
           </div>
         </div>
       );
@@ -97,10 +99,10 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
               <div>
                 <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                   <Monitor className="h-6 w-6 text-palette-primary" />
-                  Monitor Status for {monitorData.url}
+                  {t('monitor.monitorStatusFor', { url: monitorData.url })}
                 </h2>
                 <p className="text-slate-600 mt-1">
-                  Last checked: {new Date(monitorData.lastChecked).toLocaleString()}
+                  {t('monitor.lastChecked', { date: new Date(monitorData.lastChecked).toLocaleString() })}
                 </p>
               </div>
               <Button
@@ -129,17 +131,17 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                   {monitorData.status === 'up' ? (
                     <>
                       <CheckCircle className="h-5 w-5 text-green-600" />
-                      <Badge className="bg-green-100 text-green-800">Online</Badge>
+                      <Badge className="bg-green-100 text-green-800">{t('monitor.online')}</Badge>
                     </>
                   ) : (
                     <>
                       <AlertTriangle className="h-5 w-5 text-red-600" />
-                      <Badge variant="destructive">Offline</Badge>
+                      <Badge variant="destructive">{t('monitor.offline')}</Badge>
                     </>
                   )}
                 </div>
                 <p className="text-xs text-slate-500 mt-1">
-                  Last checked: {new Date(monitorData.lastChecked).toLocaleTimeString()}
+                  {t('monitor.lastCheckedTime', { time: new Date(monitorData.lastChecked).toLocaleTimeString() })}
                 </p>
               </CardContent>
             </Card>
@@ -303,17 +305,16 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
           <div className="mb-6">
             <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
               <Monitor className="h-4 w-4 mr-2" />
-              Real-time Website Monitoring
+              {t('monitor.heroBadge')}
             </Badge>
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Monitor Your Website
+            {t('monitor.heroTitle')}
           </h1>
           
           <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed">
-            Check your website's uptime, response time, and SSL certificate status. 
-            Get instant insights and comprehensive link analysis.
+            {t('monitor.heroDescription')}
           </p>
 
           {/* URL Input Section - Glassmorphism style */}
@@ -323,7 +324,7 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                 <Input
                   id="monitor-url"
                   type="text"
-                  placeholder="example.com or https://example.com"
+                  placeholder={t('monitor.urlPlaceholder')}
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   className="flex-1 h-14 text-lg px-4 bg-white/90 border-0 rounded-xl placeholder:text-gray-500 focus:ring-2 focus:ring-white/50"
@@ -337,12 +338,12 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                   {isChecking ? (
                     <>
                       <Activity className="h-5 w-5 mr-2 animate-spin" />
-                      Checking...
+                      {t('monitor.checking')}
                     </>
                   ) : (
                     <>
                       <Zap className="h-5 w-5 mr-2" />
-                      Analyze
+                      {t('monitor.analyze')}
                     </>
                   )}
                 </Button>
@@ -350,7 +351,7 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
             </div>
             
             <p className="text-center text-white/80 mt-4 text-sm">
-              We'll check HTTP/HTTPS status, response time, SSL certificate, and test all page links
+              {t('monitor.helperText')}
             </p>
           </div>
         </div>
@@ -383,10 +384,10 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                 <div>
                   <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                     <Monitor className="h-6 w-6 text-palette-primary" />
-                    Monitor Status for {monitorData.url}
+                    {t('monitor.monitorStatusFor', { url: monitorData.url })}
                   </h2>
                   <p className="text-slate-600 mt-1">
-                    Last checked: {new Date(monitorData.lastChecked).toLocaleString()}
+                    {t('monitor.lastChecked', { date: new Date(monitorData.lastChecked).toLocaleString() })}
                   </p>
                 </div>
                 <Button
@@ -396,7 +397,7 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                   className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                 >
                   <Activity className={`h-4 w-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
-                  Refresh
+                  {t('monitor.refresh')}
                 </Button>
               </div>
             </div>
@@ -407,7 +408,7 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
                     <Globe className="h-4 w-4" />
-                    Website Status
+                    {t('monitor.websiteStatus')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -415,17 +416,17 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                     {monitorData.status === 'up' ? (
                       <>
                         <CheckCircle className="h-5 w-5 text-green-600" />
-                        <Badge className="bg-green-100 text-green-800">Online</Badge>
+                        <Badge className="bg-green-100 text-green-800">{t('monitor.online')}</Badge>
                       </>
                     ) : (
                       <>
                         <AlertTriangle className="h-5 w-5 text-red-600" />
-                        <Badge variant="destructive">Offline</Badge>
+                        <Badge variant="destructive">{t('monitor.offline')}</Badge>
                       </>
                     )}
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    Last checked: {new Date(monitorData.lastChecked).toLocaleTimeString()}
+                    {t('monitor.lastCheckedTime', { time: new Date(monitorData.lastChecked).toLocaleTimeString() })}
                   </p>
                 </CardContent>
               </Card>
@@ -434,12 +435,12 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />
-                    Uptime
+                    {t('monitor.uptime')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-palette-primary">{monitorData.uptime.toFixed(2)}%</div>
-                  <p className="text-xs text-slate-500 mt-1">Last 30 days</p>
+                  <p className="text-xs text-slate-500 mt-1">{t('monitor.last30Days')}</p>
                 </CardContent>
               </Card>
 
@@ -447,14 +448,14 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
                     <Zap className="h-4 w-4" />
-                    Response Time
+                    {t('monitor.responseTime')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-palette-primary">{Math.round(monitorData.responseTime)}ms</div>
                   <div className="flex items-center gap-1 mt-1">
                     <TrendingDown className="h-3 w-3 text-green-600" />
-                    <span className="text-xs text-green-600">-12% from last week</span>
+                    <span className="text-xs text-green-600">{t('monitor.fromLastWeek')}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -463,7 +464,7 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
                     <Shield className="h-4 w-4" />
-                    SSL Certificate
+                    {t('monitor.sslCertificate')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -471,17 +472,17 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                     {monitorData.ssl.valid ? (
                       <>
                         <CheckCircle className="h-5 w-5 text-green-600" />
-                        <Badge className="bg-green-100 text-green-800">Valid</Badge>
+                        <Badge className="bg-green-100 text-green-800">{t('monitor.valid')}</Badge>
                       </>
                     ) : (
                       <>
                         <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                        <Badge className="bg-yellow-100 text-yellow-800">Warning</Badge>
+                        <Badge className="bg-yellow-100 text-yellow-800">{t('monitor.warning')}</Badge>
                       </>
                     )}
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
-                    Expires in {monitorData.ssl.expiresIn} days
+                    {t('monitor.expiresIn', { days: monitorData.ssl.expiresIn })}
                   </p>
                 </CardContent>
               </Card>
@@ -492,10 +493,10 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
               <CardHeader>
                 <CardTitle className="text-slate-800 flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-palette-primary" />
-                  Detailed Analysis
+                  {t('monitor.detailedAnalysis')}
                 </CardTitle>
                 <CardDescription className="text-slate-600">
-                  View comprehensive status report, performance metrics, and technical details
+                  {t('monitor.detailedAnalysisDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -506,7 +507,7 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                   >
                     <Link href={`/monitor/${encodeURIComponent(monitorData.url)}`}>
                       <Eye className="h-4 w-4 mr-2" />
-                      View Detailed Report
+                      {t('monitor.viewDetailedReport')}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
                   </Button>
@@ -518,12 +519,12 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                     className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                   >
                     <Activity className="h-4 w-4 mr-2" />
-                    Re-check Status
+                    {t('monitor.recheckStatus')}
                   </Button>
                   
                   <Button variant="outline" className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3">
                     <Server className="h-4 w-4 mr-2" />
-                    Export Report
+                    {t('monitor.exportReport')}
                   </Button>
                 </div>
               </CardContent>
@@ -534,7 +535,7 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
               <CardHeader>
                 <CardTitle className="text-slate-800 flex items-center gap-2">
                   <Clock className="h-5 w-5 text-palette-primary" />
-                  Recent Activity
+                  {t('monitor.recentActivity')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -543,22 +544,22 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                     <div className="flex items-center gap-3">
                       <CheckCircle className="h-5 w-5 text-green-600" />
                       <div>
-                        <p className="font-medium text-green-800">Website is online</p>
-                        <p className="text-sm text-green-600">Response time: {Math.round(monitorData.responseTime)}ms</p>
+                        <p className="font-medium text-green-800">{t('monitor.websiteIsOnline')}</p>
+                        <p className="text-sm text-green-600">{t('monitor.responseTimeMs', { time: Math.round(monitorData.responseTime) })}</p>
                       </div>
                     </div>
-                    <span className="text-sm text-green-600">Just now</span>
+                    <span className="text-sm text-green-600">{t('monitor.justNow')}</span>
                   </div>
                   
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <div className="flex items-center gap-3">
                       <Wifi className="h-5 w-5 text-blue-600" />
                       <div>
-                        <p className="font-medium text-blue-800">Monitoring started</p>
-                        <p className="text-sm text-blue-600">Checking every 30 seconds</p>
+                        <p className="font-medium text-blue-800">{t('monitor.monitoringStarted')}</p>
+                        <p className="text-sm text-blue-600">{t('monitor.checkingEvery')}</p>
                       </div>
                     </div>
-                    <span className="text-sm text-blue-600">2 minutes ago</span>
+                    <span className="text-sm text-blue-600">{t('monitor.minutesAgo', { minutes: 2 })}</span>
                   </div>
                 </div>
               </CardContent>
@@ -576,22 +577,22 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                     <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                       <Monitor className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-3 text-slate-800">Status Monitoring</h3>
+                    <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('monitor.statusMonitoring')}</h3>
                     <p className="text-slate-600 mb-4">
-                      Instant website status and performance checks with real-time monitoring capabilities.
+                      {t('monitor.statusMonitoringDesc')}
                     </p>
                     <ul className="space-y-2 text-sm text-slate-500">
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        HTTP/HTTPS status check
+                        {t('monitor.httpHttpsCheck')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        Response time measurement
+                        {t('monitor.responseTimeMeasurement')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                        SSL certificate validation
+                        {t('monitor.sslCertificateValidation')}
                       </li>
                     </ul>
                   </div>
@@ -605,22 +606,22 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <AlertTriangle className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Technical Analysis</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('monitor.technicalAnalysis')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Comprehensive technical details and server information for deep insights.
+                    {t('monitor.technicalAnalysisDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Server headers analysis
+                      {t('monitor.serverHeadersAnalysis')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Security certificate details
+                      {t('monitor.securityCertificateDetails')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Network connectivity test
+                      {t('monitor.networkConnectivityTest')}
                     </li>
                   </ul>
                 </div>
@@ -634,22 +635,22 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <BarChart3 className="h-8 w-8 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3 text-slate-800">Performance Metrics</h3>
+                  <h3 className="text-2xl font-bold mb-3 text-slate-800">{t('monitor.performanceMetrics')}</h3>
                   <p className="text-slate-600 mb-4">
-                    Real-time performance data and accessibility checks for comprehensive monitoring.
+                    {t('monitor.performanceMetricsDesc')}
                   </p>
                   <ul className="space-y-2 text-sm text-slate-500">
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Current availability status
+                      {t('monitor.currentAvailabilityStatus')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Response time analysis
+                      {t('monitor.responseTimeAnalysis')}
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      Status code verification
+                      {t('monitor.statusCodeVerification')}
                     </li>
                   </ul>
                 </div>
@@ -661,8 +662,8 @@ export function MonitorMain({ url: initialUrl = "" }: MonitorMainProps) {
           {/* Call to Action Section - Only show after results */}
           {monitorData && (
             <ConsultationCTA
-              title="Need Help Improving Your Website Uptime?"
-              description="Our expert consultants can help you optimize your website's reliability, improve response times, and implement monitoring best practices."
+              title={t('monitor.ctaTitle')}
+              description={t('monitor.ctaDescription')}
               secondaryButtonHref="/monitor-info"
             />
           )}

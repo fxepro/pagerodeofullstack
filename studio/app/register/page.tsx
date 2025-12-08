@@ -21,7 +21,8 @@ export default function RegisterPage() {
     confirmPassword: "",
     first_name: "",
     last_name: "",
-    role: "viewer"
+    role: "viewer",
+    demoPlan: "none"  // "none", "analyst", "auditor", "manager", "director", "executive"
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,7 +69,8 @@ export default function RegisterPage() {
         password: formData.password,
         first_name: formData.first_name,
         last_name: formData.last_name,
-        role: formData.role
+        role: formData.role,
+        demo_plan: formData.demoPlan !== "none" ? formData.demoPlan : null
       });
 
       // Auto-login after successful registration
@@ -126,8 +128,7 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-palette-primary rounded-xl mb-4">
             <UserPlus className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800">PageRodeo</h1>
-          <p className="text-slate-600 mt-2">Create your account to get started</p>
+          <p className="text-slate-600 text-lg">Create your account to get started</p>
         </div>
 
         {/* Registration Card */}
@@ -138,7 +139,7 @@ export default function RegisterPage() {
               Create Account
             </CardTitle>
             <CardDescription className="text-slate-600">
-              Fill in your details to create your PageRodeo account
+              Fill in your details to create your account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -272,6 +273,32 @@ export default function RegisterPage() {
                     required
                   />
                 </div>
+              </div>
+
+              {/* Demo Access Request */}
+              <div className="space-y-2 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <Label htmlFor="demoPlan" className="text-slate-700 font-medium">
+                  Request Demo Access (Optional)
+                </Label>
+                <p className="text-xs text-slate-500 mb-3">
+                  Get instant access to a demo account with pre-loaded sample data. Demo credentials will be sent to your email.
+                </p>
+                <Select 
+                  value={formData.demoPlan} 
+                  onValueChange={(value) => setFormData({ ...formData, demoPlan: value })}
+                >
+                  <SelectTrigger className="bg-white/60 border-palette-accent-2/50 focus:border-palette-accent-1 focus:ring-palette-accent-1">
+                    <SelectValue placeholder="Select demo plan (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No demo access</SelectItem>
+                    <SelectItem value="analyst">Analyst Plan Demo</SelectItem>
+                    <SelectItem value="auditor">Auditor Plan Demo</SelectItem>
+                    <SelectItem value="manager">Manager Plan Demo</SelectItem>
+                    <SelectItem value="director">Director Plan Demo</SelectItem>
+                    <SelectItem value="executive">Executive Plan Demo</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {error && (

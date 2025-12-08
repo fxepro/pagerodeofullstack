@@ -1,4 +1,9 @@
 from django.urls import path
+from .paypal_views import (
+    create_paypal_subscription,
+    confirm_paypal_subscription,
+    paypal_webhook,
+)
 from .views import (
     user_info, list_users, create_user, get_user,
     update_user, delete_user, assign_role, user_stats, register_user,
@@ -11,6 +16,14 @@ from .views import (
 from .role_views import (
     list_roles, get_role, create_role, update_role, delete_role,
     list_permissions, get_role_permissions, update_role_permissions
+)
+from .permission_views import (
+    check_permissions, user_permissions, get_navigation,
+    get_sidebar_matrix, update_sidebar_matrix
+)
+from .deal_views import (
+    list_active_deals, get_deal_by_slug, get_featured_deal,
+    create_deal_subscription, confirm_deal_subscription
 )
 from .sitemap_views import generate_sitemap, fetch_sitemap_xml
 from .views import (
@@ -71,4 +84,25 @@ urlpatterns = [
     path('api/roles/<int:role_id>/permissions/', get_role_permissions, name='get_role_permissions'),
     path('api/roles/<int:role_id>/permissions/update/', update_role_permissions, name='update_role_permissions'),
     path('api/permissions/', list_permissions, name='list_permissions'),
+    
+    # Permission checking endpoints
+    path('api/permissions/check/', check_permissions, name='check_permissions'),
+    path('api/permissions/user/', user_permissions, name='user_permissions'),
+    path('api/navigation/', get_navigation, name='get_navigation'),
+    
+    # PayPal payment endpoints
+    path('api/payments/paypal/create-subscription', create_paypal_subscription, name='create_paypal_subscription'),
+    path('api/payments/paypal/confirm', confirm_paypal_subscription, name='confirm_paypal_subscription'),
+    path('api/payments/paypal/webhook/', paypal_webhook, name='paypal_webhook'),
+    
+    # Sidebar matrix endpoints
+    path('api/roles/sidebar-matrix/', get_sidebar_matrix, name='get_sidebar_matrix'),
+    path('api/roles/sidebar-matrix/update/', update_sidebar_matrix, name='update_sidebar_matrix'),
+    
+    # Promotional deals endpoints
+    path('api/deals/active/', list_active_deals, name='list_active_deals'),
+    path('api/deals/featured/', get_featured_deal, name='get_featured_deal'),
+    path('api/deals/<slug:slug>/', get_deal_by_slug, name='get_deal_by_slug'),
+    path('api/payments/paypal/create-deal-subscription/', create_deal_subscription, name='create_deal_subscription'),
+    path('api/payments/paypal/confirm-deal/', confirm_deal_subscription, name='confirm_deal_subscription'),
 ]

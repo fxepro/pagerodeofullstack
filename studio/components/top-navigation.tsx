@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, BarChart3, LogIn, LogOut, User, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { LanguageSelector } from "@/components/language-selector";
+import { useTranslation } from "react-i18next";
 
 // Use relative URL in production (browser), localhost in dev (SSR)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
 export function TopNavigation() {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
@@ -87,7 +90,7 @@ export function TopNavigation() {
     // Clear orchestrator state to prevent old reports from running
     localStorage.removeItem("pagerodeo_analysis_state");
     setLoggedIn(false);
-    router.push("/login");
+    router.push("/");
   };
 
   return (
@@ -96,6 +99,9 @@ export function TopNavigation() {
         <div className="flex h-12 items-center justify-end max-w-[1600px] mx-auto">
           {/* Right side - Action Buttons */}
           <div className="flex items-center space-x-2">
+            {/* Language Selector */}
+            <LanguageSelector />
+            
             <Button 
               variant="ghost"
               size="sm"
@@ -112,7 +118,7 @@ export function TopNavigation() {
                   "h-3.5 w-3.5 mr-1 transition-transform duration-300",
                   pathname === "/blog" || pathname.startsWith("/blog") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                Blog
+                {t('navigation.blog')}
                 {(pathname === "/blog" || pathname.startsWith("/blog")) && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
                 )}
@@ -135,7 +141,7 @@ export function TopNavigation() {
                   "h-3.5 w-3.5 mr-1 transition-transform duration-300",
                   pathname === "/feedback" || pathname.startsWith("/feedback") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                Feedback
+                {t('navigation.feedback')}
                 {(pathname === "/feedback" || pathname.startsWith("/feedback")) && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
                 )}
@@ -158,7 +164,7 @@ export function TopNavigation() {
                   "h-3.5 w-3.5 mr-1 transition-transform duration-300",
                   pathname === "/consult" || pathname.startsWith("/consult") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                Consult
+                {t('navigation.consult')}
                 {(pathname === "/consult" || pathname.startsWith("/consult")) && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
                 )}
@@ -181,8 +187,32 @@ export function TopNavigation() {
                   "h-3.5 w-3.5 mr-1 transition-transform duration-300",
                   pathname === "/upgrade" || pathname.startsWith("/upgrade") ? "scale-110" : "group-hover:scale-110"
                 )} />
-                Upgrade
+                {t('navigation.upgrade')}
                 {(pathname === "/upgrade" || pathname.startsWith("/upgrade")) && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
+                )}
+              </Link>
+            </Button>
+            
+            {/* Workspace - visible to everyone */}
+            <Button 
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "relative transition-all duration-300 px-2 py-1 text-xs group",
+                pathname === "/workspace" || pathname.startsWith("/workspace")
+                  ? "text-palette-primary bg-palette-accent-3/50 font-semibold"
+                  : "text-slate-700 hover:text-palette-primary hover:bg-palette-accent-3/30"
+              )}
+              asChild
+            >
+              <Link href={loggedIn ? "/workspace" : "/workspace/login"}>
+                <User className={cn(
+                  "h-3.5 w-3.5 mr-1 transition-transform duration-300",
+                  pathname === "/workspace" || pathname.startsWith("/workspace") ? "scale-110" : "group-hover:scale-110"
+                )} />
+                Workspace
+                {(pathname === "/workspace" || pathname.startsWith("/workspace")) && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
                 )}
               </Link>
@@ -190,30 +220,6 @@ export function TopNavigation() {
             
             {loggedIn ? (
               <>
-                {/* Dashboard - for all logged-in users */}
-                <Button 
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "relative transition-all duration-300 px-2 py-1 text-xs group",
-                    pathname === "/dashboard" || pathname.startsWith("/dashboard") || pathname === "/admin/dashboard" || pathname.startsWith("/admin/dashboard")
-                      ? "text-palette-primary bg-palette-accent-3/50 font-semibold"
-                      : "text-slate-700 hover:text-palette-primary hover:bg-palette-accent-3/30"
-                  )}
-                  asChild
-                >
-                  <Link href={user?.role === 'admin' ? "/admin/dashboard" : "/dashboard"}>
-                    <User className={cn(
-                      "h-3.5 w-3.5 mr-1 transition-transform duration-300",
-                      pathname === "/dashboard" || pathname.startsWith("/dashboard") || pathname === "/admin/dashboard" || pathname.startsWith("/admin/dashboard") ? "scale-110" : "group-hover:scale-110"
-                    )} />
-                    Dashboard
-                    {(pathname === "/dashboard" || pathname.startsWith("/dashboard") || pathname === "/admin/dashboard" || pathname.startsWith("/admin/dashboard")) && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
-                    )}
-                  </Link>
-                </Button>
-                
                 {/* Logout button for all logged-in users */}
                 <Button
                   variant="ghost"
@@ -222,7 +228,7 @@ export function TopNavigation() {
                   onClick={handleLogout}
                 >
                   <LogOut className="h-3.5 w-3.5 mr-1" />
-                  Logout
+                  {t('navigation.logout')}
                 </Button>
               </>
             ) : (
@@ -242,7 +248,7 @@ export function TopNavigation() {
                     "h-3.5 w-3.5 mr-1 transition-transform duration-300",
                     pathname === "/login" || pathname.startsWith("/login") ? "scale-110" : "group-hover:scale-110"
                   )} />
-                  Login
+                  {t('navigation.login')}
                   {(pathname === "/login" || pathname.startsWith("/login")) && (
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
                   )}

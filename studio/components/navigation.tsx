@@ -89,7 +89,7 @@ export function Navigation() {
     localStorage.removeItem("pagerodeo_analysis_state");
     localStorage.removeItem("refresh_token");
     setLoggedIn(false);
-    router.push("/login");
+    router.push("/");
   };
 
   return (

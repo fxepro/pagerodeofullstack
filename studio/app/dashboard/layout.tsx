@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { cn } from "@/lib/utils";
 import UserNavigation from "@/components/user-navigation";
@@ -15,6 +16,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   const [user, setUser] = useState<any>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,7 @@ export default function DashboardLayout({
         setLoading(false);
       })
       .catch(() => {
-        setError("Session expired or invalid. Please log in again.");
+        setError(t('errors.unauthorized'));
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
         router.push("/login");
@@ -63,7 +65,7 @@ export default function DashboardLayout({
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80">
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-          <h1 className="text-2xl font-bold mb-4 text-center text-palette-primary">Dashboard</h1>
+          <h1 className="text-2xl font-bold mb-4 text-center text-palette-primary">{t('dashboard.title')}</h1>
           <p className="text-red-500 text-center">{error}</p>
         </div>
       </div>
@@ -74,11 +76,11 @@ export default function DashboardLayout({
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80">
         <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-          <h1 className="text-2xl font-bold mb-4 text-center text-palette-primary">Dashboard</h1>
+          <h1 className="text-2xl font-bold mb-4 text-center text-palette-primary">{t('dashboard.title')}</h1>
           <div className="flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-palette-primary"></div>
           </div>
-          <p className="text-slate-600 text-center mt-4">Loading dashboard...</p>
+          <p className="text-slate-600 text-center mt-4">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -96,33 +98,33 @@ export default function DashboardLayout({
             const sites = JSON.parse(storedSites);
             const site = sites.find((s: any) => s.id === decodeURIComponent(siteId));
             if (site) {
-              return `Monitoring: ${site.url}`;
+              return `${t('monitoring.title')}: ${site.url}`;
             }
           }
         } catch (err) {
           console.error('Failed to load site from localStorage:', err);
         }
       }
-      return 'Monitoring Detail';
+      return t('monitoring.title');
     }
-    if (pathname.includes('/monitoring')) return 'Website Monitoring';
-    if (pathname.includes('/site-audit')) return 'Site Audit';
-    if (pathname.includes('/performance')) return 'Performance';
-    if (pathname.includes('/reports')) return 'Audit Reports';
-    if (pathname.includes('/profile')) return 'Profile';
-    return 'Overview';
+    if (pathname.includes('/monitoring')) return t('monitoring.title');
+    if (pathname.includes('/site-audit')) return t('dashboard.siteAudit');
+    if (pathname.includes('/performance')) return t('performance.title');
+    if (pathname.includes('/reports')) return t('dashboard.reports');
+    if (pathname.includes('/profile')) return t('navigation.profile');
+    return t('dashboard.overview');
   };
 
   const getPageDescription = () => {
     if (pathname.includes('/monitoring/') && pathname !== '/dashboard/monitoring') {
-      return 'Real-time status, device performance testing, and site link analysis';
+      return t('monitoring.title');
     }
-    if (pathname.includes('/monitoring')) return 'Monitor uptime and performance of your websites';
-    if (pathname.includes('/site-audit')) return 'Comprehensive website analysis';
-    if (pathname.includes('/performance')) return 'Performance metrics and analysis';
-    if (pathname.includes('/reports')) return 'View and download your audit reports';
-    if (pathname.includes('/profile')) return 'Manage your account settings';
-    return 'Your main workspace';
+    if (pathname.includes('/monitoring')) return t('monitoring.title');
+    if (pathname.includes('/site-audit')) return t('dashboard.siteAuditDesc');
+    if (pathname.includes('/performance')) return t('performance.title');
+    if (pathname.includes('/reports')) return t('dashboard.reports');
+    if (pathname.includes('/profile')) return t('navigation.profile');
+    return t('dashboard.welcome');
   };
 
   return (

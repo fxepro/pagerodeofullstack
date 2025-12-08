@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useTranslation, Trans } from "react-i18next"
 import { 
   Link2, 
   Globe, 
@@ -44,6 +45,7 @@ interface LinksMainProps {
 }
 
 export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
+  const { t } = useTranslation()
   const {
     domain,
     setDomain,
@@ -81,7 +83,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
         <div className="p-6">
           <div className="text-center py-8">
             <RefreshCw className="animate-spin h-12 w-12 text-palette-primary mx-auto mb-4" />
-            <p className="text-slate-600">Checking links for {initialUrl}...</p>
+            <p className="text-slate-600">{t('links.checkingFor', { url: initialUrl })}</p>
           </div>
         </div>
       );
@@ -113,10 +115,10 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                 <div>
                   <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                     <Link2 className="h-6 w-6 text-palette-primary" />
-                    Link Analysis for {initialUrl}
+                    {t('links.linkAnalysisFor', { domain: initialUrl })}
                   </h2>
                   <p className="text-slate-600 mt-1">
-                    Found {discoveredLinks.length} links, checked {results.length} links
+                    {t('links.foundLinksChecked', { discovered: discoveredLinks.length, checked: results.length })}
                   </p>
                 </div>
                 <Button
@@ -126,7 +128,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                   className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                  Re-check
+                  {t('links.recheck')}
                 </Button>
               </div>
             </div>
@@ -153,7 +155,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                     <div className="text-2xl font-bold text-green-600">
                       {results.filter(r => r.status >= 200 && r.status < 400).length}
                     </div>
-                    <div className="text-sm text-green-700">Working Links</div>
+                    <div className="text-sm text-green-700">{t('links.workingLinks')}</div>
                   </CardContent>
                 </Card>
                 
@@ -162,7 +164,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                     <div className="text-2xl font-bold text-red-600">
                       {results.filter(r => r.status >= 400 || r.status === 0).length}
                     </div>
-                    <div className="text-sm text-red-700">Broken Links</div>
+                    <div className="text-sm text-red-700">{t('links.brokenLinks')}</div>
                   </CardContent>
                 </Card>
                 
@@ -171,7 +173,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                     <div className="text-2xl font-bold text-blue-600">
                       {results.filter(r => r.isInternal).length}
                     </div>
-                    <div className="text-sm text-blue-700">Internal Links</div>
+                    <div className="text-sm text-blue-700">{t('links.internalLinks')}</div>
                   </CardContent>
                 </Card>
                 
@@ -180,7 +182,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                     <div className="text-2xl font-bold text-palette-primary">
                       {results.filter(r => !r.isInternal).length}
                     </div>
-                    <div className="text-sm text-palette-primary">External Links</div>
+                    <div className="text-sm text-palette-primary">{t('links.externalLinks')}</div>
                   </CardContent>
                 </Card>
               </div>
@@ -190,10 +192,10 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                 <CardHeader>
                   <CardTitle className="text-slate-800 flex items-center gap-2">
                     <Link2 className="h-5 w-5 text-palette-primary" />
-                    All Links ({results.length})
+                    {t('links.allLinks', { count: results.length })}
                   </CardTitle>
                   <CardDescription className="text-slate-600">
-                    Complete list of discovered links and their status
+                    {t('links.completeListDesc')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -223,10 +225,10 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0">
                           <Badge className={`${getStatusColor(result.status)} px-2 py-1`}>
-                            {result.status === 0 ? 'Error' : result.status}
+                            {result.status === 0 ? t('links.error') : result.status}
                           </Badge>
                           <Badge variant="outline" className="px-2 py-1">
-                            {result.isInternal ? 'Internal' : 'External'}
+                            {result.isInternal ? t('links.internal') : t('links.external')}
                           </Badge>
                           <span className="text-xs text-slate-500">
                             {result.responseTime}ms
@@ -262,31 +264,35 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
           <div className="mb-8">
             <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
               <Link2 className="h-4 w-4 mr-2" />
-              Broken Link Checker
+              {t('links.heroBadge')}
             </Badge>
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            Check Link Health
+            {t('links.heroTitle')}
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-8 leading-relaxed">
-            Discover and test all links on your website with our <span className="text-white font-semibold">comprehensive broken link checker</span>. 
-            Get detailed status reports and performance insights for every link.
+            <Trans
+              i18nKey="links.heroDescription"
+              components={{
+                1: <span className="text-white font-semibold" />,
+              }}
+            />
           </p>
           
           <div className="flex flex-wrap justify-center gap-3 mb-8">
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Auto Discovery
+              {t('links.autoDiscovery')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Status Checking
+              {t('links.statusChecking')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Performance Metrics
+              {t('links.performanceMetrics')}
             </div>
             <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              Detailed Reports
+              {t('links.detailedReports')}
             </div>
           </div>
 
@@ -296,11 +302,11 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
               <CardContent className="p-6">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="domain" className="text-white font-medium">Website URL</Label>
+                    <Label htmlFor="domain" className="text-white font-medium">{t('links.websiteUrl')}</Label>
                     <Input
                       id="domain"
                       type="text"
-                      placeholder="example.com or https://example.com"
+                      placeholder={t('links.urlPlaceholder')}
                       value={domain}
                       onChange={(e) => setDomain(e.target.value)}
                       className="border-white/30 bg-white/20 text-white placeholder:text-white/70 focus:border-white/50 focus:ring-white/50"
@@ -317,12 +323,12 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                       {loading ? (
                         <>
                           <RefreshCw className="mr-2 h-5 w-5 animate-spin" />
-                          Checking Links...
+                          {t('links.checkingLinks')}
                         </>
                       ) : (
                         <>
                           <Search className="mr-2 h-5 w-5" />
-                          Check Links
+                          {t('links.checkLinks')}
                         </>
                       )}
                     </Button>
@@ -334,7 +340,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                         className="border-white/40 text-white hover:bg-white/10 px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         <RefreshCw className="mr-2 h-5 w-5" />
-                        Clear Results
+                        {t('links.clearResults')}
                       </Button>
                     )}
                   </div>
@@ -369,9 +375,9 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                 <div className="w-16 h-16 bg-palette-accent-3 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Search className="h-8 w-8 text-palette-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-3">Auto Discovery</h3>
+                <h3 className="text-xl font-bold text-slate-800 mb-3">{t('links.autoDiscoveryTitle')}</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Automatically crawl your website to discover all internal and external links for comprehensive testing.
+                  {t('links.autoDiscoveryDesc')}
                 </p>
               </CardContent>
             </Card>
@@ -381,9 +387,9 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                 <div className="w-16 h-16 bg-palette-accent-3 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Shield className="h-8 w-8 text-palette-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-3">Status Validation</h3>
+                <h3 className="text-xl font-bold text-slate-800 mb-3">{t('links.statusValidationTitle')}</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Test each link's HTTP status code to identify broken links, redirects, and accessibility issues.
+                  {t('links.statusValidationDesc')}
                 </p>
               </CardContent>
             </Card>
@@ -393,9 +399,9 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                 <div className="w-16 h-16 bg-palette-accent-3 rounded-full flex items-center justify-center mx-auto mb-4">
                   <BarChart3 className="h-8 w-8 text-palette-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-3">Detailed Analytics</h3>
+                <h3 className="text-xl font-bold text-slate-800 mb-3">{t('links.detailedAnalyticsTitle')}</h3>
                 <p className="text-slate-600 leading-relaxed">
-                  Get comprehensive reports with response times, link categorization, and performance insights.
+                  {t('links.detailedAnalyticsDesc')}
                 </p>
               </CardContent>
             </Card>
@@ -415,10 +421,10 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                   <div>
                     <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                       <Link2 className="h-6 w-6 text-palette-primary" />
-                      Link Analysis for {domain}
+                      {t('links.linkAnalysisFor', { domain })}
                     </h2>
                     <p className="text-slate-600 mt-1">
-                      Found {discoveredLinks.length} links, checked {results.length} links
+                      {t('links.foundLinksChecked', { discovered: discoveredLinks.length, checked: results.length })}
                     </p>
                   </div>
                   <Button
@@ -428,7 +434,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                     className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
                   >
                     <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                    Re-check
+                    {t('links.recheck')}
                   </Button>
                 </div>
               </div>
@@ -454,7 +460,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                     <div className="text-2xl font-bold text-green-600">
                       {results.filter(r => r.status >= 200 && r.status < 400).length}
                     </div>
-                    <div className="text-sm text-green-700">Working Links</div>
+                    <div className="text-sm text-green-700">{t('links.workingLinks')}</div>
                   </CardContent>
                 </Card>
                 
@@ -463,7 +469,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                     <div className="text-2xl font-bold text-red-600">
                       {results.filter(r => r.status >= 400 || r.status === 0).length}
                     </div>
-                    <div className="text-sm text-red-700">Broken Links</div>
+                    <div className="text-sm text-red-700">{t('links.brokenLinks')}</div>
                   </CardContent>
                 </Card>
                 
@@ -472,7 +478,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                     <div className="text-2xl font-bold text-blue-600">
                       {results.filter(r => r.isInternal).length}
                     </div>
-                    <div className="text-sm text-blue-700">Internal Links</div>
+                    <div className="text-sm text-blue-700">{t('links.internalLinks')}</div>
                   </CardContent>
                 </Card>
                 
@@ -481,7 +487,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                     <div className="text-2xl font-bold text-palette-primary">
                       {results.filter(r => !r.isInternal).length}
                     </div>
-                    <div className="text-sm text-palette-primary">External Links</div>
+                    <div className="text-sm text-palette-primary">{t('links.externalLinks')}</div>
                   </CardContent>
                 </Card>
               </div>
@@ -492,9 +498,9 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
             {results.length > 0 && (
               <Card className="border-palette-accent-2 shadow-xl">
                 <CardHeader className="bg-white">
-                  <CardTitle className="text-xl font-bold text-slate-800 text-center">Link Check Results</CardTitle>
+                  <CardTitle className="text-xl font-bold text-slate-800 text-center">{t('links.linkCheckResults')}</CardTitle>
                   <CardDescription className="text-slate-600 text-center mt-2">
-                    Detailed analysis of all discovered links and their status. Click any link to verify it directly.
+                    {t('links.detailedAnalysisDesc')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -502,12 +508,12 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                     <table className="w-full table-fixed">
                       <thead className="border-b border-slate-200">
                         <tr>
-                          <th className="text-left p-3 font-semibold text-slate-700 w-2/5">Link URL</th>
-                          <th className="text-center p-3 font-semibold text-slate-700 w-16">Status Code</th>
-                          <th className="text-center p-3 font-semibold text-slate-700 w-20">Status</th>
-                          <th className="text-center p-3 font-semibold text-slate-700 w-24">Response Time</th>
-                          <th className="text-center p-3 font-semibold text-slate-700 w-20">Type</th>
-                          <th className="text-center p-3 font-semibold text-slate-700 w-32">Error / Response</th>
+                          <th className="text-left p-3 font-semibold text-slate-700 w-2/5">{t('links.linkUrl')}</th>
+                          <th className="text-center p-3 font-semibold text-slate-700 w-16">{t('links.statusCode')}</th>
+                          <th className="text-center p-3 font-semibold text-slate-700 w-20">{t('links.status')}</th>
+                          <th className="text-center p-3 font-semibold text-slate-700 w-24">{t('links.responseTime')}</th>
+                          <th className="text-center p-3 font-semibold text-slate-700 w-20">{t('links.type')}</th>
+                          <th className="text-center p-3 font-semibold text-slate-700 w-32">{t('links.errorResponse')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -529,16 +535,16 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                             </td>
                             <td className="p-3 text-center w-16">
                               <Badge variant="outline" className={`${getStatusColor(result.status)} border-0 text-xs`}>
-                                {result.status || 'Error'}
+                                {result.status || t('links.error')}
                               </Badge>
                             </td>
                             <td className="p-3 text-center w-20">
                               <div className="flex items-center justify-center gap-1">
                                 {getStatusIcon(result.status)}
                                 <span className="text-xs">
-                                  {result.status === 0 ? 'Failed' : 
-                                   result.status >= 200 && result.status < 300 ? 'Success' :
-                                   result.status >= 300 && result.status < 400 ? 'Redirect' : 'Failed'}
+                                  {result.status === 0 ? t('links.failed') : 
+                                   result.status >= 200 && result.status < 300 ? t('links.success') :
+                                   result.status >= 300 && result.status < 400 ? t('links.redirect') : t('links.failed')}
                                 </span>
                               </div>
                             </td>
@@ -549,7 +555,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                             </td>
                             <td className="p-3 text-center w-20">
                               <Badge variant="outline" className={`text-xs ${result.isInternal ? "border-blue-200 text-blue-700 bg-blue-50" : "border-palette-accent-2 text-palette-primary bg-palette-accent-3"}`}>
-                                {result.isInternal ? 'Internal' : 'External'}
+                                {result.isInternal ? t('links.internal') : t('links.external')}
                               </Badge>
                             </td>
                             <td className="p-3 text-center w-32">
@@ -567,7 +573,7 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
                                   </div>
                                 ) : (
                                   <span className="text-xs text-green-600">
-                                    {result.statusText || 'OK'}
+                                    {result.statusText || t('links.ok')}
                                   </span>
                                 )}
                               </div>
@@ -587,8 +593,8 @@ export function LinksMain({ url: initialUrl = "" }: LinksMainProps) {
       {/* Call to Action Section - Only show after results */}
       {(results.length > 0 || statusMessage) && (
         <ConsultationCTA
-          title="Need Help Fixing Your Website Links?"
-          description="Our expert consultants can help you identify and fix broken links, improve your site structure, and optimize your internal linking strategy."
+          title={t('links.ctaTitle')}
+          description={t('links.ctaDescription')}
           secondaryButtonHref="/links-info"
         />
       )}
