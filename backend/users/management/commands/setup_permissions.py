@@ -102,11 +102,9 @@ class Command(BaseCommand):
         # Note: Role names are capitalized in Group model
         ROLE_PERMISSIONS = {
             'Viewer': [
-                'dashboard.view',
-                'site_audit.view',
-                'performance.view',
-                'monitoring.view',
-                'reports.view',
+                'dashboard.view',  # Workspace Overview
+                'site_audit.view',  # Site Audit
+                'reports.view',  # Reports
                 'profile.view',
                 'profile.edit',
             ],
