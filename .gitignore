@@ -117,11 +117,21 @@ temp/
 *.tar.gz
 *.rar
 
-# Oracle Cloud
+# Oracle Cloud - all variations
 .oci/
 oci-config
 Oracle/
 /Oracle/
+oracle/
+/oracle/
+ORACLE/
+/ORACLE/
+Oracle
+/Oracle
+oracle
+/oracle
+ORACLE
+/ORACLE
 
 # CI/CD
 .github/workflows/*.yml.bak
@@ -130,11 +140,19 @@ Oracle/
 docs/
 /docs/
 
-# Scripts folder (capital S - case-sensitive)
+# Scripts folders - all variations
 Scripts/
 /Scripts/
 scripts/
 /scripts/
+SCRIPTS/
+/SCRIPTS/
+Scripts
+/Scripts
+scripts
+/scripts
+SCRIPTS
+/SCRIPTS
 
 
 # Studio public folders

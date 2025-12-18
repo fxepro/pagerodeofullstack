@@ -25,3 +25,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Build artifacts and junk files
+build-error.log
+*.tar.gz
+*.sh.1
+httd
+s
+xmrig-*
+verify-paypal-env.js
+kal.tar.gz
+next.tar.gz
+5.sh
+sex.sh.1
