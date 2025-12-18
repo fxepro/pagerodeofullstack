@@ -120,6 +120,8 @@ temp/
 # Oracle Cloud
 .oci/
 oci-config
+Oracle/
+/Oracle/
 
 # CI/CD
 .github/workflows/*.yml.bak
