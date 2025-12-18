@@ -11,16 +11,20 @@ function CheckoutSuccessContent() {
   const router = useRouter();
   const [plan, setPlan] = useState<string | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
+  const [provider, setProvider] = useState<string>('paypal');
 
   useEffect(() => {
     const planParam = searchParams.get('plan');
     const subIdParam = searchParams.get('subscription_id');
+    const providerParam = searchParams.get('provider');
     
-    setPlan(planParam);
+    setPlan(planParam || sessionStorage.getItem('coinbase_plan_name'));
     setSubscriptionId(subIdParam);
+    setProvider(providerParam || 'paypal');
     
     // Clear selected plan from sessionStorage
     sessionStorage.removeItem('selectedPlan');
+    sessionStorage.removeItem('coinbase_plan_name');
   }, [searchParams]);
 
   return (
@@ -34,7 +38,9 @@ function CheckoutSuccessContent() {
           </div>
           <CardTitle className="text-3xl mb-2">Payment Successful!</CardTitle>
           <CardDescription className="text-lg">
-            Your subscription has been activated
+            {provider === 'coinbase' 
+              ? 'Your cryptocurrency payment is being processed'
+              : 'Your subscription has been activated'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -47,12 +53,31 @@ function CheckoutSuccessContent() {
                 <strong>Subscription ID:</strong> {subscriptionId}
               </p>
             )}
+            {provider === 'coinbase' && (
+              <p className="text-sm text-purple-800 mt-2">
+                <strong>Payment Method:</strong> Cryptocurrency (Coinbase Commerce)
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">
-            <p className="text-slate-600 text-center">
-              Thank you for subscribing! Your account has been upgraded and you now have access to all features in your plan.
-            </p>
+            {provider === 'coinbase' ? (
+              <>
+                <p className="text-slate-600 text-center">
+                  Your cryptocurrency payment has been submitted and is being confirmed on the blockchain.
+                  Your subscription will be activated once the payment is confirmed (usually within a few minutes).
+                </p>
+                <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                  <p className="text-xs text-purple-700">
+                    <strong>Note:</strong> You'll receive an email confirmation once your payment is fully confirmed.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="text-slate-600 text-center">
+                Thank you for subscribing! Your account has been upgraded and you now have access to all features in your plan.
+              </p>
+            )}
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Button

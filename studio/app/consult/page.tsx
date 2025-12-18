@@ -186,10 +186,10 @@ export default function ConsultPage() {
           <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
             {/* Performance Analysis */}
             <Card className="group relative overflow-hidden border-0 shadow-xl hover:shadow-2xl bg-gradient-to-br from-white to-slate-50 transition-all duration-500 transform hover:-translate-y-2" style={{ boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-palette-accent-1/5 to-palette-accent-1/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <CardContent className="p-8 relative z-10">
                 <div className="mb-6">
-                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-1 to-palette-accent-1 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <BarChart3 className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold mb-3 text-slate-800">Performance Analysis</h3>
@@ -199,19 +199,19 @@ export default function ConsultPage() {
                 </div>
                 <ul className="space-y-2 text-sm text-slate-500">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-blue-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-1" />
                     Review and interpret performance reports
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-blue-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-1" />
                     Identify key bottlenecks and issues
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-blue-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-1" />
                     Provide actionable recommendations
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-blue-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-1" />
                     Create improvement roadmap
                   </li>
                 </ul>
@@ -220,10 +220,10 @@ export default function ConsultPage() {
 
             {/* Optimization Strategy */}
             <Card className="group relative overflow-hidden border-0 shadow-xl hover:shadow-2xl bg-gradient-to-br from-white to-slate-50 transition-all duration-500 transform hover:-translate-y-2" style={{ boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-palette-accent-2/5 to-palette-accent-2/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <CardContent className="p-8 relative z-10">
                 <div className="mb-6">
-                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-2 to-palette-accent-2 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Target className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold mb-3 text-slate-800">Optimization Strategy</h3>
@@ -233,19 +233,19 @@ export default function ConsultPage() {
                 </div>
                 <ul className="space-y-2 text-sm text-slate-500">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-2" />
                     Custom improvement recommendations
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-2" />
                     Implementation timeline
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-2" />
                     Resource requirements
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-2" />
                     Success metrics definition
                   </li>
                 </ul>
@@ -288,11 +288,11 @@ export default function ConsultPage() {
 
             {/* Training Sessions */}
             <Card className="group relative overflow-hidden border-0 shadow-xl hover:shadow-2xl bg-gradient-to-br from-white to-slate-50 transition-all duration-500 transform hover:-translate-y-2" style={{ boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-orange-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-palette-accent-3/5 to-palette-accent-2/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <CardContent className="p-8 relative z-10">
                 <div className="mb-6">
-                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <BookOpen className="h-8 w-8 text-white" />
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-accent-3 to-palette-accent-2 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <BookOpen className="h-8 w-8 text-palette-primary" />
                   </div>
                   <h3 className="text-2xl font-bold mb-3 text-slate-800">Training Sessions</h3>
                   <p className="text-slate-600 mb-4">
@@ -301,19 +301,19 @@ export default function ConsultPage() {
                 </div>
                 <ul className="space-y-2 text-sm text-slate-500">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-orange-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-3" />
                     Teach teams how to use performance tools
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-orange-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-3" />
                     Best practices workshops
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-orange-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-3" />
                     Hands-on optimization training
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-orange-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-accent-3" />
                     Ongoing support and mentoring
                   </li>
                 </ul>
@@ -356,10 +356,10 @@ export default function ConsultPage() {
 
             {/* Performance Audit */}
             <Card className="group relative overflow-hidden border-0 shadow-xl hover:shadow-2xl bg-gradient-to-br from-white to-slate-50 transition-all duration-500 transform hover:-translate-y-2" style={{ boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-indigo-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-palette-secondary/5 to-palette-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <CardContent className="p-8 relative z-10">
                 <div className="mb-6">
-                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-palette-secondary to-palette-secondary-hover flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Search className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold mb-3 text-slate-800">Performance Audit</h3>
@@ -369,19 +369,19 @@ export default function ConsultPage() {
                 </div>
                 <ul className="space-y-2 text-sm text-slate-500">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-indigo-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-secondary" />
                     Complete website health assessment
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-indigo-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-secondary" />
                     Multi-tool performance analysis
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-indigo-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-secondary" />
                     Comprehensive optimization roadmap
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-indigo-500" />
+                    <CheckCircle className="h-4 w-4 text-palette-secondary" />
                     Priority-based action plan
                   </li>
                 </ul>
@@ -665,7 +665,7 @@ export default function ConsultPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="text-center p-6 bg-gradient-to-br from-palette-accent-3 to-blue-50 rounded-lg">
+                    <div className="text-center p-6 bg-gradient-to-br from-palette-accent-3 to-palette-accent-3 rounded-lg">
                       <Calendar className="h-12 w-12 text-palette-primary mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">Schedule Your Call</h3>
                       <p className="text-sm text-gray-600 mb-4">

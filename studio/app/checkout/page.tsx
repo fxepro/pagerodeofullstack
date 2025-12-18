@@ -45,8 +45,12 @@ function CheckoutContent() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [loading, setLoading] = useState(false);
   const [paypalLoading, setPaypalLoading] = useState(false);
+  const [coinbaseLoading, setCoinbaseLoading] = useState(false);
+  const [stripeLoading, setStripeLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("paypal");
   const [paypalError, setPaypalError] = useState<string | null>(null);
+  const [coinbaseError, setCoinbaseError] = useState<string | null>(null);
+  const [stripeError, setStripeError] = useState<string | null>(null);
   const [paypalSDKLoaded, setPaypalSDKLoaded] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -153,6 +157,160 @@ function CheckoutContent() {
       }
     }
   }, [searchParams, router, authChecked]);
+
+  // Handle Coinbase payment
+  const handleCoinbasePayment = useCallback(async () => {
+    if (!plan) {
+      setCoinbaseError('Plan information is missing');
+      return;
+    }
+
+    setCoinbaseLoading(true);
+    setCoinbaseError(null);
+
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setCoinbaseError('Authentication required. Please log in again.');
+        router.push("/workspace/login");
+        return;
+      }
+
+      const planName = deal ? deal.base_plan.name : plan.name;
+      const billingPeriodValue = deal ? deal.billing_period : billingPeriod;
+
+      // Create Coinbase charge
+      const response = await axios.post(
+        `${API_BASE}/api/payments/coinbase/create-charge`,
+        {
+          plan_name: planName,
+          billing_period: billingPeriodValue,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      const { hosted_url, charge_id } = response.data;
+
+      if (!hosted_url) {
+        setCoinbaseError('Failed to get payment URL from Coinbase');
+        setCoinbaseLoading(false);
+        return;
+      }
+
+      // Store charge info for return handling
+      sessionStorage.setItem('coinbase_charge_id', charge_id);
+      sessionStorage.setItem('coinbase_plan_name', planName);
+
+      // Redirect to Coinbase checkout
+      window.location.href = hosted_url;
+    } catch (error: any) {
+      console.error('Coinbase payment error:', error);
+      setCoinbaseError(
+        error.response?.data?.error || 
+        'Failed to create Coinbase payment. Please try again.'
+      );
+      setCoinbaseLoading(false);
+    }
+  }, [plan, deal, billingPeriod, router]);
+
+  // Handle Stripe payment
+  const handleStripePayment = useCallback(async () => {
+    if (!plan && !deal) {
+      setStripeError('Plan information is missing');
+      return;
+    }
+
+    setStripeLoading(true);
+    setStripeError(null);
+
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setStripeError('Authentication required. Please log in again.');
+        router.push("/workspace/login");
+        return;
+      }
+
+      // Get plan name
+      const planName = deal?.base_plan?.name || plan?.name;
+      if (!planName) {
+        setStripeError('Plan name is required');
+        setStripeLoading(false);
+        return;
+      }
+
+      // Determine billing period
+      const billingPeriodValue = deal?.billing_period || billingPeriod;
+
+      // Create Stripe checkout session
+      const response = await axios.post(
+        `${API_BASE}/api/payments/stripe/create-checkout/`,
+        {
+          plan_name: planName,
+          billing_period: billingPeriodValue,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = response.data.url;
+      } else {
+        setStripeError('Failed to create checkout session. Please try again.');
+        setStripeLoading(false);
+      }
+    } catch (error: any) {
+      console.error('Stripe payment error:', error);
+      setStripeError(
+        error.response?.data?.error || 
+        'Failed to create Stripe payment. Please try again.'
+      );
+      setStripeLoading(false);
+    }
+  }, [plan, deal, billingPeriod, router]);
+
+  // Check for return from Coinbase
+  useEffect(() => {
+    const chargeId = sessionStorage.getItem('coinbase_charge_id');
+    const canceled = searchParams.get('canceled');
+    
+    if (chargeId && !canceled) {
+      // User returned from Coinbase - check if payment was successful
+      // The webhook will handle the actual confirmation, but we can check status
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        // Redirect to success page - webhook will have processed the payment
+        router.push('/checkout/success?provider=coinbase');
+        sessionStorage.removeItem('coinbase_charge_id');
+        sessionStorage.removeItem('coinbase_plan_name');
+      }
+    } else if (canceled === 'true') {
+      // User canceled payment
+      setCoinbaseError('Payment was canceled. You can try again.');
+      sessionStorage.removeItem('coinbase_charge_id');
+      sessionStorage.removeItem('coinbase_plan_name');
+    }
+  }, [searchParams, router]);
+
+  // Check for return from Stripe
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    const provider = searchParams.get('provider');
+    const canceled = searchParams.get('canceled');
+    
+    if (sessionId && provider === 'stripe' && !canceled) {
+      // User returned from Stripe - redirect to success page
+      // The webhook will have processed the payment
+      router.push(`/checkout/success?provider=stripe&session_id=${sessionId}`);
+    } else if (canceled === 'true' && activeTab === 'stripe') {
+      // User canceled Stripe payment
+      setStripeError('Payment was canceled. You can try again.');
+    }
+  }, [searchParams, router, activeTab]);
 
   const renderPayPalButton = useCallback(() => {
     console.log('renderPayPalButton called');
@@ -633,15 +791,13 @@ function CheckoutContent() {
                     <CreditCard className="h-4 w-4" />
                     PayPal
                   </TabsTrigger>
-                  <TabsTrigger value="stripe" disabled className="flex items-center gap-2">
+                  <TabsTrigger value="stripe" className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4" />
                     Stripe
-                    <Badge variant="outline" className="ml-1 text-xs">Soon</Badge>
                   </TabsTrigger>
-                  <TabsTrigger value="coinbase" disabled className="flex items-center gap-2">
+                  <TabsTrigger value="coinbase" className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4" />
                     Coinbase
-                    <Badge variant="outline" className="ml-1 text-xs">Soon</Badge>
                   </TabsTrigger>
                 </TabsList>
 
@@ -689,19 +845,82 @@ function CheckoutContent() {
                 </TabsContent>
 
                 <TabsContent value="stripe" className="space-y-4 mt-6">
-                  <div className="text-center py-12">
-                    <CreditCard className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-600 mb-2">Stripe payment coming soon</p>
-                    <p className="text-sm text-slate-500">We're working on integrating Stripe for your convenience.</p>
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-800 mb-2">
+                      Complete your subscription using Stripe. You'll be redirected to Stripe Checkout to complete payment.
+                    </p>
+                    <p className="text-xs text-blue-700">
+                      Secure payment processing with credit/debit cards.
+                    </p>
                   </div>
+                  
+                  {stripeError && (
+                    <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                      <p className="text-sm text-red-800 font-medium mb-2">Stripe Error:</p>
+                      <p className="text-sm text-red-700">{stripeError}</p>
+                    </div>
+                  )}
+                  
+                  {stripeLoading && (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-palette-primary mr-2" />
+                      <span className="text-slate-600">Creating Stripe checkout session...</span>
+                    </div>
+                  )}
+                  
+                  {!stripeLoading && (
+                    <Button
+                      onClick={handleStripePayment}
+                      disabled={!plan && !deal}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      size="lg"
+                    >
+                      <CreditCard className="h-5 w-5 mr-2" />
+                      Continue to Stripe Checkout
+                    </Button>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="coinbase" className="space-y-4 mt-6">
-                  <div className="text-center py-12">
-                    <CreditCard className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-                    <p className="text-slate-600 mb-2">Coinbase payment coming soon</p>
-                    <p className="text-sm text-slate-500">We're working on integrating Coinbase for cryptocurrency payments.</p>
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <p className="text-sm text-purple-800 mb-2">
+                      Pay with cryptocurrency using Coinbase Commerce
+                    </p>
+                    <p className="text-xs text-purple-700">
+                      Supports Bitcoin (BTC), Ethereum (ETH), USD Coin (USDC), Litecoin (LTC), Dogecoin (DOGE), and more.
+                    </p>
                   </div>
+
+                  {coinbaseError && (
+                    <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                      <p className="text-sm text-red-800 font-medium mb-2">Error:</p>
+                      <p className="text-sm text-red-700">{coinbaseError}</p>
+                    </div>
+                  )}
+
+                  {coinbaseLoading && (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-palette-primary mr-2" />
+                      <span className="text-slate-600">Creating payment request...</span>
+                    </div>
+                  )}
+
+                  {!coinbaseError && !coinbaseLoading && (
+                    <div className="space-y-4">
+                      <Button
+                        onClick={handleCoinbasePayment}
+                        disabled={!plan || coinbaseLoading}
+                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-6 text-lg font-semibold"
+                        size="lg"
+                      >
+                        <CreditCard className="h-5 w-5 mr-2" />
+                        Pay with Cryptocurrency
+                      </Button>
+                      <p className="text-xs text-center text-slate-500">
+                        You'll be redirected to Coinbase Commerce to complete your payment
+                      </p>
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </CardContent>

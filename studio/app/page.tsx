@@ -20,48 +20,36 @@ export default function HomePage() {
     setMounted(true);
     
     // Fetch featured deal
-    fetch(getDjangoApiUrl('/api/deals/featured/'))
-      .then(res => res.json())
+    const url = getDjangoApiUrl('/api/deals/featured/');
+    fetch(url)
+      .then(res => {
+        if (!res.ok) {
+          // Handle HTTP error responses
+          if (res.status === 404) {
+            console.warn('Featured deal endpoint not found (404). This is expected if no deals are configured.');
+            return null;
+          }
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
-        if (data.has_deal && data.deal) {
+        if (data && data.has_deal && data.deal) {
           setFeaturedDeal(data.deal);
         }
       })
       .catch(err => {
-        console.error('Error fetching featured deal:', err);
-        console.error('Request URL:', getDjangoApiUrl('/api/deals/featured/'));
-        console.error('Error response:', err.response?.data);
-        console.error('Error status:', err.response?.status);
-        if (err.response?.status === 404) {
-          console.error('404 Error: /api/deals/featured/ not found. Check nginx configuration to proxy /api/* to Django backend.');
+        // Handle network errors and other exceptions
+        if (err.name === 'TypeError' && err.message.includes('Failed to fetch')) {
+          console.warn('Network error fetching featured deal. This may be expected if the backend is not available.');
+        } else {
+          console.error('Error fetching featured deal:', err);
         }
+        // Silently fail - featured deal is optional
       });
     
-    // Check if user is logged in and redirect to dashboard
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      // Validate token by checking user info
-      fetch(getDjangoApiUrl('/api/user-info/'), {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(res => {
-          if (res.ok) {
-            return res.json();
-          }
-          throw new Error('Invalid token');
-        })
-        .then(data => {
-          // If email is verified, redirect to workspace (unified dashboard)
-          if (data.email_verified !== false) {
-            router.push("/workspace");
-          }
-        })
-        .catch(() => {
-          // Token is invalid, clear it and stay on homepage
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-        });
-    }
+    // Removed auto-redirect: Logged-in users can access homepage freely
+    // Users can navigate to workspace via navigation links if they want
   }, [router]);
   return (
     <div className="min-h-screen overflow-x-hidden" suppressHydrationWarning>

@@ -29,6 +29,9 @@ python-dotenv==1.0.0
 django-anymail==10.3
 boto3==1.35.32
 
+# Payment providers
+stripe==14.0.1
+
 # Production Server
 gunicorn==21.2.0
 

@@ -14,8 +14,19 @@ from .role_serializers import (
 def list_roles(request):
     """List all roles with their permissions"""
     try:
+        # Define role order by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer
+        ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer']
+        
         roles = Group.objects.all().prefetch_related('permissions')
-        serializer = RoleSerializer(roles, many=True)
+        
+        # Sort roles: system roles first (by seniority), then custom roles (alphabetically)
+        def role_sort_key(role):
+            if role.name in ROLE_ORDER:
+                return (0, ROLE_ORDER.index(role.name))
+            return (1, role.name.lower())
+        
+        sorted_roles = sorted(roles, key=role_sort_key)
+        serializer = RoleSerializer(sorted_roles, many=True)
         return Response(serializer.data)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -47,7 +58,8 @@ def update_role(request, role_id):
     role = get_object_or_404(Group, id=role_id)
     
     # Prevent modification of system roles (capitalized names in Group model)
-    SYSTEM_ROLES = ['Viewer', 'Analyst', 'Manager', 'Director', 'Admin']
+    # Ordered by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer
+    SYSTEM_ROLES = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer']
     if role.name in SYSTEM_ROLES:
         return Response(
             {'error': f'System role "{role.name}" cannot be modified'}, 
@@ -111,18 +123,18 @@ def get_role_permissions(request, role_id):
 @api_view(['PUT'])
 @permission_classes([IsAdminUser])
 def update_role_permissions(request, role_id):
-    """Update permissions for a specific role"""
+    """Update permissions for a specific role
+    
+    Note: System roles CAN have their permissions updated via UI,
+    but their names cannot be changed. This allows admins to add
+    new permissions to system roles as they are created.
+    """
     from django.db import transaction
     
     role = get_object_or_404(Group, id=role_id)
     
-    # Prevent modification of system roles (capitalized names in Group model)
-    SYSTEM_ROLES = ['Viewer', 'Analyst', 'Manager', 'Director', 'Admin']
-    if role.name in SYSTEM_ROLES:
-        return Response(
-            {'error': f'System role "{role.name}" cannot be modified'}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    # System roles CAN have permissions updated, just not renamed/deleted
+    # This allows adding new permissions to system roles as features are added
     
     permission_ids = request.data.get('permission_ids', [])
     

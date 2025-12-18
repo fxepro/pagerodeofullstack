@@ -7,6 +7,7 @@ import { ConditionalNavigation } from "@/components/conditional-navigation"
 import { ConditionalFooter } from "@/components/conditional-footer"
 import { ToasterProvider } from "@/components/toaster-provider"
 import { ThemeProvider } from "@/components/theme-provider"
+import { PaletteProvider } from "@/components/palette-provider"
 import { PostHogProviderWrapper } from "@/lib/posthog"
 import { LanguageProvider } from "@/components/language-provider"
 import { I18nProvider } from "@/components/i18n-provider"
@@ -154,15 +155,17 @@ export default function RootLayout({
         <I18nProvider>
         <PostHogProviderWrapper>
           <ThemeProvider>
-            {/* Conditional navigation - hidden for dashboard routes */}
-            <ConditionalNavigation />
-            
-            {/* Fallback: Original navigation (commented out for now) */}
-            {/* <Navigation /> */}
-            
-            <main className="min-h-screen bg-background">{children}</main>
-            <ConditionalFooter />
-            <ToasterProvider />
+            <PaletteProvider>
+              {/* Conditional navigation - hidden for dashboard routes */}
+              <ConditionalNavigation />
+              
+              {/* Fallback: Original navigation (commented out for now) */}
+              {/* <Navigation /> */}
+              
+              <main className="min-h-screen bg-background">{children}</main>
+              <ConditionalFooter />
+              <ToasterProvider />
+            </PaletteProvider>
           </ThemeProvider>
         </PostHogProviderWrapper>
         </I18nProvider>

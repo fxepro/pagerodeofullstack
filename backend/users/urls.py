@@ -1,15 +1,8 @@
 from django.urls import path
-from .paypal_views import (
-    create_paypal_subscription,
-    confirm_paypal_subscription,
-    paypal_webhook,
-)
 from .views import (
     user_info, list_users, create_user, get_user,
     update_user, delete_user, assign_role, user_stats, register_user,
     update_own_profile, change_password, corporate_profile,
-    payment_methods, payment_method_detail, user_subscriptions,
-    subscription_detail, billing_history, billing_summary, billing_transaction_detail,
     user_settings, monitored_site_list,
     monitored_site_detail
 )
@@ -21,15 +14,11 @@ from .permission_views import (
     check_permissions, user_permissions, get_navigation,
     get_sidebar_matrix, update_sidebar_matrix
 )
-from .deal_views import (
-    list_active_deals, get_deal_by_slug, get_featured_deal,
-    create_deal_subscription, confirm_deal_subscription
-)
 from .sitemap_views import generate_sitemap, fetch_sitemap_xml
 from .views import (
     send_verification_email_endpoint, verify_email, 
-    resend_verification_email, verification_status, get_user_verification_code,
-    setup_2fa, verify_and_enable_2fa, disable_2fa,
+    resend_verification_email, verification_status, check_verification_status_by_email,
+    get_user_verification_code, setup_2fa, verify_and_enable_2fa, disable_2fa,
     generate_backup_codes_2fa, verify_2fa_login, get_2fa_status
 )
 
@@ -42,6 +31,7 @@ urlpatterns = [
     path('api/auth/verify-email/', verify_email, name='verify_email'),
     path('api/auth/resend-verification/', resend_verification_email, name='resend_verification'),
     path('api/auth/verification-status/', verification_status, name='verification_status'),
+    path('api/auth/check-verification-status/', check_verification_status_by_email, name='check_verification_status_by_email'),
     path('api/users/<int:user_id>/verification-code/', get_user_verification_code, name='get_user_verification_code'),
     # Two-factor authentication endpoints
     path('api/auth/2fa/setup/', setup_2fa, name='setup_2fa'),
@@ -53,13 +43,6 @@ urlpatterns = [
     path('api/profile/update/', update_own_profile, name='update_own_profile'),
     path('api/profile/change-password/', change_password, name='change_password'),
     path('api/profile/corporate/', corporate_profile, name='corporate_profile'),
-    path('api/profile/payment-methods/', payment_methods, name='payment_methods'),
-    path('api/profile/payment-methods/<int:method_id>/', payment_method_detail, name='payment_method_detail'),
-    path('api/profile/subscriptions/', user_subscriptions, name='user_subscriptions'),
-    path('api/profile/subscriptions/<int:subscription_id>/', subscription_detail, name='subscription_detail'),
-    path('api/profile/billing-history/', billing_history, name='billing_history'),
-    path('api/profile/billing-history/<int:transaction_id>/', billing_transaction_detail, name='billing_transaction_detail'),
-    path('api/profile/billing-summary/', billing_summary, name='billing_summary'),
     path('api/user/settings/', user_settings, name='user_settings'),
     path('api/monitor/sites/', monitored_site_list, name='monitored_site_list'),
     path('api/monitor/sites/<int:site_id>/', monitored_site_detail, name='monitored_site_detail'),
@@ -90,19 +73,8 @@ urlpatterns = [
     path('api/permissions/user/', user_permissions, name='user_permissions'),
     path('api/navigation/', get_navigation, name='get_navigation'),
     
-    # PayPal payment endpoints
-    path('api/payments/paypal/create-subscription', create_paypal_subscription, name='create_paypal_subscription'),
-    path('api/payments/paypal/confirm', confirm_paypal_subscription, name='confirm_paypal_subscription'),
-    path('api/payments/paypal/webhook/', paypal_webhook, name='paypal_webhook'),
     
     # Sidebar matrix endpoints
     path('api/roles/sidebar-matrix/', get_sidebar_matrix, name='get_sidebar_matrix'),
     path('api/roles/sidebar-matrix/update/', update_sidebar_matrix, name='update_sidebar_matrix'),
-    
-    # Promotional deals endpoints
-    path('api/deals/active/', list_active_deals, name='list_active_deals'),
-    path('api/deals/featured/', get_featured_deal, name='get_featured_deal'),
-    path('api/deals/<slug:slug>/', get_deal_by_slug, name='get_deal_by_slug'),
-    path('api/payments/paypal/create-deal-subscription/', create_deal_subscription, name='create_deal_subscription'),
-    path('api/payments/paypal/confirm-deal/', confirm_deal_subscription, name='confirm_deal_subscription'),
 ]

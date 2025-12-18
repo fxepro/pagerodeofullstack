@@ -205,8 +205,12 @@ INSTALLED_APPS = [
     'anymail',  # For Amazon SES email backend
     'core.apps.CoreConfig',  # For management commands
     'users',
+    'multilocation',
+    'multilanguage',
+    'financials',
     'emails',
     'dns',
+    'blog',
     'site_settings.apps.SettingsConfig',
     'audit_reports',
     'monitoring',

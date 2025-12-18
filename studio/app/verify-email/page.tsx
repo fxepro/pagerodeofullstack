@@ -24,10 +24,12 @@ function VerifyEmailContent() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [resending, setResending] = useState(false);
+  const [autoVerificationAttempted, setAutoVerificationAttempted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const handleVerify = useCallback(async (verifyCode?: string) => {
+    // Path 2: Manual code entry - verify code first, then update database
     const codeToVerify = (verifyCode || token || '').trim();
     if (!codeToVerify) {
       setError("Please enter a verification code");
@@ -39,7 +41,11 @@ function VerifyEmailContent() {
     setSuccess(false);
 
     try {
+      // Manual code entry - verify code first, then set email_verified = True and delete code
       const payload = { code: codeToVerify };
+      if (email) {
+        payload.email = email; // Include email for better error handling
+      }
       const url = `${API_BASE}/api/auth/verify-email/`.replace(/\/+/g, '/').replace(':/', '://');
       
       const res = await axios.post(url, payload, {
@@ -49,11 +55,14 @@ function VerifyEmailContent() {
       });
 
       if (res.data?.email_verified) {
-        // Email verified - redirect to login page
+        // Code verified successfully - email_verified is now True and code is deleted
         setSuccess(true);
         setTimeout(() => {
           router.push("/login");
         }, 1500); // Give user time to see success message
+      } else {
+        setError("Verification failed. Please check your code and try again.");
+        setLoading(false);
       }
     } catch (err: any) {
       console.error('Verification error:', {
@@ -70,15 +79,22 @@ function VerifyEmailContent() {
         console.error('Full error response:', JSON.stringify(err.response.data, null, 2));
       }
       
+      // Check if already verified
+      if (err.response?.data?.email_verified) {
+        setSuccess(true);
+        setError("");
+        setTimeout(() => router.push("/login"), 1500);
+        return;
+      }
+      
       const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Verification failed. Please try again.";
       setError(errorMsg);
       setLoading(false);
     }
-  }, [token, router]);
+  }, [token, email, router]);
 
   useEffect(() => {
     // Extract code/token and email from URL if present
-    // Support both ?code= (new) and ?token= (old emails) for backward compatibility
     const codeFromUrl = searchParams.get('code') || searchParams.get('token');
     const emailFromUrl = searchParams.get('email');
     
@@ -86,45 +102,57 @@ function VerifyEmailContent() {
       setEmail(emailFromUrl);
     }
     
-    // If code/token is in URL (from email link), verify immediately and redirect to login
-    if (codeFromUrl) {
-      // Set loading immediately to show loading screen
+    // Path 1: Email link click (code in URL) - no code verification, just update database
+    if (codeFromUrl && emailFromUrl && !autoVerificationAttempted) {
+      setAutoVerificationAttempted(true);
       setLoading(true);
       setToken(codeFromUrl);
-      setError(""); // Clear any previous errors
+      setError("");
       
-      // Verify immediately without showing the form
-      const verifyAndRedirect = async () => {
+      const verifyLinkClick = async () => {
         try {
-          const payload = { code: codeFromUrl };
+          // Link click = proof user received email
+          // Set email_verified = True and delete code (no code verification needed)
+          const payload = { 
+            email: emailFromUrl,
+            link_click: true  // Signal this is a link click, not code verification
+          };
           const url = `${API_BASE}/api/auth/verify-email/`.replace(/\/+/g, '/').replace(':/', '://');
           
           const res = await axios.post(url, payload, {
-            headers: {
-              'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
           });
 
           if (res.data?.email_verified) {
-            // Email verified - redirect to login immediately (no delay)
-            router.push("/login");
-            return; // Don't set loading to false, let redirect happen
+            // Email verified successfully
+            setSuccess(true);
+            setError("");
+            setLoading(false);
+            setTimeout(() => router.push("/login"), 2000);
           } else {
-            // Verification failed - show error on verify page
             setError("Verification failed. Please try again.");
             setLoading(false);
-    }
+          }
         } catch (err: any) {
-          // Verification failed - show error on verify page
-          const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Verification failed. Please try again.";
+          // Check if already verified
+          if (err.response?.data?.email_verified) {
+            setSuccess(true);
+            setError("");
+            setLoading(false);
+            setTimeout(() => router.push("/login"), 2000);
+            return;
+          }
+          
+          // Handle expired link or other errors
+          const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || "Verification failed. Please request a new verification email.";
           setError(errorMsg);
           setLoading(false);
         }
       };
       
-      verifyAndRedirect();
+      verifyLinkClick();
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, autoVerificationAttempted]);
 
   const handleResend = async () => {
     if (!email) {
@@ -160,10 +188,12 @@ function VerifyEmailContent() {
   };
 
   // If code/token is in URL (from email link), show minimal loading and redirect immediately after verification
+  // Only show loading screen if we're still attempting auto-verification and haven't failed yet
   const codeFromUrl = searchParams.get('code') || searchParams.get('token');
-  // Show loading screen if code is in URL (auto-verification flow from email link)
-  // Don't show the form - just verify and redirect
-  if (codeFromUrl) {
+  const isAutoVerifying = codeFromUrl && autoVerificationAttempted && loading && !error && !success;
+  
+  // Show loading screen only during active auto-verification (not after failure or success)
+  if (isAutoVerifying) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
@@ -178,13 +208,30 @@ function VerifyEmailContent() {
             <RefreshCw className="h-16 w-16 text-palette-primary mx-auto mb-4 animate-spin" />
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Verifying Email...</h2>
             <p className="text-slate-600 mb-4">Please wait while we verify your email address.</p>
-            {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                {error}
-                <p className="mt-2 text-xs">You can still enter your code manually below.</p>
-              </div>
-            )}
-            {!error && <p className="text-sm text-slate-500">Redirecting to login...</p>}
+            <p className="text-sm text-slate-500">Redirecting to login...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // Show success screen if verification succeeded (from auto-verification with code in URL)
+  if (success && codeFromUrl && autoVerificationAttempted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 to-palette-accent-2/80 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-white/80 backdrop-blur-sm border-palette-accent-2/50 shadow-xl">
+          <CardContent className="pt-6 text-center">
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/Pagerodeo-Logo-Black.png" 
+                alt="PageRodeo Logo" 
+                className="h-16 w-auto"
+              />
+            </div>
+            <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Email Verified Successfully!</h2>
+            <p className="text-slate-600 mb-4">Your email address has been verified.</p>
+            <p className="text-sm text-slate-500">Redirecting to login...</p>
           </CardContent>
         </Card>
       </div>

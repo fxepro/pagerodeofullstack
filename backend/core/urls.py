@@ -40,8 +40,12 @@ urlpatterns = [
     # Django admin at /django-admin/ to avoid conflict with Next.js app admin
     path('django-admin/', admin.site.urls),
     path('', include('users.urls')),
+    path('', include('financials.urls')),
     path('', include('emails.urls')),
     path('', include('dns.urls')),
+    path('', include('multilocation.urls')),
+    path('', include('multilanguage.urls')),
+    path('api/blog/', include('blog.urls')),
 ]
 
 # Add site_settings URLs explicitly

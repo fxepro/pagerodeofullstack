@@ -85,14 +85,9 @@ export function useSiteConfig() {
       // Fetch active typography preset (public endpoint, no auth)
       let apiUrl: string;
       
-      if (typeof window !== 'undefined') {
-        // Browser context - ALWAYS use relative URL to match page protocol (HTTPS in production)
-        // This prevents mixed content errors (HTTP on HTTPS page)
-        apiUrl = '/api/typography/active/';
-      } else {
-        // Server-side rendering - use env var or default
-        apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/typography/active/`;
-      }
+      // ALWAYS use full Django backend URL to bypass Next.js rewrites (per critical implementation doc)
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+      apiUrl = `${apiBase.replace(/\/$/, '')}/api/typography/active/`;
       
       const response = await fetch(apiUrl);
       
@@ -112,8 +107,11 @@ export function useSiteConfig() {
       
       setLoading(false);
     } catch (err: any) {
-      console.warn('Could not fetch typography from backend:', err.message);
-      console.warn('Using default typography. Make sure to run: python manage.py setup_default_typography');
+      // Only log warning if not a network error (backend might not be running in dev)
+      if (err.message !== 'Failed to fetch') {
+        console.warn('Could not fetch typography from backend:', err.message);
+      }
+      // Silent fallback - app will use cached or default typography
       setError('Using default typography');
       setLoading(false);
       // Apply default typography on error

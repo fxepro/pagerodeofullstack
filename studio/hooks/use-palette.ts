@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 export interface Palette {
   id: number;
@@ -16,6 +17,7 @@ export function usePalette() {
   const [palette, setPalette] = useState<Palette | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const pathname = usePathname();
 
   useLayoutEffect(() => {
     // Immediately apply cached palette to prevent flash
@@ -34,17 +36,37 @@ export function usePalette() {
   }, []);
 
   useEffect(() => {
-    // Fetch fresh data from API on mount
+    // Fetch fresh data from API on mount and route changes
     fetchActivePalette();
-  }, []);
+  }, [pathname]); // Re-fetch when route changes
+
+  // Also apply palette whenever it changes or route changes
+  useEffect(() => {
+    if (palette) {
+      applyPaletteToDOM(palette);
+    } else if (typeof window !== 'undefined') {
+      // If no palette loaded yet, ensure cached palette is applied on route change
+      const cachedPalette = localStorage.getItem('activePalette');
+      if (cachedPalette) {
+        try {
+          const paletteData = JSON.parse(cachedPalette);
+          applyPaletteToDOM(paletteData);
+        } catch (e) {
+          // Ignore parse errors, will fall back to default
+        }
+      } else {
+        // Apply default if nothing cached
+        applyDefaultPalette();
+      }
+    }
+  }, [palette, pathname]); // Re-apply on palette change or route change
 
   const fetchActivePalette = async () => {
     try {
       // Public endpoint - no auth required
-      // Use relative URL in browser (matches page protocol - HTTPS in production)
-      const apiUrl = typeof window !== 'undefined' 
-        ? '/api/palettes/active/' // Relative URL in browser (automatic HTTPS)
-        : `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/palettes/active/`; // SSR: use env var or default
+      // ALWAYS use full Django backend URL to bypass Next.js rewrites (per critical implementation doc)
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+      const apiUrl = `${apiBase.replace(/\/$/, '')}/api/palettes/active/`;
       
       const response = await fetch(apiUrl);
       
@@ -61,8 +83,11 @@ export function usePalette() {
       
       setLoading(false);
     } catch (err: any) {
-      console.warn('Could not fetch palette from backend:', err.message);
-      console.warn('Using cached or default purple palette. Make sure to run: python manage.py setup_default_palette');
+      // Only log warning if not a network error (backend might not be running in dev)
+      if (err.message !== 'Failed to fetch') {
+        console.warn('Could not fetch palette from backend:', err.message);
+      }
+      // Silent fallback - app will use cached or default palette
       setError('Using default palette');
       setPalette(prev => {
         if (prev) {

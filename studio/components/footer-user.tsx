@@ -8,13 +8,13 @@ export function FooterUser() {
         {/* Connect Section */}
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 pb-6">
           <div className="flex items-center space-x-6">
-            <h3 className="font-semibold text-purple-900 text-lg">Connect</h3>
+            <h3 className="font-semibold text-palette-primary text-lg">Connect</h3>
             <div className="flex space-x-4">
               <Link 
                 href="https://www.facebook.com/pagerodeo" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="text-palette-primary hover:text-purple-900 transition-colors p-2 rounded-lg hover:bg-palette-accent-2"
+                className="text-palette-primary hover:text-palette-primary-hover transition-colors p-2 rounded-lg hover:bg-palette-accent-2"
               >
                 <Facebook className="h-5 w-5" />
               </Link>
@@ -22,20 +22,20 @@ export function FooterUser() {
                 href="https://www.x.com/pagerodeo" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="text-palette-primary hover:text-purple-900 transition-colors p-2 rounded-lg hover:bg-palette-accent-2"
+                className="text-palette-primary hover:text-palette-primary-hover transition-colors p-2 rounded-lg hover:bg-palette-accent-2"
               >
                 <Twitter className="h-5 w-5" />
               </Link>
             </div>
           </div>
           <div className="flex space-x-6">
-            <Link href="/about" className="text-palette-primary hover:text-purple-900 transition-colors font-medium">
+            <Link href="/about" className="text-palette-primary hover:text-palette-primary-hover transition-colors font-medium">
               About
             </Link>
-            <Link href="/feedback" className="text-palette-primary hover:text-purple-900 transition-colors font-medium">
+            <Link href="/feedback" className="text-palette-primary hover:text-palette-primary-hover transition-colors font-medium">
               Feedback
             </Link>
-            <Link href="/contact" className="text-palette-primary hover:text-purple-900 transition-colors font-medium">
+            <Link href="/contact" className="text-palette-primary hover:text-palette-primary-hover transition-colors font-medium">
               Contact
             </Link>
           </div>
@@ -47,13 +47,13 @@ export function FooterUser() {
             © 2024 PageRodeo. All rights reserved.
           </p>
           <div className="flex space-x-6 text-sm text-palette-primary">
-            <Link href="/privacy" className="hover:text-purple-900 transition-colors">
+            <Link href="/privacy" className="hover:text-palette-primary-hover transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms" className="hover:text-purple-900 transition-colors">
+            <Link href="/terms" className="hover:text-palette-primary-hover transition-colors">
               Terms of Service
             </Link>
-            <Link href="/cookies" className="hover:text-purple-900 transition-colors">
+            <Link href="/cookies" className="hover:text-palette-primary-hover transition-colors">
               Cookie Policy
             </Link>
           </div>

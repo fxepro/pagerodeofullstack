@@ -188,18 +188,86 @@ export function SidebarPermissionsMatrix() {
     try {
       setSaving(true);
       setError(null);
-      const token = localStorage.getItem("access_token");
+      let token = localStorage.getItem("access_token");
+      const refreshToken = localStorage.getItem("refresh_token");
+      
       if (!token) {
         setError("Authentication token not found.");
+        setSaving(false);
         return;
       }
+
+      // Helper function to refresh token
+      const refreshAccessToken = async (): Promise<string | null> => {
+        if (!refreshToken) {
+          return null;
+        }
+        
+        try {
+          const res = await axios.post(`${API_BASE}/api/token/refresh/`, {
+            refresh: refreshToken,
+          });
+          const newAccessToken = res.data.access;
+          localStorage.setItem("access_token", newAccessToken);
+          // Update refresh token if a new one is provided (token rotation)
+          if (res.data.refresh) {
+            localStorage.setItem("refresh_token", res.data.refresh);
+          }
+          return newAccessToken;
+        } catch (err) {
+          console.error("Token refresh failed:", err);
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          return null;
+        }
+      };
+
+      // Helper function to make authenticated request with retry on 401
+      const makeRequest = async (roleId: number, permCodes: string[], currentToken: string): Promise<void> => {
+        try {
+          await axios.post(
+            `${API_BASE}/api/roles/sidebar-matrix/update/`,
+            {
+              role_id: roleId,
+              permission_codes: permCodes,
+            },
+            {
+              headers: { Authorization: `Bearer ${currentToken}` },
+            }
+          );
+        } catch (err: any) {
+          // If 401, try to refresh token and retry
+          if (err.response?.status === 401) {
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+              // Retry with new token
+              await axios.post(
+                `${API_BASE}/api/roles/sidebar-matrix/update/`,
+                {
+                  role_id: roleId,
+                  permission_codes: permCodes,
+                },
+                {
+                  headers: { Authorization: `Bearer ${newToken}` },
+                }
+              );
+              // Update token for subsequent requests
+              token = newToken;
+            } else {
+              throw new Error("Session expired. Please log in again.");
+            }
+          } else {
+            throw err;
+          }
+        }
+      };
 
       // Collect all permission codes for each role
       const rolePermissionMap: Record<number, Set<string>> = {};
 
-      // Start with current permissions
+      // Start with current permissions from ALL sidebar items
+      // This ensures we have the complete permission set before applying changes
       matrixData.roles.forEach(role => {
-        if (role.is_system_role) return;
         rolePermissionMap[role.id] = new Set();
         matrixData.sidebar_items.forEach(item => {
           const access = item.role_access[role.id.toString()];
@@ -212,7 +280,9 @@ export function SidebarPermissionsMatrix() {
         });
       });
 
-      // Apply changes
+      // Apply changes - only modify permissions for items that were actually changed
+      // The key fix: only remove/add permissions for the specific item being changed,
+      // not all permissions that might be shared across items
       Object.entries(changes).forEach(([roleIdStr, itemChanges]) => {
         const roleId = parseInt(roleIdStr);
         if (!rolePermissionMap[roleId]) rolePermissionMap[roleId] = new Set();
@@ -221,31 +291,32 @@ export function SidebarPermissionsMatrix() {
           const item = matrixData.sidebar_items.find(i => i.id === itemId);
           if (!item) return;
 
-          // Remove all permissions for this item
-          if (item.required_permissions.view) rolePermissionMap[roleId].delete(item.required_permissions.view);
-          if (item.required_permissions.create) rolePermissionMap[roleId].delete(item.required_permissions.create);
-          if (item.required_permissions.edit) rolePermissionMap[roleId].delete(item.required_permissions.edit);
-          if (item.required_permissions.delete) rolePermissionMap[roleId].delete(item.required_permissions.delete);
+          // Get all permission codes that this specific item can have
+          const itemPermissionCodes = new Set<string>();
+          if (item.required_permissions.view) itemPermissionCodes.add(item.required_permissions.view);
+          if (item.required_permissions.create) itemPermissionCodes.add(item.required_permissions.create);
+          if (item.required_permissions.edit) itemPermissionCodes.add(item.required_permissions.edit);
+          if (item.required_permissions.delete) itemPermissionCodes.add(item.required_permissions.delete);
 
-          // Add new permissions
-          permCodes.forEach(code => rolePermissionMap[roleId].add(code));
+          // Remove ONLY this item's permissions (this is safe because each item has unique permission codes)
+          // e.g., site_audit.view vs reports.view are different codes, so removing one won't affect the other
+          itemPermissionCodes.forEach(code => rolePermissionMap[roleId].delete(code));
+
+          // Add back the permissions that should be active for this item
+          // permCodes contains the final state of permissions for this item after changes
+          permCodes.forEach(code => {
+            // Safety check: only add if it's actually a permission code for this item
+            if (itemPermissionCodes.has(code)) {
+              rolePermissionMap[roleId].add(code);
+            }
+          });
         });
       });
 
       // Save each role (both system and custom roles can have permissions updated)
       const savePromises = Object.entries(rolePermissionMap).map(async ([roleIdStr, permCodes]) => {
         const roleId = parseInt(roleIdStr);
-
-        await axios.post(
-          `${API_BASE}/api/roles/sidebar-matrix/update/`,
-          {
-            role_id: roleId,
-            permission_codes: Array.from(permCodes),
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        await makeRequest(roleId, Array.from(permCodes), token!);
       });
 
       await Promise.all(savePromises);
@@ -344,18 +415,30 @@ export function SidebarPermissionsMatrix() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[250px] sticky left-0 bg-white z-10">Sidebar Option</TableHead>
-                      {matrixData.roles.map(role => (
-                  <TableHead key={role.id} className="text-center min-w-[120px]">
-                    <div className="flex flex-col items-center gap-1">
-                      <span>{role.name}</span>
-                      {role.is_system_role && (
-                        <Badge variant="outline" className="text-xs">
-                          System
-                        </Badge>
-                      )}
-                    </div>
-                  </TableHead>
-                ))}
+                      {/* Sort roles by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer */}
+                      {(() => {
+                        const ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer'];
+                        const sortedRoles = [...matrixData.roles].sort((a, b) => {
+                          const aIndex = ROLE_ORDER.indexOf(a.name);
+                          const bIndex = ROLE_ORDER.indexOf(b.name);
+                          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+                          if (aIndex !== -1) return -1;
+                          if (bIndex !== -1) return 1;
+                          return a.name.localeCompare(b.name);
+                        });
+                        return sortedRoles.map(role => (
+                          <TableHead key={role.id} className="text-center min-w-[120px]">
+                            <div className="flex flex-col items-center gap-1">
+                              <span>{role.name}</span>
+                              {role.is_system_role && (
+                                <Badge variant="outline" className="text-xs">
+                                  System
+                                </Badge>
+                              )}
+                            </div>
+                          </TableHead>
+                        ));
+                      })()}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -371,12 +454,22 @@ export function SidebarPermissionsMatrix() {
                       <TableCell className="font-medium sticky left-0 bg-white z-10">
                         {item.title}
                       </TableCell>
-                      {matrixData.roles.map(role => {
-                        const access = item.role_access[role.id.toString()] || { view: false, create: false, edit: false, delete: false };
-                        const displayValue = getAccessValue(role.id, item.id);
+                      {(() => {
+                        const ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer'];
+                        const sortedRoles = [...matrixData.roles].sort((a, b) => {
+                          const aIndex = ROLE_ORDER.indexOf(a.name);
+                          const bIndex = ROLE_ORDER.indexOf(b.name);
+                          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+                          if (aIndex !== -1) return -1;
+                          if (bIndex !== -1) return 1;
+                          return a.name.localeCompare(b.name);
+                        });
+                        return sortedRoles.map(role => {
+                          const access = item.role_access[role.id.toString()] || { view: false, create: false, edit: false, delete: false };
+                          const displayValue = getAccessValue(role.id, item.id);
 
-                        return (
-                          <TableCell key={role.id} className="text-center">
+                          return (
+                            <TableCell key={role.id} className="text-center">
                             <div className="flex flex-col gap-1 items-center">
                               {item.required_permissions.view && (
                                 <div className="flex gap-1 items-center">
@@ -419,8 +512,9 @@ export function SidebarPermissionsMatrix() {
                               </Badge>
                             </div>
                           </TableCell>
-                        );
-                      })}
+                          );
+                        });
+                      })()}
                     </TableRow>
                   ))}
                 </React.Fragment>

@@ -132,10 +132,17 @@ def get_navigation(request):
                     },
                     {
                         "id": "ai_health",
-                        "title": "AI Health",
+                        "title": "AI Monitoring",
                         "href": "/workspace/ai-health",
                         "icon": "Cpu",
                         "permission": "ai_health.view"
+                    },
+                    {
+                        "id": "database_monitoring",
+                        "title": "Database Monitoring",
+                        "href": "/workspace/database-monitoring",
+                        "icon": "Database",
+                        "permission": "database_monitoring.view"
                     },
                     {
                         "id": "api_monitoring_user",
@@ -164,6 +171,77 @@ def get_navigation(request):
                         "href": "/workspace/google-analytics",
                         "icon": "TrendingUp",
                         "permission": "google_analytics.view"
+                    },
+                    {
+                        "id": "wordpress",
+                        "title": "WordPress",
+                        "href": "/workspace/wordpress",
+                        "icon": "Package",
+                        "permission": "wordpress.view"
+                    }
+                ]
+            },
+            {
+                "id": "coming_soon",
+                "title": "Coming Soon",
+                "icon": "Clock",
+                "permission": "users.view",  # Admin only (requires users.view which is admin permission)
+                "items": [
+                    {
+                        "id": "ai_analysis",
+                        "title": "AI Analysis",
+                        "href": "/workspace/ai-analysis",
+                        "icon": "Cpu",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "security_test",
+                        "title": "Security Test",
+                        "href": "/workspace/security",
+                        "icon": "Shield",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "apis",
+                        "title": "APIs",
+                        "href": "/workspace/apis",
+                        "icon": "Network",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "site_maintenance",
+                        "title": "Site Maintenance",
+                        "href": "/workspace/site-maintenance",
+                        "icon": "Wrench",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "saas_monitoring",
+                        "title": "SAAS Monitoring",
+                        "href": "/workspace/saas-monitoring",
+                        "icon": "Plug",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "ui_testing",
+                        "title": "UI Testing",
+                        "href": "/workspace/ui-testing",
+                        "icon": "Monitor",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "seo_monitoring",
+                        "title": "SEO Monitoring",
+                        "href": "/workspace/seo-monitoring",
+                        "icon": "Search",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "cloud_monitoring",
+                        "title": "Cloud Monitoring",
+                        "href": "/workspace/cloud-monitoring",
+                        "icon": "Cloud",
+                        "permission": "users.view"
                     }
                 ]
             },
@@ -237,11 +315,46 @@ def get_navigation(request):
                         "permission": "financials.view"
                     },
                     {
+                        "id": "blogging",
+                        "title": "Blogging",
+                        "href": "/workspace/blogging",
+                        "icon": "FileText",
+                        "permission": "blog.view"
+                    },
+                    {
                         "id": "admin_settings",
                         "title": "System Settings",
                         "href": "/workspace/system-settings",
                         "icon": "Settings",
                         "permission": "settings.view"
+                    },
+                    {
+                        "id": "multi_language",
+                        "title": "Multi-Language",
+                        "href": "/workspace/multi-language",
+                        "icon": "Globe",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "multi_currency",
+                        "title": "Multi-Currency",
+                        "href": "/workspace/multi-currency",
+                        "icon": "CircleDollarSign",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "multi_location",
+                        "title": "Multi-Location",
+                        "href": "/workspace/multi-location",
+                        "icon": "MapPin",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "security",
+                        "title": "Security",
+                        "href": "/workspace/security",
+                        "icon": "Lock",
+                        "permission": "users.view"
                     }
                 ]
             },
@@ -299,7 +412,15 @@ def get_sidebar_matrix(request):
     from .permission_models import FeaturePermission
     
     # Get all roles (system + custom)
-    all_groups = Group.objects.all().order_by('name')
+    # Define role order by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer
+    ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer']
+    
+    def role_sort_key(group):
+        if group.name in ROLE_ORDER:
+            return (0, ROLE_ORDER.index(group.name))
+        return (1, group.name.lower())
+    
+    all_groups = sorted(Group.objects.all(), key=role_sort_key)
     
     # Get navigation structure (same as get_navigation)
     navigation_structure = {
@@ -353,10 +474,17 @@ def get_sidebar_matrix(request):
                     },
                     {
                         "id": "ai_health",
-                        "title": "AI Health",
+                        "title": "AI Monitoring",
                         "href": "/workspace/ai-health",
                         "icon": "Cpu",
                         "permission": "ai_health.view"
+                    },
+                    {
+                        "id": "database_monitoring",
+                        "title": "Database Monitoring",
+                        "href": "/workspace/database-monitoring",
+                        "icon": "Database",
+                        "permission": "database_monitoring.view"
                     },
                     {
                         "id": "api_monitoring_user",
@@ -385,6 +513,77 @@ def get_sidebar_matrix(request):
                         "href": "/workspace/google-analytics",
                         "icon": "TrendingUp",
                         "permission": "google_analytics.view"
+                    },
+                    {
+                        "id": "wordpress",
+                        "title": "WordPress",
+                        "href": "/workspace/wordpress",
+                        "icon": "Package",
+                        "permission": "wordpress.view"
+                    }
+                ]
+            },
+            {
+                "id": "coming_soon",
+                "title": "Coming Soon",
+                "icon": "Clock",
+                "permission": "users.view",  # Admin only (requires users.view which is admin permission)
+                "items": [
+                    {
+                        "id": "ai_analysis",
+                        "title": "AI Analysis",
+                        "href": "/workspace/ai-analysis",
+                        "icon": "Cpu",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "security_test",
+                        "title": "Security Test",
+                        "href": "/workspace/security",
+                        "icon": "Shield",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "apis",
+                        "title": "APIs",
+                        "href": "/workspace/apis",
+                        "icon": "Network",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "site_maintenance",
+                        "title": "Site Maintenance",
+                        "href": "/workspace/site-maintenance",
+                        "icon": "Wrench",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "saas_monitoring",
+                        "title": "SAAS Monitoring",
+                        "href": "/workspace/saas-monitoring",
+                        "icon": "Plug",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "ui_testing",
+                        "title": "UI Testing",
+                        "href": "/workspace/ui-testing",
+                        "icon": "Monitor",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "seo_monitoring",
+                        "title": "SEO Monitoring",
+                        "href": "/workspace/seo-monitoring",
+                        "icon": "Search",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "cloud_monitoring",
+                        "title": "Cloud Monitoring",
+                        "href": "/workspace/cloud-monitoring",
+                        "icon": "Cloud",
+                        "permission": "users.view"
                     }
                 ]
             },
@@ -458,11 +657,46 @@ def get_sidebar_matrix(request):
                         "permission": "financials.view"
                     },
                     {
+                        "id": "blogging",
+                        "title": "Blogging",
+                        "href": "/workspace/blogging",
+                        "icon": "FileText",
+                        "permission": "blog.view"
+                    },
+                    {
                         "id": "admin_settings",
                         "title": "System Settings",
                         "href": "/workspace/system-settings",
                         "icon": "Settings",
                         "permission": "settings.view"
+                    },
+                    {
+                        "id": "multi_language",
+                        "title": "Multi-Language",
+                        "href": "/workspace/multi-language",
+                        "icon": "Globe",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "multi_currency",
+                        "title": "Multi-Currency",
+                        "href": "/workspace/multi-currency",
+                        "icon": "CircleDollarSign",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "multi_location",
+                        "title": "Multi-Location",
+                        "href": "/workspace/multi-location",
+                        "icon": "MapPin",
+                        "permission": "users.view"
+                    },
+                    {
+                        "id": "security",
+                        "title": "Security",
+                        "href": "/workspace/security",
+                        "icon": "Lock",
+                        "permission": "users.view"
                     }
                 ]
             },
@@ -484,7 +718,8 @@ def get_sidebar_matrix(request):
     }
     
     # System roles that cannot be modified
-    SYSTEM_ROLES = ['Viewer', 'Analyst', 'Manager', 'Director', 'Admin']
+    # Ordered by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer
+    SYSTEM_ROLES = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer']
     
     # Build roles list
     roles_data = []

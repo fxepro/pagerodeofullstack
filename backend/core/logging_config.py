@@ -3,9 +3,44 @@ Centralized logging configuration for Django
 Includes structured logging, file rotation, and retention policies
 """
 import os
+import sys
 import logging
 import logging.handlers
 from pathlib import Path
+
+# Windows-compatible RotatingFileHandler that handles file locking gracefully
+class WindowsRotatingFileHandler(logging.handlers.RotatingFileHandler):
+    """
+    RotatingFileHandler that handles Windows file locking issues gracefully.
+    On Windows, if rotation fails due to file locking, it will log a warning
+    and continue without rotating.
+    """
+    def doRollover(self):
+        """
+        Override doRollover to handle Windows file locking gracefully.
+        Silently handles Windows file locking issues without warnings.
+        """
+        if self.stream:
+            self.stream.close()
+            self.stream = None
+        
+        # Try to rotate, but catch Windows permission errors
+        try:
+            super().doRollover()
+        except (PermissionError, OSError) as e:
+            # On Windows, if the file is locked, silently continue without rotation
+            # The log will continue to grow, but at least it won't crash or spam warnings
+            if sys.platform == 'win32':
+                # Try to reopen the file in append mode
+                try:
+                    self.stream = self._open()
+                    # Silently continue - no warning needed
+                except Exception:
+                    # If we can't reopen, just continue - logging will fail but app won't crash
+                    pass
+            else:
+                # On non-Windows, re-raise the error
+                raise
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -59,8 +94,8 @@ LOGGING = {
         # File handler for application logs
         'file': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGS_DIR / 'app.log',
+            '()': WindowsRotatingFileHandler,
+            'filename': str(LOGS_DIR / 'app.log'),
             'maxBytes': LOG_MAX_BYTES,
             'backupCount': LOG_BACKUP_COUNT,
             'formatter': 'verbose',
@@ -68,8 +103,8 @@ LOGGING = {
         # File handler for error logs
         'error_file': {
             'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGS_DIR / 'error.log',
+            '()': WindowsRotatingFileHandler,
+            'filename': str(LOGS_DIR / 'error.log'),
             'maxBytes': LOG_MAX_BYTES,
             'backupCount': LOG_BACKUP_COUNT,
             'formatter': 'verbose',
@@ -77,8 +112,8 @@ LOGGING = {
         # File handler for request/response logs
         'request_file': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGS_DIR / 'requests.log',
+            '()': WindowsRotatingFileHandler,
+            'filename': str(LOGS_DIR / 'requests.log'),
             'maxBytes': LOG_MAX_BYTES,
             'backupCount': LOG_BACKUP_COUNT,
             'formatter': 'verbose',
@@ -86,8 +121,8 @@ LOGGING = {
         # File handler for background job logs
         'job_file': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGS_DIR / 'jobs.log',
+            '()': WindowsRotatingFileHandler,
+            'filename': str(LOGS_DIR / 'jobs.log'),
             'maxBytes': LOG_MAX_BYTES,
             'backupCount': LOG_BACKUP_COUNT,
             'formatter': 'verbose',
@@ -95,8 +130,8 @@ LOGGING = {
         # File handler for performance logs
         'performance_file': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': LOGS_DIR / 'performance.log',
+            '()': WindowsRotatingFileHandler,
+            'filename': str(LOGS_DIR / 'performance.log'),
             'maxBytes': LOG_MAX_BYTES,
             'backupCount': LOG_BACKUP_COUNT,
             'formatter': 'verbose',

@@ -93,7 +93,7 @@ export default function FeedbackMain() {
         <button
           key={index}
           type="button"
-          className="focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-full p-1"
+          className="focus:outline-none focus:ring-2 focus:ring-palette-primary focus:ring-offset-2 rounded-full p-1"
           onClick={() => setRating(starNumber)}
           onMouseEnter={() => setHoveredRating(starNumber)}
           onMouseLeave={() => setHoveredRating(0)}
@@ -123,7 +123,7 @@ export default function FeedbackMain() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-20 px-4 bg-gradient-to-br from-palette-primary via-purple-700 to-palette-secondary overflow-hidden">
+      <section className="relative py-20 px-4 bg-gradient-to-br from-palette-primary via-palette-primary to-palette-secondary overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="absolute inset-0">
           <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full animate-pulse"></div>
@@ -139,7 +139,7 @@ export default function FeedbackMain() {
               Feedback
             </span>
           </h1>
-          <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
             Help us improve PageRodeo by sharing your thoughts, suggestions, and experiences
           </p>
         </div>
@@ -185,7 +185,7 @@ export default function FeedbackMain() {
                     placeholder="Tell us what you loved about PageRodeo. What features worked well? What exceeded your expectations?"
                     value={greatWork}
                     onChange={(e) => setGreatWork(e.target.value)}
-                    className="min-h-[100px] resize-none border-gray-200 focus:border-palette-accent-1 focus:ring-purple-500"
+                    className="min-h-[100px] resize-none border-gray-200 focus:border-palette-accent-1 focus:ring-palette-primary"
                   />
                 </div>
 
@@ -203,7 +203,7 @@ export default function FeedbackMain() {
                     placeholder="Share suggestions for improvement. What features need work? What would make your experience smoother?"
                     value={couldBeBetter}
                     onChange={(e) => setCouldBeBetter(e.target.value)}
-                    className="min-h-[100px] resize-none border-gray-200 focus:border-palette-accent-1 focus:ring-purple-500"
+                    className="min-h-[100px] resize-none border-gray-200 focus:border-palette-accent-1 focus:ring-palette-primary"
                   />
                 </div>
 
@@ -221,7 +221,7 @@ export default function FeedbackMain() {
                     placeholder="What features are frustrating or unnecessary? What should we completely remove or redesign?"
                     value={removeAndRelish}
                     onChange={(e) => setRemoveAndRelish(e.target.value)}
-                    className="min-h-[100px] resize-none border-gray-200 focus:border-palette-accent-1 focus:ring-purple-500"
+                    className="min-h-[100px] resize-none border-gray-200 focus:border-palette-accent-1 focus:ring-palette-primary"
                   />
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function FeedbackMain() {
                 <Button
                   type="submit"
                   disabled={isSubmitting || rating === 0}
-                  className="bg-gradient-to-r from-palette-primary to-palette-primary-hover hover:from-purple-700 hover:to-palette-secondary text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-palette-primary to-palette-primary-hover hover:from-palette-primary-hover hover:to-palette-secondary text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <>

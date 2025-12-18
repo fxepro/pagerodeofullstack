@@ -192,13 +192,13 @@ export function UpgradeContent() {
   return (
     <div className="min-h-screen overflow-x-hidden">
       {/* Hero Section - Consistent with other pages */}
-      <section className="relative min-h-[60vh] flex items-center justify-center bg-gradient-to-br from-palette-accent-2 via-palette-accent-1 to-palette-primary">
+      <section className="relative min-h-[60vh] flex items-center justify-center bg-gradient-to-br from-slate-900 via-palette-primary to-slate-900">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -inset-10 opacity-35">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-palette-primary-hover rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-pulse"></div>
-            <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-800 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-pulse animation-delay-2000"></div>
-            <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-palette-primary rounded-full mix-blend-multiply filter blur-2xl opacity-55 animate-pulse animation-delay-4000"></div>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-palette-primary rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-pulse"></div>
+            <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-palette-accent-1 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-pulse animation-delay-2000"></div>
+            <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-palette-accent-2 rounded-full mix-blend-multiply filter blur-2xl opacity-55 animate-pulse animation-delay-4000"></div>
           </div>
         </div>
         
@@ -207,7 +207,7 @@ export function UpgradeContent() {
         
         <div className="relative z-10 container mx-auto px-4 text-center">
           <div className="mb-8">
-            <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
+            <Badge variant="outline" className="border-palette-primary/40 text-white/80 bg-palette-primary/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
               <BarChart3 className="h-4 w-4 mr-2" />
               Progressive Monitoring Capabilities
             </Badge>
@@ -218,22 +218,22 @@ export function UpgradeContent() {
           </h1>
           
           <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-8 leading-relaxed">
-            From <span className="text-white font-semibold">essential monitoring</span> to 
-            <span className="text-purple-100 font-semibold"> enterprise-grade intelligence</span> — 
+            From <span className="text-white/80 font-semibold">essential monitoring</span> to 
+            <span className="text-white/80 font-semibold"> enterprise-grade intelligence</span> — 
             find the perfect plan for your needs.
           </p>
           
           <div className="flex flex-wrap justify-center gap-3 mb-8">
-            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
+            <div className="px-4 py-2 bg-palette-primary/15 backdrop-blur-sm rounded-full text-white/80 text-sm font-medium border border-palette-primary/40">
               Start Free Forever
             </div>
-            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
+            <div className="px-4 py-2 bg-palette-primary/15 backdrop-blur-sm rounded-full text-white/80 text-sm font-medium border border-palette-primary/40">
               Plans from $29.99/mo
             </div>
-            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
+            <div className="px-4 py-2 bg-palette-primary/15 backdrop-blur-sm rounded-full text-white/80 text-sm font-medium border border-palette-primary/40">
               Cancel Anytime
             </div>
-            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
+            <div className="px-4 py-2 bg-palette-primary/15 backdrop-blur-sm rounded-full text-white/80 text-sm font-medium border border-palette-primary/40">
               No Credit Card Required
             </div>
           </div>
@@ -241,7 +241,7 @@ export function UpgradeContent() {
       </section>
 
       {/* Main Content */}
-      <div className="bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
+      <div className="bg-gradient-to-br from-white to-palette-accent-3">
         <div className="container mx-auto px-4 py-16">
 
         {/* Pricing Plans - Responsive Grid */}
@@ -257,7 +257,7 @@ export function UpgradeContent() {
                 key={plan.name}
                 className={`relative transition-all duration-300 hover:shadow-xl h-full flex flex-col ${
                   plan.isHighlighted 
-                    ? "border-2 border-palette-primary shadow-2xl shadow-purple-500/20" 
+                    ? "border-2 border-palette-primary shadow-2xl shadow-palette-primary/20" 
                     : "border-slate-200 hover:border-slate-300"
                 }`}
               >
@@ -331,9 +331,9 @@ export function UpgradeContent() {
 
 
         {/* Footer CTA */}
-        <div className="text-center bg-gradient-to-r from-palette-accent-1/10 via-purple-400/5 to-palette-primary/10 border-2 border-palette-accent-1/20 rounded-2xl p-10 shadow-xl">
+        <div className="text-center bg-gradient-to-r from-palette-accent-3 via-palette-accent-3 to-palette-accent-3 border-2 border-palette-primary/30 rounded-2xl p-10 shadow-xl">
           <div className="mb-6">
-            <Badge variant="outline" className="border-palette-accent-2 text-palette-primary bg-palette-accent-3 px-4 py-2 mb-4">
+            <Badge variant="outline" className="border-palette-primary/30 text-palette-primary bg-palette-accent-3 px-4 py-2 mb-4">
               <Rocket className="h-4 w-4 mr-2" />
               Ready to Get Started?
             </Badge>
@@ -347,7 +347,7 @@ export function UpgradeContent() {
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-palette-accent-1 to-palette-primary hover:from-palette-primary hover:to-palette-primary-hover text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-4 text-lg"
+              className="bg-gradient-to-r from-palette-primary to-palette-secondary hover:from-palette-primary-hover hover:to-palette-secondary-hover text-white shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-4 text-lg"
               onClick={() => window.location.href = "/login"}
             >
               <Rocket className="mr-2 h-5 w-5" />
@@ -356,7 +356,7 @@ export function UpgradeContent() {
             <Button 
               size="lg" 
               variant="outline"
-              className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3 px-8 py-4 text-lg transition-all duration-300"
+              className="border-palette-primary/30 text-palette-primary hover:bg-palette-accent-3 px-8 py-4 text-lg transition-all duration-300"
               onClick={() => window.location.href = "/"}
             >
               <Zap className="mr-2 h-5 w-5" />

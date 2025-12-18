@@ -25,9 +25,6 @@ from .models import (
     UserProfile,
     UserActivity,
     UserCorporateProfile,
-    PaymentMethod,
-    UserSubscription,
-    BillingTransaction,
     MonitoredSite,
 )
 from .serializers import (
@@ -35,9 +32,6 @@ from .serializers import (
     UserProfileSerializer,
     UserActivitySerializer,
     UserCorporateProfileSerializer,
-    PaymentMethodSerializer,
-    UserSubscriptionSerializer,
-    BillingTransactionSerializer,
     MonitoredSiteSerializer,
     MonitoredSiteUpdateSerializer,
 )
@@ -252,13 +246,17 @@ def register_user(request):
                 if not profile.email_verification_code:
                     logger.error(f"Code generation failed for user {user.email} - code field is still null")
                 else:
-                    # Only send email if email verification is enabled
-                    if email_verification_enabled:
-                        email_sent = send_verification_email(user, code)
-                        if not email_sent:
-                            logger.warning(f"Failed to send verification email to {user.email}, but user was created")
+                    # Always send verification email for all roles during registration
+                    # This ensures all users receive verification emails regardless of site config
+                    logger.info(f"Attempting to send verification email to {user.email} (role: {profile.role})")
+                    email_sent = send_verification_email(user, code)
+                    if email_sent:
+                        logger.info(f"Verification email sent successfully to {user.email} (role: {profile.role})")
                     else:
-                        logger.info(f"Verification code generated for {user.email} but email not sent (verification disabled)")
+                        logger.warning(f"Failed to send verification email to {user.email} (role: {profile.role}), but user was created")
+                        # If email sending fails, log the role for debugging
+                        if not email_verification_enabled:
+                            logger.warning(f"Note: Email verification is disabled in site config, but email was still attempted for {user.email}")
             except Exception as token_error:
                 logger.error(f"Error generating verification token for user {user.email}: {str(token_error)}", exc_info=True)
                 # Don't fail registration if token generation fails
@@ -557,362 +555,6 @@ def corporate_profile(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def payment_methods(request):
-    """List or create payment methods for the authenticated user"""
-    if request.method == 'GET':
-        try:
-            methods = PaymentMethod.objects.filter(user=request.user).order_by('-is_default', '-created_at')
-            serializer = PaymentMethodSerializer(methods, many=True)
-            return Response(serializer.data)
-        except Exception as e:
-            # Handle case where new fields don't exist in database yet (migration not run)
-            # Try to query only existing fields
-            try:
-                from django.db import connection
-                # Get only basic fields that definitely exist
-                methods = PaymentMethod.objects.filter(user=request.user).only(
-                    'id', 'nickname', 'method_type', 'brand', 'last4', 
-                    'exp_month', 'exp_year', 'bank_name', 'account_type', 
-                    'is_default', 'created_at'
-                ).order_by('-is_default', '-created_at')
-                serializer = PaymentMethodSerializer(methods, many=True)
-                return Response(serializer.data)
-            except Exception as inner_e:
-                # If that also fails, return empty list
-                logger.error(f"Error loading payment methods: {str(inner_e)}", exc_info=True)
-                return Response([], status=status.HTTP_200_OK)
-
-    data = request.data.copy()
-    method_type = data.get('method_type')
-
-    if method_type not in dict(PaymentMethod.METHOD_CHOICES):
-        return Response({'error': 'Invalid payment method type'}, status=status.HTTP_400_BAD_REQUEST)
-
-    if method_type == 'card':
-        required_fields = ['cardholder_name', 'card_number', 'exp_month', 'exp_year']
-        for field in required_fields:
-            if not data.get(field):
-                return Response({'error': f'{field} is required for card payment method'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate card number (16 digits)
-        card_number = data.get('card_number', '').replace(' ', '').replace('-', '')
-        if len(card_number) != 16 or not card_number.isdigit():
-            return Response({'error': 'Card number must be exactly 16 digits'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Extract last4 from card number
-        last4 = card_number[-4:]
-        
-        # Validate expiration
-        try:
-            exp_month = int(data.get('exp_month'))
-            exp_year = int(data.get('exp_year'))
-        except (TypeError, ValueError):
-            return Response({'error': 'exp_month and exp_year must be numbers'}, status=status.HTTP_400_BAD_REQUEST)
-        if exp_month < 1 or exp_month > 12:
-            return Response({'error': 'exp_month must be between 1 and 12'}, status=status.HTTP_400_BAD_REQUEST)
-        if exp_year < 2000:
-            return Response({'error': 'exp_year must be a valid year'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Set ACH fields to empty
-        account_number = ''
-        routing_number = ''
-        bank_name = ''
-        account_type = ''
-    else:
-        # ACH validation
-        required_fields = ['bank_name', 'account_number', 'routing_number']
-        for field in required_fields:
-            if not data.get(field):
-                return Response({'error': f'{field} is required for ACH payment method'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate routing number (9 digits)
-        routing_number = data.get('routing_number', '').replace(' ', '').replace('-', '')
-        if len(routing_number) != 9 or not routing_number.isdigit():
-            return Response({'error': 'Routing number must be exactly 9 digits'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        account_number = data.get('account_number', '').replace(' ', '').replace('-', '')
-        bank_name = data.get('bank_name', '')
-        account_type = data.get('account_type', '')
-        
-        # Extract last4 from account number for display
-        last4 = account_number[-4:] if len(account_number) >= 4 else ''
-        
-        # Set card fields to empty
-        cardholder_name = ''
-        card_number = ''
-        exp_month = None
-        exp_year = None
-
-    payment_method = PaymentMethod.objects.create(
-        user=request.user,
-        nickname=data.get('nickname', ''),
-        method_type=method_type,
-        # Card fields
-        cardholder_name=data.get('cardholder_name', ''),
-        card_number=card_number,
-        brand=data.get('brand', ''),
-        last4=last4,
-        exp_month=exp_month,
-        exp_year=exp_year,
-        billing_address_line1=data.get('billing_address_line1', ''),
-        billing_address_line2=data.get('billing_address_line2', ''),
-        billing_city=data.get('billing_city', ''),
-        billing_state=data.get('billing_state', ''),
-        billing_postal_code=data.get('billing_postal_code', ''),
-        billing_country=data.get('billing_country', ''),
-        # ACH fields
-        bank_name=bank_name,
-        account_type=account_type,
-        account_number=account_number,
-        routing_number=routing_number,
-        bank_address_line1=data.get('bank_address_line1', ''),
-        bank_address_line2=data.get('bank_address_line2', ''),
-        bank_city=data.get('bank_city', ''),
-        bank_state=data.get('bank_state', ''),
-        bank_postal_code=data.get('bank_postal_code', ''),
-        bank_country=data.get('bank_country', ''),
-        is_default=bool(data.get('is_default')),    
-    )
-
-    # Ensure only one default method
-    if payment_method.is_default:
-        PaymentMethod.objects.filter(user=request.user).exclude(id=payment_method.id).update(is_default=False)
-    elif not PaymentMethod.objects.filter(user=request.user).exclude(id=payment_method.id).filter(is_default=True).exists():
-        payment_method.is_default = True
-        payment_method.save(update_fields=['is_default'])
-
-    serializer = PaymentMethodSerializer(payment_method)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-@api_view(['PATCH', 'DELETE'])
-@permission_classes([IsAuthenticated])
-def payment_method_detail(request, method_id):
-    payment_method = get_object_or_404(PaymentMethod, id=method_id, user=request.user)
-
-    if request.method == 'DELETE':
-        payment_method.delete()
-        # Ensure another default exists
-        if not PaymentMethod.objects.filter(user=request.user, is_default=True).exists():
-            next_method = PaymentMethod.objects.filter(user=request.user).order_by('-created_at').first()
-            if next_method:
-                next_method.is_default = True
-                next_method.save(update_fields=['is_default'])
-        return Response({'message': 'Payment method deleted'})
-
-    # PATCH - update
-    data = request.data
-    updated = []
-
-    if 'nickname' in data:
-        payment_method.nickname = data['nickname']
-        updated.append('nickname')
-
-    if 'is_default' in data:
-        is_default = bool(data['is_default'])
-        payment_method.is_default = is_default
-        updated.append('is_default')
-        if is_default:
-            PaymentMethod.objects.filter(user=request.user).exclude(id=payment_method.id).update(is_default=False)
-
-    payment_method.save(update_fields=updated or None)
-    serializer = PaymentMethodSerializer(payment_method)
-    return Response(serializer.data)
-
-
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def user_subscriptions(request):
-    if request.method == 'GET':
-        try:
-            subs = UserSubscription.objects.filter(user=request.user).order_by('-created_at')
-            serializer = UserSubscriptionSerializer(subs, many=True)
-            return Response(serializer.data)
-        except Exception as e:
-            # Handle case where new fields don't exist in database yet (migration not run)
-            # Try to query only existing fields
-            try:
-                subs = UserSubscription.objects.filter(user=request.user).only(
-                    'id', 'plan_name', 'role', 'start_date', 'end_date',
-                    'is_recurring', 'status', 'notes', 'created_at', 'updated_at'
-                ).order_by('-created_at')
-                serializer = UserSubscriptionSerializer(subs, many=True)
-                return Response(serializer.data)
-            except Exception as inner_e:
-                # If that also fails, return empty list
-                logger.error(f"Error loading subscriptions: {str(inner_e)}", exc_info=True)
-                return Response([], status=status.HTTP_200_OK)
-
-    serializer = UserSubscriptionSerializer(data=request.data)
-    if serializer.is_valid():
-        subscription = serializer.save(user=request.user)
-        return Response(UserSubscriptionSerializer(subscription).data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['PATCH', 'DELETE'])
-@permission_classes([IsAuthenticated])
-def subscription_detail(request, subscription_id):
-    subscription = get_object_or_404(UserSubscription, id=subscription_id, user=request.user)
-
-    if request.method == 'DELETE':
-        subscription.status = 'cancelled'
-        subscription.is_recurring = False
-        subscription.save(update_fields=['status', 'is_recurring'])
-        return Response({'message': 'Subscription cancelled'})
-
-    data = request.data
-    if 'is_recurring' in data:
-        subscription.is_recurring = bool(data['is_recurring'])
-    if 'end_date' in data:
-        subscription.end_date = data['end_date'] or None
-    if 'notes' in data:
-        subscription.notes = data['notes']
-    subscription.save()
-    return Response(UserSubscriptionSerializer(subscription).data)
-
-
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def billing_history(request):
-    """List or create billing transactions for the authenticated user"""
-    if request.method == 'GET':
-        # Support filtering by status and date range
-        transactions = BillingTransaction.objects.filter(user=request.user)
-        
-        # Filter by status if provided
-        status_filter = request.query_params.get('status')
-        if status_filter:
-            transactions = transactions.filter(status=status_filter)
-        
-        # Filter by date range if provided
-        start_date = request.query_params.get('start_date')
-        end_date = request.query_params.get('end_date')
-        if start_date:
-            from django.utils.dateparse import parse_date
-            parsed_start = parse_date(start_date)
-            if parsed_start:
-                transactions = transactions.filter(created_at__gte=parsed_start)
-        if end_date:
-            from django.utils.dateparse import parse_date
-            parsed_end = parse_date(end_date)
-            if parsed_end:
-                transactions = transactions.filter(created_at__lte=parsed_end)
-        
-        transactions = transactions.order_by('-created_at')
-        serializer = BillingTransactionSerializer(transactions, many=True)
-        return Response(serializer.data)
-
-    # POST - Create new transaction
-    data = request.data.copy()
-    # Allow status to be set, default to 'pending' if not provided
-    if 'status' not in data:
-        data['status'] = 'pending'
-    
-    serializer = BillingTransactionSerializer(data=data)
-    if serializer.is_valid():
-        transaction = serializer.save(user=request.user)
-        return Response(BillingTransactionSerializer(transaction).data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def billing_summary(request):
-    """Get financial summary for the authenticated user"""
-    from django.db.models import Sum, Count, Q
-    from decimal import Decimal
-    
-    user = request.user
-    
-    # Get all transactions
-    transactions = BillingTransaction.objects.filter(user=user)
-    
-    # Calculate totals by status
-    total_paid = transactions.filter(status='paid').aggregate(
-        total=Sum('amount')
-    )['total'] or Decimal('0.00')
-    
-    total_pending = transactions.filter(status='pending').aggregate(
-        total=Sum('amount')
-    )['total'] or Decimal('0.00')
-    
-    total_failed = transactions.filter(status='failed').aggregate(
-        total=Sum('amount')
-    )['total'] or Decimal('0.00')
-    
-    total_refunded = transactions.filter(status='refunded').aggregate(
-        total=Sum('amount')
-    )['total'] or Decimal('0.00')
-    
-    # Count transactions by status
-    transaction_counts = transactions.values('status').annotate(count=Count('id'))
-    status_counts = {item['status']: item['count'] for item in transaction_counts}
-    
-    # Get active subscriptions
-    active_subs = UserSubscription.objects.filter(
-        user=user,
-        status='active'
-    ).count()
-    
-    # Get default payment method
-    default_payment = PaymentMethod.objects.filter(
-        user=user,
-        is_default=True
-    ).first()
-    
-    default_payment_data = None
-    if default_payment:
-        default_payment_data = PaymentMethodSerializer(default_payment).data
-    
-    return Response({
-        'total_paid': str(total_paid),
-        'total_pending': str(total_pending),
-        'total_failed': str(total_failed),
-        'total_refunded': str(total_refunded),
-        'net_revenue': str(total_paid - total_refunded),
-        'transaction_counts': status_counts,
-        'total_transactions': transactions.count(),
-        'active_subscriptions': active_subs,
-        'default_payment_method': default_payment_data,
-    })
-
-
-@api_view(['PATCH', 'DELETE'])
-@permission_classes([IsAuthenticated])
-def billing_transaction_detail(request, transaction_id):
-    """Update or delete a specific billing transaction"""
-    transaction = get_object_or_404(BillingTransaction, id=transaction_id, user=request.user)
-    
-    if request.method == 'DELETE':
-        transaction.delete()
-        return Response({'message': 'Transaction deleted'}, status=status.HTTP_200_OK)
-    
-    # PATCH - Update transaction
-    data = request.data
-    updated_fields = []
-    
-    # Only allow updating certain fields
-    allowed_fields = ['status', 'description', 'invoice_id', 'metadata']
-    for field in allowed_fields:
-        if field in data:
-            if field == 'metadata' and isinstance(data[field], dict):
-                # Merge metadata if it's a dict
-                current_metadata = transaction.metadata or {}
-                transaction.metadata = {**current_metadata, **data[field]}
-            else:
-                setattr(transaction, field, data[field])
-            updated_fields.append(field)
-    
-    if updated_fields:
-        transaction.save(update_fields=updated_fields)
-    
-    serializer = BillingTransactionSerializer(transaction)
-    return Response(serializer.data)
-
-
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def user_settings(request):
@@ -1129,9 +771,61 @@ def send_verification_email_endpoint(request):
 @permission_classes([AllowAny])
 @rate_limit_api
 def verify_email(request):
-    """Verify email with human-readable code (Public endpoint, rate limited)"""
+    """
+    Verify email - handles two paths:
+    1. Link click: link_click=true - immediately set email_verified=True and delete code
+    2. Manual code entry: verify code first, then set email_verified=True and delete code
+    """
     code = request.data.get('code', '').strip()
+    email = request.data.get('email', '').strip()
+    link_click = request.data.get('link_click', False)  # True if user clicked email link
     
+    # Path 1: Email link click - no code verification needed
+    if link_click:
+        if not email:
+            return Response({'error': 'Email is required for link verification'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = User.objects.get(email=email)
+            profile = user.profile
+            
+            # Check if already verified
+            if profile.email_verified:
+                logger.info(f"Email {email} is already verified")
+                return Response({
+                    'message': 'Email is already verified. Please log in with your username and password.',
+                    'email_verified': True
+                }, status=status.HTTP_200_OK)
+            
+            # Check if link/code is expired
+            if profile.email_verification_sent_at:
+                from django.utils import timezone
+                from datetime import timedelta
+                if timezone.now() - profile.email_verification_sent_at > timedelta(hours=24):
+                    return Response({
+                        'error': 'Verification link has expired. Please request a new verification email.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # User clicked link = proof they received email
+            # Set email_verified = True and delete code
+            profile.email_verified = True
+            profile.email_verification_code = None
+            profile.email_verification_token = None
+            profile.email_verification_sent_at = None
+            profile.save()
+            
+            logger.info(f"Email verified via link click for user {user.email}")
+            return Response({
+                'message': 'Email verified successfully. Please log in with your username and password.',
+                'email_verified': True
+            }, status=status.HTTP_200_OK)
+            
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'User profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Path 2: Manual code entry - verify code first
     if not code:
         return Response({'error': 'Verification code is required'}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -1151,7 +845,6 @@ def verify_email(request):
         logger.warning(f"Verification failed - no matching code found")
         
         # Check if email is provided and already verified
-        email = request.data.get('email', '').strip()
         if email:
             try:
                 user = User.objects.get(email=email)
@@ -1164,22 +857,6 @@ def verify_email(request):
             except (User.DoesNotExist, UserProfile.DoesNotExist, AttributeError):
                 pass
         
-        # Code not found - might be already used (cleared after verification) or invalid
-        # Check if there are recently verified profiles (within last hour) - code might have been used
-        from django.utils import timezone
-        from datetime import timedelta
-        recently_verified = UserProfile.objects.filter(
-            email_verified=True,
-            email_verification_sent_at__gte=timezone.now() - timedelta(hours=1)
-        ).exists()
-        
-        if recently_verified:
-            # Code was likely already used - suggest email is already verified
-            return Response({
-                'message': 'Email is already verified. Please log in with your username and password.',
-                'email_verified': True
-            }, status=status.HTTP_200_OK)
-        
         # Code not found - invalid or expired
         return Response({
             'error': 'Invalid verification code. Please check the code and try again, or request a new verification email.'
@@ -1191,16 +868,21 @@ def verify_email(request):
     
     # Check if already verified
     if verified_profile.email_verified:
-        return Response({'message': 'Email is already verified'}, status=status.HTTP_400_BAD_REQUEST)
+        logger.info(f"User {verified_profile.user.email} is already verified")
+        return Response({
+            'message': 'Email is already verified. Please log in with your username and password.',
+            'email_verified': True
+        }, status=status.HTTP_200_OK)
     
-    # Mark as verified and clear code
+    # Code verified - set email_verified = True and delete code
     verified_profile.email_verified = True
     verified_profile.email_verification_code = None
     verified_profile.email_verification_token = None
     verified_profile.email_verification_sent_at = None
     verified_profile.save()
     
-    # Return success - user must log in with username/password
+    logger.info(f"Email verified successfully via code for user {verified_profile.user.email}")
+    
     return Response({
         'message': 'Email verified successfully. Please log in with your username and password.',
         'email_verified': True
@@ -1301,6 +983,42 @@ def verification_status(request):
         return Response({
             'email_verified': False,
             'email': request.user.email
+        }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@rate_limit_api
+def check_verification_status_by_email(request):
+    """Check email verification status by email address (Public endpoint, rate limited)"""
+    email = request.query_params.get('email', '').strip()
+    
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        # Don't reveal if email exists for security
+        return Response({
+            'email_verified': False,
+            'message': 'If the email exists, verification status has been checked.'
+        }, status=status.HTTP_200_OK)
+    
+    try:
+        profile = user.profile
+        return Response({
+            'email_verified': profile.email_verified,
+            'email': user.email,
+            'has_code': bool(profile.email_verification_code),
+            'code_expired': profile.is_code_expired() if profile.email_verification_code else None
+        }, status=status.HTTP_200_OK)
+    except UserProfile.DoesNotExist:
+        return Response({
+            'email_verified': False,
+            'email': user.email,
+            'has_code': False,
+            'code_expired': None
         }, status=status.HTTP_200_OK)
 
 

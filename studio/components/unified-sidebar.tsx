@@ -25,6 +25,15 @@ import {
   User as UserIcon,
   Cpu,
   Plug,
+  Package,
+  Clock,
+  Cloud,
+  Globe,
+  CircleDollarSign,
+  MapPin,
+  Lock,
+  Database,
+  FileText,
 } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
 
@@ -76,6 +85,15 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Tool: Wrench, // Use Wrench as alternative for Tool icon (Tool doesn't exist in lucide-react)
   Cpu, // AI Health icon
   Plug, // Integrations icon
+  Package, // WordPress icon
+  Clock, // Coming Soon icon
+  Cloud, // Cloud Monitoring icon
+  Globe, // Multi-lingual icon
+  CircleDollarSign, // Multi-currency icon
+  MapPin, // Multi-location icon
+  Lock, // Security icon
+  Database, // Database Monitoring icon
+  FileText, // Blogging icon
 };
 
 export function UnifiedSidebar({ navigation, currentPath, collapsed = false, onToggle }: UnifiedSidebarProps) {
@@ -98,15 +116,28 @@ export function UnifiedSidebar({ navigation, currentPath, collapsed = false, onT
     section.items && section.items.length > 0
   );
 
-  // Safety check: If user has site_audit.view but it's not in navigation, add it
-  // This is a temporary fallback to ensure the item appears
-  if (hasPermission('site_audit.view')) {
-    const hasSiteAudit = filteredSections.some(section => 
-      section.items?.some(item => item.id === 'site_audit')
-    );
-    if (!hasSiteAudit) {
+  // Transform navigation: Move SEO Monitoring to My Tools and rename Monitoring
+  // First, create deep copies of all sections and rename Monitoring
+  const transformedSections = filteredSections.map(section => ({
+    ...section,
+    items: section.items.map(item => {
+      // Rename "Monitoring" to "Site Monitoring"
+      if (item.id === 'monitoring' && item.title === 'Monitoring') {
+        return { ...item, title: 'Site Monitoring' };
+      }
+      return { ...item };
+    })
+  }));
+
+  // Find SEO Monitoring in Coming Soon section and move it to My Tools
+  const comingSoonSection = transformedSections.find(s => s.id === 'coming_soon');
+  if (comingSoonSection) {
+    const seoMonitoringIndex = comingSoonSection.items.findIndex(item => item.id === 'seo_monitoring');
+    if (seoMonitoringIndex !== -1) {
+      const seoMonitoringItem = comingSoonSection.items.splice(seoMonitoringIndex, 1)[0];
+      
       // Find or create "My Tools" section
-      let myToolsSection = filteredSections.find(s => s.id === 'user_features');
+      let myToolsSection = transformedSections.find(s => s.id === 'user_features');
       if (!myToolsSection) {
         myToolsSection = {
           id: 'user_features',
@@ -114,7 +145,33 @@ export function UnifiedSidebar({ navigation, currentPath, collapsed = false, onT
           icon: 'Tool',
           items: []
         };
-        filteredSections.push(myToolsSection);
+        transformedSections.push(myToolsSection);
+      }
+      
+      // Add SEO Monitoring to My Tools if not already there
+      if (!myToolsSection.items?.find(item => item.id === 'seo_monitoring')) {
+        myToolsSection.items.push(seoMonitoringItem);
+      }
+    }
+  }
+
+  // Safety check: If user has site_audit.view but it's not in navigation, add it
+  // This is a temporary fallback to ensure the item appears
+  if (hasPermission('site_audit.view')) {
+    const hasSiteAudit = transformedSections.some(section => 
+      section.items?.some(item => item.id === 'site_audit')
+    );
+    if (!hasSiteAudit) {
+      // Find or create "My Tools" section
+      let myToolsSection = transformedSections.find(s => s.id === 'user_features');
+      if (!myToolsSection) {
+        myToolsSection = {
+          id: 'user_features',
+          title: 'My Tools',
+          icon: 'Tool',
+          items: []
+        };
+        transformedSections.push(myToolsSection);
       }
       // Add site-audit if not present
       if (!myToolsSection.items?.find(item => item.id === 'site_audit')) {
@@ -133,7 +190,7 @@ export function UnifiedSidebar({ navigation, currentPath, collapsed = false, onT
   // Debug in development
   if (process.env.NODE_ENV === 'development') {
     console.log('Sidebar - Navigation sections:', navigation.sections.length);
-    console.log('Sidebar - Filtered sections:', filteredSections.length);
+    console.log('Sidebar - Filtered sections:', transformedSections.length);
     console.log('Sidebar - Permissions:', permissions.length);
     console.log('Sidebar - Full navigation:', JSON.stringify(navigation, null, 2));
     // Check for site-audit specifically
@@ -197,7 +254,7 @@ export function UnifiedSidebar({ navigation, currentPath, collapsed = false, onT
       {/* Navigation Sections */}
       <div className={cn("flex-1 overflow-y-auto", collapsed ? "p-4" : "p-6")}>
         <div className={cn("flex flex-col", collapsed ? "gap-6" : "gap-8")}>
-          {filteredSections.map((section) => (
+          {transformedSections.map((section) => (
             <div key={section.id}>
               {!collapsed && (
                 <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-4">

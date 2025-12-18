@@ -22,6 +22,21 @@ interface RolesListPanelProps {
   onRoleUpdate?: (updatedRole: Role) => void;
 }
 
+// Sort roles by seniority: Admin, Agency, Executive, Director, Manager, Analyst, Auditor, Viewer
+const ROLE_ORDER = ['Admin', 'Agency', 'Executive', 'Director', 'Manager', 'Analyst', 'Auditor', 'Viewer'];
+const sortRoles = (roles: Role[]): Role[] => {
+  return [...roles].sort((a, b) => {
+    const aIndex = ROLE_ORDER.indexOf(a.name);
+    const bIndex = ROLE_ORDER.indexOf(b.name);
+    if (aIndex !== -1 && bIndex !== -1) {
+      return aIndex - bIndex;
+    }
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+    return a.name.localeCompare(b.name);
+  });
+};
+
 export function RolesListPanel({ roles, selectedRole, onRoleSelect, onRefresh, onRoleAdd, onRoleUpdate }: RolesListPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,9 +44,11 @@ export function RolesListPanel({ roles, selectedRole, onRoleSelect, onRefresh, o
   const [newRoleName, setNewRoleName] = useState("");
   const [addLoading, setAddLoading] = useState(false);
 
-  const filteredRoles = roles.filter(role =>
-    role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    role.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRoles = sortRoles(
+    roles.filter(role =>
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.description.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   const getRoleBadgeColor = (role: Role) => {
@@ -44,9 +61,12 @@ export function RolesListPanel({ roles, selectedRole, onRoleSelect, onRefresh, o
   const getRoleIconColor = (role: Role) => {
     switch (role.name.toLowerCase()) {
       case "admin": return "bg-red-600";
+      case "agency": return "bg-indigo-600";
+      case "executive": return "bg-purple-600";
       case "director": return "bg-blue-600";
       case "manager": return "bg-orange-600";
       case "analyst": return "bg-green-600";
+      case "auditor": return "bg-teal-600";
       case "viewer": return "bg-slate-600";
       default: return "bg-palette-primary";
     }

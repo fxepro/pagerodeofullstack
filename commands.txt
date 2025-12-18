@@ -1,3 +1,13 @@
+.\venv\Scripts\Activate.ps1
+python manage.py runserver
+
+npm run dev -p 3001
+
+
+
+
+
+
 https://pagerodeo.com/api/auth/verify-email/
 
 {
@@ -83,7 +93,7 @@ C:\Users\fxepro\AIProjects\pagerodeo\pagerodeo-v21 - fullstarep> .\scripts\test-
 curl -i http://129.146.57.158/api/palettes/active/
 
 
-npm run devnpm run build
+npm run dev npm run build
 npm run start -- -p 3001
 
 
@@ -92,7 +102,10 @@ source venv/bin/activate
 python manage.py migrate
 
 Quick Deployment Commands:
-# 1. SSH to VMssh opc@129.146.57.158# 
+# 1. SSH to VM
+ssh opc@129.146.57.158
+# Or if using SSH key:
+ssh -i /path/to/your/private_key.pem opc@129.146.57.158 
 
 2. Navigate and pull
 cd /opt/pagerodeofullstack
@@ -108,7 +121,7 @@ npm run build#
 
 5. Restart services
 sudo systemctl restart pagerodeo-backend
-sudo systemctl restart pagerodeo-frontend# '
+sudo systemctl restart pagerodeo-frontend
 
 6. Verify
 sudo systemctl status pagerodeo-backend

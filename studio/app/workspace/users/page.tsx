@@ -15,6 +15,66 @@ import axios from "axios";
 // Use relative URL in production (browser), localhost in dev (SSR)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
+// Helper function to refresh token
+const refreshAccessToken = async (): Promise<string | null> => {
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) {
+    return null;
+  }
+  
+  try {
+    const res = await axios.post(`${API_BASE}/api/token/refresh/`, {
+      refresh: refreshToken,
+    });
+    const newAccessToken = res.data.access;
+    localStorage.setItem("access_token", newAccessToken);
+    // Update refresh token if a new one is provided (token rotation)
+    if (res.data.refresh) {
+      localStorage.setItem("refresh_token", res.data.refresh);
+    }
+    return newAccessToken;
+  } catch (err) {
+    console.error("Token refresh failed:", err);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    return null;
+  }
+};
+
+// Helper function to make authenticated request with retry
+const makeAuthenticatedRequest = async (url: string, config: any = {}) => {
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    throw new Error("No access token available");
+  }
+
+  try {
+    return await axios.get(url, {
+      ...config,
+      headers: {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (err: any) {
+    // If 401, try to refresh token and retry
+    if (err.response?.status === 401) {
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        return await axios.get(url, {
+          ...config,
+          headers: {
+            ...config.headers,
+            Authorization: `Bearer ${newToken}`,
+          },
+        });
+      }
+      throw err; // Re-throw if refresh failed
+    }
+    throw err;
+  }
+};
+
 interface User {
   id: number;
   username: string;
@@ -66,15 +126,14 @@ export default function AdminUsersPage() {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      if (!token) return;
+      if (!token) {
+        router.push("/workspace/login");
+        return;
+      }
 
       const [usersResponse, statsResponse] = await Promise.all([
-        axios.get(`${API_BASE}/api/users/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get(`${API_BASE}/api/users/stats/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        makeAuthenticatedRequest(`${API_BASE}/api/users/`),
+        makeAuthenticatedRequest(`${API_BASE}/api/users/stats/`),
       ]);
 
       setUsers(usersResponse.data);
@@ -87,7 +146,7 @@ export default function AdminUsersPage() {
       if (error.response?.status === 403) {
         setError("You don't have permission to access this page. Admin access required.");
       } else if (error.response?.status === 401) {
-        // Token expired
+        // Token expired and refresh failed
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
         router.push("/workspace/login");

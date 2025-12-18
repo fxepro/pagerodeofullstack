@@ -1,367 +1,271 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  ArrowRight, 
-  TrendingUp, 
-  Zap, 
-  Shield, 
-  Globe,
-  FileText,
-  BarChart3
-} from "lucide-react";
+"use client";
 
-export const metadata: Metadata = {
-  title: "PageRodeo Blog - Web Performance Insights & Optimization Tips",
-  description: "Expert insights on web performance optimization, Core Web Vitals, SEO best practices, and website speed improvement strategies. Learn from performance testing experts.",
-  keywords: "web performance, Core Web Vitals, SEO optimization, website speed, performance testing, PageSpeed Insights, Lighthouse, web optimization",
-  authors: [{ name: "PageRodeo Team" }],
-  openGraph: {
-    title: "PageRodeo Blog - Web Performance Insights & Optimization Tips",
-    description: "Expert insights on web performance optimization, Core Web Vitals, SEO best practices, and website speed improvement strategies.",
-    type: "website",
-    url: "https://pagerodeo.com/blog",
-    siteName: "PageRodeo",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "PageRodeo Blog - Web Performance Insights & Optimization Tips",
-    description: "Expert insights on web performance optimization, Core Web Vitals, SEO best practices, and website speed improvement strategies.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-};
-
-// Sample blog posts data
-const blogPosts = [
-  {
-    id: 1,
-    title: "Understanding Core Web Vitals: The Complete Guide to Web Performance Metrics",
-    excerpt: "Learn everything about Core Web Vitals - LCP, FID, and CLS. Discover how these metrics impact your SEO rankings and user experience.",
-    content: "Core Web Vitals are a set of specific factors that Google considers important in a webpage's overall user experience. These metrics measure real-world user experience for loading performance, interactivity, and visual stability...",
-    author: "Sarah Johnson",
-    date: "2024-01-15",
-    readTime: "8 min read",
-    category: "Performance",
-    tags: ["Core Web Vitals", "SEO", "Performance", "Google"],
-    featured: true,
-    image: "/blog/core-web-vitals.jpg"
-  },
-  {
-    id: 2,
-    title: "10 Proven Strategies to Improve Your Website's Loading Speed",
-    excerpt: "Discover actionable techniques to reduce your website's loading time and improve user experience. From image optimization to code splitting.",
-    content: "Website speed is crucial for user experience and SEO rankings. A slow website can lead to higher bounce rates and lower conversion rates. Here are 10 proven strategies to improve your website's loading speed...",
-    author: "Mike Chen",
-    date: "2024-01-12",
-    readTime: "6 min read",
-    category: "Optimization",
-    tags: ["Speed", "Optimization", "Performance", "Tips"],
-    featured: true,
-    image: "/blog/website-speed.jpg"
-  },
-  {
-    id: 3,
-    title: "The Impact of Mobile Performance on SEO Rankings in 2024",
-    excerpt: "Explore how mobile performance affects your search engine rankings and learn best practices for mobile optimization.",
-    content: "Mobile performance has become increasingly important for SEO rankings. With Google's mobile-first indexing, your mobile site performance directly impacts your search visibility...",
-    author: "Emily Rodriguez",
-    date: "2024-01-10",
-    readTime: "7 min read",
-    category: "SEO",
-    tags: ["Mobile", "SEO", "Rankings", "2024"],
-    featured: false,
-    image: "/blog/mobile-seo.jpg"
-  },
-  {
-    id: 4,
-    title: "Lighthouse vs PageSpeed Insights: Which Tool Should You Use?",
-    excerpt: "Compare Google's two main performance testing tools and understand when to use each for optimal results.",
-    content: "Both Lighthouse and PageSpeed Insights are powerful tools for measuring web performance, but they serve different purposes. Understanding their differences can help you choose the right tool for your needs...",
-    author: "David Kim",
-    date: "2024-01-08",
-    readTime: "5 min read",
-    category: "Tools",
-    tags: ["Lighthouse", "PageSpeed", "Tools", "Comparison"],
-    featured: false,
-    image: "/blog/lighthouse-vs-pagespeed.jpg"
-  },
-  {
-    id: 5,
-    title: "Image Optimization: The Complete Guide to Faster Loading Images",
-    excerpt: "Learn advanced image optimization techniques including WebP, lazy loading, and responsive images to boost your site's performance.",
-    content: "Images often account for the largest portion of a webpage's size. Proper image optimization can significantly improve your site's loading speed and user experience...",
-    author: "Lisa Wang",
-    date: "2024-01-05",
-    readTime: "9 min read",
-    category: "Optimization",
-    tags: ["Images", "Optimization", "WebP", "Performance"],
-    featured: false,
-    image: "/blog/image-optimization.jpg"
-  },
-  {
-    id: 6,
-    title: "JavaScript Performance: How to Optimize Your Code for Better Speed",
-    excerpt: "Discover JavaScript optimization techniques including code splitting, tree shaking, and bundle optimization for improved performance.",
-    content: "JavaScript can significantly impact your website's performance. Large JavaScript bundles can slow down your site and affect user experience. Here's how to optimize your JavaScript code...",
-    author: "Alex Thompson",
-    date: "2024-01-03",
-    readTime: "10 min read",
-    category: "Development",
-    tags: ["JavaScript", "Performance", "Code", "Optimization"],
-    featured: false,
-    image: "/blog/javascript-optimization.jpg"
-  }
-];
-
-const categories = [
-  { name: "Performance", count: 2, icon: TrendingUp },
-  { name: "Optimization", count: 2, icon: Zap },
-  { name: "SEO", count: 1, icon: BarChart3 },
-  { name: "Tools", count: 1, icon: Shield },
-  { name: "Development", count: 1, icon: Globe }
-];
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Search, Calendar, User, Clock, ArrowRight } from 'lucide-react';
+import { fetchFeaturedPosts, fetchRecentPosts, fetchCategories, fetchTags, type BlogPost, type Category, type Tag } from '@/lib/api/blog';
+import { format } from 'date-fns';
 
 export default function BlogPage() {
-  const featuredPosts = blogPosts.filter(post => post.featured);
-  const recentPosts = blogPosts.filter(post => !post.featured).slice(0, 4);
+  const router = useRouter();
+  const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
+  const [recentPosts, setRecentPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [featured, recent, cats, tagList] = await Promise.all([
+        fetchFeaturedPosts(),
+        fetchRecentPosts(10),
+        fetchCategories(),
+        fetchTags(),
+      ]);
+      setFeaturedPosts(featured);
+      setRecentPosts(recent);
+      setCategories(cats);
+      setTags(tagList);
+    } catch (error) {
+      console.error('Error loading blog data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      router.push(`/blog?search=${encodeURIComponent(searchTerm)}`);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-palette-primary mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading blog posts...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-palette-primary to-blue-600 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              PageRodeo Blog
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto">
-              Expert insights on web performance optimization, Core Web Vitals, SEO best practices, and website speed improvement strategies.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                <TrendingUp className="h-4 w-4 mr-1" />
-                Performance Tips
-              </Badge>
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                <Zap className="h-4 w-4 mr-1" />
-                Optimization
-              </Badge>
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                <BarChart3 className="h-4 w-4 mr-1" />
-                SEO Insights
-              </Badge>
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                <Shield className="h-4 w-4 mr-1" />
-                Best Practices
-              </Badge>
+    <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Blog</h1>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            Insights, tips, and updates about website performance, SEO, and digital marketing
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder="Search posts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                className="pl-10"
+              />
             </div>
+            <Button onClick={handleSearch}>Search</Button>
           </div>
         </div>
-      </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2 space-y-8">
             {/* Featured Posts */}
-            <section className="mb-12">
-              <h2 className="text-3xl font-bold text-slate-800 mb-8 flex items-center">
-                <FileText className="h-8 w-8 mr-3 text-palette-primary" />
-                Featured Articles
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {featuredPosts.map((post) => (
-                  <Card key={post.id} className="group hover:shadow-lg transition-all duration-300">
-                    <CardHeader>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className="text-palette-primary border-palette-accent-2">
-                          {post.category}
-                        </Badge>
-                        <Badge variant="secondary" className="bg-palette-accent-3 text-palette-primary">
-                          Featured
-                        </Badge>
-                      </div>
-                      <CardTitle className="group-hover:text-palette-primary transition-colors">
-                        {post.title}
-                      </CardTitle>
-                      <CardDescription className="text-slate-600">
-                        {post.excerpt}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between text-sm text-slate-500 mb-4">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1">
-                            <User className="h-4 w-4" />
-                            {post.author}
+            {featuredPosts.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold mb-6">Featured Posts</h2>
+                <div className="space-y-6">
+                  {featuredPosts.map((post) => (
+                    <Card key={post.id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-6">
+                        <Link href={`/blog/${post.slug}`}>
+                          <div className="flex gap-6">
+                            {post.featured_image_url && (
+                              <div className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                                <Image
+                                  src={post.featured_image_url}
+                                  alt={post.title}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                {post.category && (
+                                  <Badge variant="outline">{post.category.name}</Badge>
+                                )}
+                                <Badge>Featured</Badge>
+                              </div>
+                              <h3 className="text-xl font-semibold mb-2 hover:text-palette-primary">
+                                {post.title}
+                              </h3>
+                              {post.excerpt && (
+                                <p className="text-muted-foreground mb-4 line-clamp-2">
+                                  {post.excerpt}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  {post.author.full_name || post.author.username}
+                                </span>
+                                {post.published_at && (
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="h-4 w-4" />
+                                    {format(new Date(post.published_at), 'MMM d, yyyy')}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  {post.read_time} min read
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(post.date).toLocaleDateString()}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {post.readTime}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {post.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <Button variant="outline" className="group-hover:bg-palette-primary group-hover:text-white group-hover:border-palette-primary transition-all">
-                        Read More
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
+                        </Link>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </section>
+            )}
 
             {/* Recent Posts */}
-            <section>
-              <h2 className="text-3xl font-bold text-slate-800 mb-8 flex items-center">
-                <TrendingUp className="h-8 w-8 mr-3 text-palette-primary" />
-                Latest Articles
-              </h2>
-              <div className="space-y-6">
-                {recentPosts.map((post) => (
-                  <Card key={post.id} className="group hover:shadow-lg transition-all duration-300">
-                    <div className="flex flex-col md:flex-row">
-                      <div className="md:w-2/3 p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className="text-palette-primary border-palette-accent-2">
-                            {post.category}
-                          </Badge>
-                        </div>
-                        <CardTitle className="group-hover:text-palette-primary transition-colors mb-2">
-                          {post.title}
-                        </CardTitle>
-                        <CardDescription className="text-slate-600 mb-4">
-                          {post.excerpt}
-                        </CardDescription>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 text-sm text-slate-500">
-                            <div className="flex items-center gap-1">
-                              <User className="h-4 w-4" />
-                              {post.author}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              {new Date(post.date).toLocaleDateString()}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              {post.readTime}
+            {recentPosts.length > 0 && (
+              <div>
+                <h2 className="text-2xl font-bold mb-6">Recent Posts</h2>
+                <div className="space-y-6">
+                  {recentPosts.map((post) => (
+                    <Card key={post.id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-6">
+                        <Link href={`/blog/${post.slug}`}>
+                          <div className="flex gap-6">
+                            {post.featured_image_url && (
+                              <div className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                                <Image
+                                  src={post.featured_image_url}
+                                  alt={post.title}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                {post.category && (
+                                  <Badge variant="outline">{post.category.name}</Badge>
+                                )}
+                              </div>
+                              <h3 className="text-xl font-semibold mb-2 hover:text-palette-primary">
+                                {post.title}
+                              </h3>
+                              {post.excerpt && (
+                                <p className="text-muted-foreground mb-4 line-clamp-2">
+                                  {post.excerpt}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <User className="h-4 w-4" />
+                                  {post.author.full_name || post.author.username}
+                                </span>
+                                {post.published_at && (
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="h-4 w-4" />
+                                    {format(new Date(post.published_at), 'MMM d, yyyy')}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  {post.read_time} min read
+                                </span>
+                              </div>
                             </div>
                           </div>
-                          <Button variant="outline" size="sm" className="group-hover:bg-palette-primary group-hover:text-white group-hover:border-palette-primary transition-all">
-                            Read More
-                            <ArrowRight className="h-4 w-4 ml-2" />
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="md:w-1/3 p-6 flex items-center justify-center bg-slate-50">
-                        <div className="w-full h-32 bg-gradient-to-br from-palette-accent-3 to-blue-100 rounded-lg flex items-center justify-center">
-                          <FileText className="h-12 w-12 text-palette-accent-2" />
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                        </Link>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </section>
+            )}
+
+            {featuredPosts.length === 0 && recentPosts.length === 0 && (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">No blog posts available yet.</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-8 space-y-8">
-              {/* Categories */}
+          <div className="space-y-6">
+            {/* Categories */}
+            {categories.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Categories</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {categories.map((category) => {
-                    const Icon = category.icon;
-                    return (
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-4">Categories</h3>
+                  <div className="space-y-2">
+                    {categories.map((category) => (
                       <Link
-                        key={category.name}
-                        href={`/blog/category/${category.name.toLowerCase()}`}
-                        className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 transition-colors group"
+                        key={category.id}
+                        href={`/blog?category=${category.slug}`}
+                        className="flex items-center justify-between p-2 rounded hover:bg-accent transition-colors"
                       >
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4 text-palette-primary" />
-                          <span className="text-sm group-hover:text-palette-primary transition-colors">
-                            {category.name}
-                          </span>
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {category.count}
-                        </Badge>
+                        <span>{category.name}</span>
+                        <Badge variant="secondary">{category.post_count}</Badge>
                       </Link>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-
-              {/* Newsletter Signup */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Stay Updated</CardTitle>
-                  <CardDescription>
-                    Get the latest performance tips and insights delivered to your inbox.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-palette-primary"
-                    />
-                    <Button className="w-full bg-palette-primary hover:bg-palette-primary-hover">
-                      Subscribe
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Popular Tags */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Popular Tags</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {["Performance", "SEO", "Optimization", "Core Web Vitals", "Lighthouse", "Speed", "Mobile", "JavaScript"].map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs hover:bg-palette-accent-3 hover:border-palette-accent-2 cursor-pointer">
-                        {tag}
-                      </Badge>
                     ))}
                   </div>
                 </CardContent>
               </Card>
-            </div>
+            )}
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-4">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag) => (
+                      <Link
+                        key={tag.id}
+                        href={`/blog?tag=${tag.slug}`}
+                        className="inline-block"
+                      >
+                        <Badge variant="outline" className="hover:bg-accent">
+                          {tag.name}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

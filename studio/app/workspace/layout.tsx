@@ -84,9 +84,11 @@ export default function WorkspaceLayout({
     };
 
     // Fetch user info and navigation
+    // Add cache-busting timestamp to ensure fresh data (prevents browser/API caching)
+    const cacheBuster = `?t=${Date.now()}`;
     Promise.all([
-      makeRequest(`${API_BASE}/api/user-info/`, token),
-      makeRequest(`${API_BASE}/api/navigation/`, token),
+      makeRequest(`${API_BASE}/api/user-info/${cacheBuster}`, token),
+      makeRequest(`${API_BASE}/api/navigation/${cacheBuster}`, token),
     ])
       .then(([userRes, navRes]) => {
         setUser(userRes.data);
@@ -103,12 +105,17 @@ export default function WorkspaceLayout({
               console.log(`  - ${item.id}: ${item.title} (${item.href})`);
             });
           });
-          const siteAuditItem = allSections
-            .flatMap((s: any) => s.items || [])
-            .find((item: any) => item.id === 'site_audit');
+          // Check for specific items
+          const allItems = allSections.flatMap((s: any) => s.items || []);
+          const siteAuditItem = allItems.find((item: any) => item.id === 'site_audit');
+          const aiMonitoringItem = allItems.find((item: any) => item.id === 'ai_health');
+          const dbMonitoringItem = allItems.find((item: any) => item.id === 'database_monitoring');
           console.log('Site Audit item found:', siteAuditItem);
+          console.log('AI Monitoring item found:', aiMonitoringItem);
+          console.log('Database Monitoring item found:', dbMonitoringItem);
           console.log('User permissions:', userRes.data?.permissions?.length || 0);
-          console.log('Has site_audit.view:', userRes.data?.permissions?.includes('site_audit.view'));
+          console.log('Has ai_health.view:', userRes.data?.permissions?.includes('ai_health.view'));
+          console.log('Has database_monitoring.view:', userRes.data?.permissions?.includes('database_monitoring.view'));
           console.log('======================');
         }
         setLoading(false);

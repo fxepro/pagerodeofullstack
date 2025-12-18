@@ -229,8 +229,11 @@ export default function RegisterPage() {
                   <SelectContent>
                     <SelectItem value="viewer">Viewer - Basic access</SelectItem>
                     <SelectItem value="analyst">Analyst - Advanced features</SelectItem>
+                    <SelectItem value="auditor">Auditor - Audit and reporting</SelectItem>
                     <SelectItem value="manager">Manager - Management tools</SelectItem>
                     <SelectItem value="director">Director - Executive access</SelectItem>
+                    <SelectItem value="executive">Executive - Strategic planning</SelectItem>
+                    <SelectItem value="agency">Agency - Agency management</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -291,11 +294,13 @@ export default function RegisterPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">No demo access</SelectItem>
+                    <SelectItem value="viewer">Viewer Plan Demo</SelectItem>
                     <SelectItem value="analyst">Analyst Plan Demo</SelectItem>
                     <SelectItem value="auditor">Auditor Plan Demo</SelectItem>
                     <SelectItem value="manager">Manager Plan Demo</SelectItem>
                     <SelectItem value="director">Director Plan Demo</SelectItem>
                     <SelectItem value="executive">Executive Plan Demo</SelectItem>
+                    <SelectItem value="agency">Agency Plan Demo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
