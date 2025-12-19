@@ -46,6 +46,7 @@ urlpatterns = [
     path('', include('multilocation.urls')),
     path('', include('multilanguage.urls')),
     path('api/blog/', include('blog.urls')),
+    path('', lambda request: HttpResponse("Pagerodeo backend is live 🚀")),
 ]
 
 # Add site_settings URLs explicitly
