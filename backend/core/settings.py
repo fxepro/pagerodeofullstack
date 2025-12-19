@@ -150,7 +150,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-lc*ju4=46*vlq62ladn2_
 DEBUG = get_env_bool('DEBUG', default=True)
 
 # ALLOWED_HOSTS - must be set in production via environment variable
-ALLOWED_HOSTS = get_env_list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
+ALLOWED_HOSTS = get_env_list('ALLOWED_HOSTS', default=['18.219.75.17', 'localhost', '127.0.0.1'])
 
 # Frontend URL - used for email verification links and other frontend redirects
 # Set via environment variable: FRONTEND_URL=https://pagerodeo.com
