@@ -56,6 +56,8 @@ db.sqlite3-journal
 /media
 /staticfiles
 /static
+backend/staticfiles/
+staticfiles/
 
 # Logs
 logs/
