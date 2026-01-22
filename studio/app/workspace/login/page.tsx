@@ -67,7 +67,15 @@ export default function WorkspaceLoginPage() {
         router.push("/workspace");
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.response?.data?.error || "Login failed. Please check your credentials.");
+      console.error('Login error:', err);
+      const errorMessage = err.response?.data?.detail || 
+                          err.response?.data?.error || 
+                          err.response?.data?.message ||
+                          (err.response?.status === 401 ? "Invalid username or password. Please check your credentials." : 
+                           err.response?.status === 400 ? "Invalid request. Please check your input." :
+                           err.response?.status === 500 ? "Server error. Please try again later." :
+                           err.message || "Login failed. Please check your credentials.");
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -106,6 +114,8 @@ export default function WorkspaceLoginPage() {
                 <Input
                   id="username"
                   type="text"
+                  name="username"
+                  autoComplete="username"
                   placeholder="Enter your username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -123,6 +133,8 @@ export default function WorkspaceLoginPage() {
                 <Input
                   id="password"
                   type="password"
+                  name="password"
+                  autoComplete="current-password"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
