@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -36,16 +38,26 @@ from core.rate_limiting import rate_limit_login, rate_limit_api
 def favicon_view(request):
     return HttpResponse(status=204)  # No Content
 
-urlpatterns = [
+# Start with empty urlpatterns - we'll add static files FIRST
+urlpatterns = []
+
+# CRITICAL: Static files MUST be added FIRST before any catch-all routes
+# Otherwise catch-all routes intercept /static/ requests and return 404/HTML
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+urlpatterns += [
     # Django admin at /django-admin/ to avoid conflict with Next.js app admin
     path('django-admin/', admin.site.urls),
+    path('api/blog/', include('blog.urls')),
     path('', include('users.urls')),
     path('', include('financials.urls')),
+    path('', include('marketing.urls')),
     path('', include('emails.urls')),
     path('', include('dns.urls')),
     path('', include('multilocation.urls')),
     path('', include('multilanguage.urls')),
-    path('api/blog/', include('blog.urls')),
+    # Catch-all route - must be last to avoid intercepting other routes
     path('', lambda request: HttpResponse("Pagerodeo backend is live 🚀")),
 ]
 
@@ -93,5 +105,13 @@ urlpatterns += [
     path('', include('typography_analysis.urls')),
     path('', include('monitor_analysis.urls')),
     path('', include('monitoring.urls')),  # Monitoring API endpoints
+    path('api/admin/databases/', include('db_management.urls')),  # Database Management
+    path('api/collateral/', include('collateral.urls')),  # Learning Materials (Collateral)
+    path('api/affiliates/', include('affiliates.urls')),  # Affiliates Management
+    path('api/security/', include('security_monitoring.urls')),  # Security Monitoring
     path('favicon.ico', favicon_view, name='favicon'),  # Prevent 404s in logs
 ]
+
+# Serve media files if needed (static files already handled above at the start)
+if settings.DEBUG and hasattr(settings, 'MEDIA_URL') and hasattr(settings, 'MEDIA_ROOT'):
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

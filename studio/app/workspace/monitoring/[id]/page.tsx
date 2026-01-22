@@ -343,7 +343,7 @@ export default function MonitoringDetailPage() {
               ) : (
                 <AlertCircle className="h-6 w-6 text-red-600" />
               )}
-              <div className={`text-2xl font-bold ${siteDetail.status === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-h2-dynamic font-bold ${siteDetail.status === 'up' ? 'text-green-600' : 'text-red-600'}`}>
                 {siteDetail.status === 'up' ? 'Up' : 'Down'}
               </div>
             </div>
@@ -429,7 +429,7 @@ export default function MonitoringDetailPage() {
               <CardTitle className="text-sm font-medium text-slate-600">Uptime (24h)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-slate-800">
+              <div className="text-h1-dynamic font-bold text-slate-800">
                 {uptimeData.uptime_24h?.toFixed(3) || '100.000'}%
               </div>
               <p className="text-xs text-slate-600 mt-2">
@@ -443,7 +443,7 @@ export default function MonitoringDetailPage() {
               <CardTitle className="text-sm font-medium text-slate-600">Uptime (7d)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-slate-800">
+              <div className="text-h1-dynamic font-bold text-slate-800">
                 {uptimeData.uptime_7d?.toFixed(3) || '100.000'}%
               </div>
               <p className="text-xs text-slate-600 mt-2">
@@ -457,7 +457,7 @@ export default function MonitoringDetailPage() {
               <CardTitle className="text-sm font-medium text-slate-600">Uptime (30d)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-slate-800">
+              <div className="text-h1-dynamic font-bold text-slate-800">
                 {uptimeData.uptime_30d?.toFixed(3) || '100.000'}%
               </div>
               <p className="text-xs text-slate-600 mt-2">
@@ -619,7 +619,7 @@ export default function MonitoringDetailPage() {
       <div className="flex items-center gap-3 mt-8 mb-4">
         <div className="flex items-center gap-2">
           <Monitor className="h-5 w-5 text-palette-primary" />
-          <h2 className="text-xl font-bold text-slate-800 font-montserrat">Device Performance Testing</h2>
+          <h2 className="text-h3-dynamic font-bold text-slate-800 font-montserrat">Device Performance Testing</h2>
         </div>
         <div className="h-px flex-1 bg-gradient-to-r from-slate-300 to-transparent"></div>
       </div>
@@ -632,7 +632,7 @@ export default function MonitoringDetailPage() {
         <div className="flex items-center gap-3 mt-8 mb-4">
           <div className="flex items-center gap-2">
             <ExternalLink className="h-5 w-5 text-palette-primary" />
-            <h2 className="text-xl font-bold text-slate-800 font-montserrat">Site Links Analysis</h2>
+            <h2 className="text-h3-dynamic font-bold text-slate-800 font-montserrat">Site Links Analysis</h2>
           </div>
           <div className="h-px flex-1 bg-gradient-to-r from-slate-300 to-transparent"></div>
         </div>
@@ -645,7 +645,7 @@ export default function MonitoringDetailPage() {
           <Card className="border-slate-200">
             <CardContent className="pt-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-slate-800">
+                <div className="text-h1-dynamic font-bold text-slate-800">
                   {siteDetail.siteLinks.length}
                 </div>
                 <p className="text-sm text-slate-600 mt-1">Total Pages</p>
@@ -657,7 +657,7 @@ export default function MonitoringDetailPage() {
           <Card className="border-green-200 bg-green-50">
             <CardContent className="pt-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">
+                <div className="text-h1-dynamic font-bold text-green-600">
                   {siteDetail.siteLinks.filter(l => l.status >= 200 && l.status < 300).length}
                 </div>
                 <p className="text-sm text-green-700 mt-1">OK (2xx)</p>
@@ -670,7 +670,7 @@ export default function MonitoringDetailPage() {
             <Card className="border-yellow-200 bg-yellow-50">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-yellow-600">
+                  <div className="text-h1-dynamic font-bold text-yellow-600">
                     {siteDetail.siteLinks.filter(l => l.status >= 300 && l.status < 400).length}
                   </div>
                   <p className="text-sm text-yellow-700 mt-1">Redirects (3xx)</p>
@@ -684,7 +684,7 @@ export default function MonitoringDetailPage() {
             <Card className="border-orange-200 bg-orange-50">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-orange-600">
+                  <div className="text-h1-dynamic font-bold text-orange-600">
                     {siteDetail.siteLinks.filter(l => l.status >= 400 && l.status < 500).length}
                   </div>
                   <p className="text-sm text-orange-700 mt-1">
@@ -705,7 +705,7 @@ export default function MonitoringDetailPage() {
             <Card className="border-red-200 bg-red-50">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-red-600">
+                  <div className="text-h1-dynamic font-bold text-red-600">
                     {siteDetail.siteLinks.filter(l => l.status >= 500).length}
                   </div>
                   <p className="text-sm text-red-700 mt-1">Server Errors (5xx)</p>
@@ -719,7 +719,7 @@ export default function MonitoringDetailPage() {
             <Card className="border-red-200 bg-red-50">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-red-600">
+                  <div className="text-h1-dynamic font-bold text-red-600">
                     {siteDetail.siteLinks.filter(l => l.status === 0).length}
                   </div>
                   <p className="text-sm text-red-700 mt-1">Network Errors</p>

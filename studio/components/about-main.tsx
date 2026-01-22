@@ -21,57 +21,18 @@ import {
   Brain
 } from "lucide-react"
 import Link from "next/link"
+import { SimpleHeroSection } from "@/components/simple-hero-section"
 
 export function AboutMain() {
   return (
     <div className="min-h-screen overflow-x-hidden">
-      {/* Hero Section */}
-      <section className="relative min-h-[60vh] flex items-center justify-center bg-gradient-to-br from-palette-accent-2 via-palette-accent-1 to-palette-primary">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -inset-10 opacity-35">
-            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-palette-primary-hover rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-pulse"></div>
-            <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-800 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-pulse animation-delay-2000"></div>
-            <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-palette-primary rounded-full mix-blend-multiply filter blur-2xl opacity-55 animate-pulse animation-delay-4000"></div>
-          </div>
-        </div>
-        
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:100px_100px]"></div>
-        
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <div className="mb-8">
-            <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
-              <Code className="h-4 w-4 mr-2" />
-              Built with Passion
-            </Badge>
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            About PageRodeo
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-8 leading-relaxed">
-            Created and coded by a <span className="text-white font-semibold">solopreneur from Colorado</span>, 
-            easing the pain of finding and chasing performance metrics.
-          </p>
-          
-          <div className="flex flex-wrap justify-center gap-3 mb-8">
-            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              <Mountain className="h-4 w-4 inline mr-2" />
-              Colorado Built
-            </div>
-            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              <Heart className="h-4 w-4 inline mr-2" />
-              Passion Project
-            </div>
-            <div className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium">
-              <Target className="h-4 w-4 inline mr-2" />
-              Problem Solver
-            </div>
-          </div>
-        </div>
-      </section>
+      <SimpleHeroSection
+        title="About PageRodeo"
+        subtitle="Created and coded by a solopreneur from Colorado, easing the pain of finding and chasing performance metrics."
+        gradientFrom="from-palette-accent-2"
+        gradientVia="via-palette-accent-1"
+        gradientTo="to-palette-primary"
+      />
 
       {/* Main Content */}
       <div className="bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
@@ -81,7 +42,7 @@ export function AboutMain() {
           <div className="mb-16">
             <Card className="border-palette-accent-2/50 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-slate-800 flex items-center gap-2 text-3xl">
+                <CardTitle className="text-slate-800 flex items-center gap-2 text-h1-dynamic">
                   <Lightbulb className="h-8 w-8 text-palette-primary" />
                   The Story Behind PageRodeo
                 </CardTitle>
@@ -91,31 +52,31 @@ export function AboutMain() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="prose prose-lg max-w-none text-slate-700">
-                  <p className="text-xl leading-relaxed mb-6">
+                  <p className="text-h3-dynamic leading-relaxed mb-6">
                     <strong>This is the tool that I built for myself and then made available to everyone.</strong>
                   </p>
                   
-                  <p className="text-lg leading-relaxed mb-6">
+                  <p className="text-h4-dynamic leading-relaxed mb-6">
                     As a solopreneur working from the beautiful mountains of Colorado, I found myself constantly 
                     struggling with the same problem: <em>finding and chasing performance metrics</em> across 
                     multiple tools and platforms. The pain was real - scattered data, confusing interfaces, 
                     and expensive solutions that didn't quite fit my needs.
                   </p>
                   
-                  <p className="text-lg leading-relaxed mb-6">
+                  <p className="text-h4-dynamic leading-relaxed mb-6">
                     After finding the metrics, sometimes partial, sometimes complete, I didn't know what to do. 
                     Then research again ensued, perusing one website page after another to find solutions. 
                     Hours turned into days, days into weeks, as I dug through documentation, forums, and 
                     countless articles. And then I figured it out myself.
                   </p>
                   
-                  <p className="text-lg leading-relaxed mb-6">
+                  <p className="text-h4-dynamic leading-relaxed mb-6">
                     So I did what any developer would do - I built my own solution. PageRodeo started as a 
                     personal project to consolidate all the performance testing, monitoring, and analysis 
                     tools I needed into one simple, powerful platform.
                   </p>
                   
-                  <p className="text-lg leading-relaxed mb-6">
+                  <p className="text-h4-dynamic leading-relaxed mb-6">
                     <strong>If you have the time to figure it out yourself, do so.</strong> But if not, 
                     let our service consultants help you sort it out. We understand the frustration of 
                     knowing what's wrong but not knowing how to fix it - that's where our expertise comes in.
@@ -276,7 +237,7 @@ export function AboutMain() {
                     <strong>For features to be implemented, please buy the services if it's currently useful.</strong>
                   </p>
                   
-                  <p className="text-lg leading-relaxed mb-6">
+                  <p className="text-h4-dynamic leading-relaxed mb-6">
                     If not, provide feedback to make it better. Every purchase helps fund new features, 
                     better infrastructure, and continued development. Your support directly enables:
                   </p>

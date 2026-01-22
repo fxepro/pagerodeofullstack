@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import axios from "axios";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Lock, LogIn, UserPlus } from "lucide-react";
 import { captureEvent, identifyUser } from "@/lib/posthog";
+import { SimpleHeroSection } from "@/components/simple-hero-section";
 
 // Use relative URL in production (browser), localhost in dev (SSR)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
@@ -73,22 +73,18 @@ export default function WorkspaceLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3 p-4">
-      {/* Logo at the top */}
-      <div className="mb-8">
-        <Link href="/" className="block">
-          <Image 
-            src="/Pagerodeo-Logo-Black.png" 
-            alt="PageRodeo Logo" 
-            width={200} 
-            height={50}
-            className="object-contain hover:opacity-90 transition-opacity duration-300"
-            priority
-          />
-        </Link>
-      </div>
-
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
+      <SimpleHeroSection
+        title="Workspace Login"
+        subtitle="Sign in to access your unified workspace and manage your website performance"
+        gradientFrom="from-palette-primary"
+        gradientVia="via-palette-primary"
+        gradientTo="to-palette-secondary"
+      />
+      
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
+        <div className="flex justify-center">
+          <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Workspace Login</CardTitle>
           <CardDescription>
@@ -166,7 +162,9 @@ export default function WorkspaceLoginPage() {
             </p>
           </div>
         </CardContent>
-      </Card>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

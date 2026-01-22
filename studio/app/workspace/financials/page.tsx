@@ -567,7 +567,7 @@ export default function AdminFinancialsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-slate-600">Total Transactions</p>
-                  <p className="text-2xl font-bold text-slate-800">
+                  <p className="text-h2-dynamic font-bold text-slate-800">
                     {config.transactionsCount?.toLocaleString() || '0'}
                   </p>
                 </div>
@@ -607,13 +607,11 @@ export default function AdminFinancialsPage() {
   };
 
   return (
-    <div className={applyTheme.page()}>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
-          <CreditCard className="h-8 w-8 text-palette-primary" />
-          Financial Management
-        </h1>
-        <p className="text-slate-600 mt-2">Manage payment providers and financial integrations</p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Financial Management</h1>
+        <p className="text-muted-foreground mt-1">Manage payment providers and financial integrations</p>
       </div>
 
       {/* Summary Cards */}

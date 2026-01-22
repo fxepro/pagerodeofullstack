@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Calendar, User, Clock, ArrowRight } from 'lucide-react';
 import { fetchFeaturedPosts, fetchRecentPosts, fetchCategories, fetchTags, type BlogPost, type Category, type Tag } from '@/lib/api/blog';
 import { format } from 'date-fns';
+import { SimpleHeroSection } from '@/components/simple-hero-section';
 
 export default function BlogPage() {
   const router = useRouter();
@@ -27,16 +28,46 @@ export default function BlogPage() {
 
   const loadData = async () => {
     try {
-      const [featured, recent, cats, tagList] = await Promise.all([
+      setLoading(true);
+      // Use Promise.allSettled to handle partial failures gracefully
+      const results = await Promise.allSettled([
         fetchFeaturedPosts(),
         fetchRecentPosts(10),
         fetchCategories(),
         fetchTags(),
       ]);
-      setFeaturedPosts(featured);
-      setRecentPosts(recent);
-      setCategories(cats);
-      setTags(tagList);
+      
+      // Handle featured posts
+      if (results[0].status === 'fulfilled') {
+        setFeaturedPosts(results[0].value);
+      } else {
+        console.error('Error loading featured posts:', results[0].reason);
+        setFeaturedPosts([]);
+      }
+      
+      // Handle recent posts
+      if (results[1].status === 'fulfilled') {
+        setRecentPosts(results[1].value);
+      } else {
+        console.error('Error loading recent posts:', results[1].reason);
+        setRecentPosts([]);
+      }
+      
+      // Handle categories
+      if (results[2].status === 'fulfilled') {
+        setCategories(results[2].value);
+      } else {
+        console.error('Error loading categories:', results[2].reason);
+        setCategories([]);
+      }
+      
+      // Handle tags
+      if (results[3].status === 'fulfilled') {
+        setTags(results[3].value);
+      } else {
+        console.error('Error loading tags:', results[3].reason);
+        setTags([]);
+      }
     } catch (error) {
       console.error('Error loading blog data:', error);
     } finally {
@@ -63,14 +94,14 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
+      <SimpleHeroSection
+        title="Blog"
+        subtitle="Insights, tips, and updates about website performance, SEO, and digital marketing"
+        gradientFrom="from-palette-primary"
+        gradientVia="via-palette-primary"
+        gradientTo="to-palette-secondary"
+      />
       <div className="container mx-auto px-4 py-12 max-w-7xl">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Blog</h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Insights, tips, and updates about website performance, SEO, and digital marketing
-          </p>
-        </div>
 
         {/* Search */}
         <div className="max-w-2xl mx-auto mb-12">

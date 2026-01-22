@@ -169,14 +169,15 @@ export const theme = {
   
   // Typography
   typography: {
-    // Headings (using dynamic palette colors)
-    h1: 'text-3xl font-bold',
-    h2: 'text-2xl font-bold',
-    h3: 'text-xl font-semibold',
+    // Headings (using dynamic typography from Theme Manager)
+    h1: 'text-h1-dynamic font-bold',
+    h2: 'text-h2-dynamic font-bold',
+    h3: 'text-h3-dynamic font-semibold',
+    h4: 'text-h4-dynamic font-semibold',
     
     // Body Text
-    body: 'text-slate-600',
-    bodyLarge: 'text-lg text-slate-600',
+    body: 'text-base-dynamic text-slate-600',
+    bodyLarge: 'text-h4-dynamic text-slate-600',
     bodySmall: 'text-sm text-slate-600',
     
     // Labels
@@ -278,11 +279,13 @@ export const applyTheme = {
   },
   
   // Text theming
-  heading: (level: 1 | 2 | 3 = 1) => {
+  heading: (level: 1 | 2 | 3 | 4 | 5 | 6 = 1) => {
     const currentTheme = getCurrentTheme();
     const themeColors = getTheme(currentTheme);
+    // Use dynamic typography classes from Theme Manager (respects Theme Manager settings)
+    const dynamicSize = `text-h${level}-dynamic`;
     // Use palette primary color for headings to make them dynamic
-    return `${theme.typography[`h${level}` as keyof typeof theme.typography]} text-palette-primary`;
+    return `${dynamicSize} font-bold text-palette-primary`;
   },
   text: (size: 'body' | 'bodyLarge' | 'bodySmall' | 'primary' | 'secondary' | 'muted' | 'label' = 'body') => {
     if (size === 'label') {

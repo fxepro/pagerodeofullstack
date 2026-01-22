@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 export interface SiteConfig {
@@ -41,6 +41,7 @@ export function useSiteConfig() {
   const [config, setConfig] = useState<SiteConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchingRef = useRef(false);
   
   // Get pathname using Next.js router (this hook is only used in client components)
   const pathname = usePathname();
@@ -81,6 +82,10 @@ export function useSiteConfig() {
   };
 
   const fetchSiteConfig = useCallback(async () => {
+    // Prevent duplicate simultaneous requests
+    if (fetchingRef.current) return;
+    
+    fetchingRef.current = true;
     try {
       // Fetch active typography preset (public endpoint, no auth)
       let apiUrl: string;
@@ -108,7 +113,7 @@ export function useSiteConfig() {
       setLoading(false);
     } catch (err: any) {
       // Only log warning if not a network error (backend might not be running in dev)
-      if (err.message !== 'Failed to fetch') {
+      if (err.message !== 'Failed to fetch' && !err.message.includes('ERR_CONNECTION_REFUSED')) {
         console.warn('Could not fetch typography from backend:', err.message);
       }
       // Silent fallback - app will use cached or default typography
@@ -116,6 +121,8 @@ export function useSiteConfig() {
       setLoading(false);
       // Apply default typography on error
       applyDefaultTypography();
+    } finally {
+      fetchingRef.current = false;
     }
   }, []); // Empty deps - function doesn't depend on any props/state
 

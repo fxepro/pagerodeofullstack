@@ -8,7 +8,7 @@ export function FooterUser() {
         {/* Connect Section */}
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 pb-6">
           <div className="flex items-center space-x-6">
-            <h3 className="font-semibold text-palette-primary text-lg">Connect</h3>
+            <h3 className="font-semibold text-palette-primary text-h4-dynamic">Connect</h3>
             <div className="flex space-x-4">
               <Link 
                 href="https://www.facebook.com/pagerodeo" 
@@ -31,6 +31,9 @@ export function FooterUser() {
           <div className="flex space-x-6">
             <Link href="/about" className="text-palette-primary hover:text-palette-primary-hover transition-colors font-medium">
               About
+            </Link>
+            <Link href="/affiliate" className="text-palette-primary hover:text-palette-primary-hover transition-colors font-medium">
+              Affiliates
             </Link>
             <Link href="/feedback" className="text-palette-primary hover:text-palette-primary-hover transition-colors font-medium">
               Feedback

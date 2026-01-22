@@ -107,7 +107,14 @@ export default function AdminThemesPage() {
     try {
       const token = localStorage.getItem('access_token');
       if (!token) {
-        console.error('No access token found');
+        // No token - user might not be logged in, redirect to login
+        setError('Please log in to access themes management.');
+        setPalettes([]);
+        setLoading(false);
+        // Redirect to login after a brief delay
+        setTimeout(() => {
+          router.push('/workspace/login');
+        }, 1000);
         return;
       }
       
@@ -115,27 +122,47 @@ export default function AdminThemesPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPalettes(response.data);
+      setError(null);
     } catch (error: any) {
       console.error('Error fetching palettes:', error);
+      
+      // Handle 401 Unauthorized - token expired or invalid
+      if (error.response?.status === 401) {
+        // Clear invalid token and redirect to login
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        setError('Your session has expired. Please log in again.');
+        setPalettes([]);
+        setTimeout(() => {
+          router.push('/workspace/login');
+        }, 1000);
+        return;
+      }
       
       // Handle network errors
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
         console.error('Network error - check API_BASE:', API_BASE);
         toast.error('Network error. Please check if the backend server is running.');
+        setError('Network error. Please check if the backend server is running.');
+        setPalettes([]);
         return;
       }
       
       // Handle 403 Forbidden - user doesn't have permission
       if (error.response?.status === 403) {
         toast.error('You do not have permission to view themes.');
+        setError('You do not have permission to view themes.');
+        setPalettes([]);
         return;
       }
       
       // Check if it's a 500 error (likely database not setup)
       if (error.response?.status === 500) {
         toast.error('Backend not setup. Please run migrations and setup commands');
+        setError('Backend not setup. Please run migrations and setup commands');
       } else {
         toast.error('Failed to load palettes. Check backend is running.');
+        setError('Failed to load palettes. Check backend is running.');
       }
       
       // Set empty array so page doesn't break
@@ -318,7 +345,11 @@ export default function AdminThemesPage() {
 
   if (loading) {
     return (
-      <div className={applyTheme.page()}>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-h4-dynamic font-bold">Themes & Typography</h1>
+          <p className="text-muted-foreground mt-1">Manage color palettes and typography presets for your site</p>
+        </div>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-palette-primary" />
           <span className="ml-2 text-slate-600">Loading theme settings...</span>
@@ -332,7 +363,7 @@ export default function AdminThemesPage() {
       <div className={applyTheme.page()}>
         <div className="flex flex-col items-center justify-center py-12">
           <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
-          <h2 className="text-xl font-semibold text-slate-800 mb-2">Access Denied</h2>
+          <h2 className="text-h3-dynamic font-semibold text-slate-800 mb-2">Access Denied</h2>
           <p className="text-slate-600 mb-4">{error}</p>
           <Button onClick={() => router.push('/workspace')} variant="outline">
             Return to Workspace
@@ -343,7 +374,13 @@ export default function AdminThemesPage() {
   }
 
   return (
-    <div className={applyTheme.page()}>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Themes & Typography</h1>
+        <p className="text-muted-foreground mt-1">Manage color palettes and typography presets for your site</p>
+      </div>
+
       <Tabs defaultValue="colors" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
           <TabsTrigger value="colors" className="flex items-center gap-2">
@@ -363,7 +400,7 @@ export default function AdminThemesPage() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-slate-800 flex items-center">
+                <h3 className="text-h4-dynamic font-semibold text-slate-800 flex items-center">
                   <Check className="h-5 w-5 text-green-600 mr-2" />
                   Active Theme: {activePalette.name}
                 </h3>
@@ -482,7 +519,7 @@ export default function AdminThemesPage() {
         <Card className="bg-yellow-50 border-yellow-200">
           <CardContent className="p-8 text-center">
             <Palette className="h-12 w-12 text-yellow-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">No Palettes Found</h3>
+            <h3 className="text-h4-dynamic font-semibold text-slate-800 mb-2">No Palettes Found</h3>
             <p className="text-slate-600 mb-4">
               The backend database hasn't been setup yet.
             </p>
@@ -508,7 +545,7 @@ python manage.py runserver`}
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg flex items-center">
+                  <CardTitle className="text-h4-dynamic flex items-center">
                     {palette.name}
                     {palette.is_active && (
                       <Badge className="ml-2 bg-green-600 text-white">Active</Badge>
@@ -586,7 +623,7 @@ python manage.py runserver`}
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-800 flex items-center">
+                    <h3 className="text-h4-dynamic font-semibold text-slate-800 flex items-center">
                       <Check className="h-5 w-5 text-green-600 mr-2" />
                       Active Typography: {activeTypography.name}
                     </h3>
@@ -728,7 +765,7 @@ python manage.py runserver`}
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-lg flex items-center">
+                      <CardTitle className="text-h4-dynamic flex items-center">
                         {preset.name}
                         {preset.is_active && (
                           <Badge className="ml-2 bg-green-600 text-white">Active</Badge>

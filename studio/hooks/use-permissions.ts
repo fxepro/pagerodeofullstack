@@ -1,7 +1,21 @@
-import { usePermissions as usePermissionsContext } from "@/contexts/permission-context";
+import { useContext } from "react";
+import { PermissionContext } from "@/contexts/permission-context";
 
 export function usePermissions() {
-  return usePermissionsContext();
+  const context = useContext(PermissionContext);
+  
+  // If context is not available, return a default safe context
+  if (!context) {
+    return {
+      user: null,
+      permissions: [],
+      hasPermission: () => false,
+      hasAnyPermission: () => false,
+      hasAllPermissions: () => false,
+    };
+  }
+  
+  return context;
 }
 
 export function usePermissionGuard(permission: string) {

@@ -10,7 +10,7 @@ interface PermissionContextType {
   hasAllPermissions: (permissions: string[]) => boolean;
 }
 
-const PermissionContext = createContext<PermissionContextType | null>(null);
+export const PermissionContext = createContext<PermissionContextType | null>(null);
 
 export function PermissionProvider({
   children,

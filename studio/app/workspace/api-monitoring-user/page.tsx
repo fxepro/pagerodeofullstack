@@ -5,13 +5,11 @@ import { applyTheme } from "@/lib/theme";
 
 export default function APIMonitoringUserPage() {
   return (
-    <div className={applyTheme.page()}>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
-          <Network className="h-8 w-8 text-palette-primary" />
-          API Monitoring
-        </h1>
-        <p className="text-slate-600 mt-2">Monitor API endpoints and performance for user features</p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">API Monitoring</h1>
+        <p className="text-muted-foreground mt-1">Monitor API endpoints and performance for user features</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -23,7 +21,7 @@ export default function APIMonitoringUserPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">12</div>
+            <div className="text-h2-dynamic font-bold text-green-600">12</div>
             <p className="text-xs text-slate-600 mt-1">Endpoints</p>
           </CardContent>
         </Card>
@@ -36,7 +34,7 @@ export default function APIMonitoringUserPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">0</div>
+            <div className="text-h2-dynamic font-bold text-red-600">0</div>
             <p className="text-xs text-slate-600 mt-1">Active issues</p>
           </CardContent>
         </Card>
@@ -49,7 +47,7 @@ export default function APIMonitoringUserPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
+            <div className="text-h2-dynamic font-bold">--</div>
             <p className="text-xs text-slate-600 mt-1">Response time</p>
           </CardContent>
         </Card>
@@ -62,7 +60,7 @@ export default function APIMonitoringUserPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
+            <div className="text-h2-dynamic font-bold">--</div>
             <p className="text-xs text-slate-600 mt-1">Last 24h</p>
           </CardContent>
         </Card>

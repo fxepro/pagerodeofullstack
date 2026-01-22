@@ -229,7 +229,12 @@ export default function AdminUsersPage() {
 
   if (loading) {
     return (
-      <div className={applyTheme.page()}>
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div>
+          <h1 className="text-h4-dynamic font-bold">Users</h1>
+          <p className="text-muted-foreground mt-1">Manage user accounts, permissions, and access control</p>
+        </div>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-palette-primary" />
           <span className="ml-2 text-slate-600">Loading user data...</span>
@@ -239,7 +244,12 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className={applyTheme.page()}>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Users</h1>
+        <p className="text-muted-foreground mt-1">Manage user accounts, permissions, and access control</p>
+      </div>
 
       {/* Stats Cards */}
       <div className={LAYOUT.statsGrid}>
@@ -248,7 +258,7 @@ export default function AdminUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Total Users</p>
-                <p className={`text-2xl font-bold ${applyTheme.text('primary')}`}>
+                <p className={`text-h2-dynamic font-bold ${applyTheme.text('primary')}`}>
                   {stats?.total_users || 0}
                 </p>
               </div>
@@ -262,7 +272,7 @@ export default function AdminUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Active Users</p>
-                <p className="text-2xl font-bold text-green-400">
+                <p className="text-h2-dynamic font-bold text-green-400">
                   {stats?.active_users || 0}
                 </p>
               </div>
@@ -276,7 +286,7 @@ export default function AdminUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Admin Users</p>
-                <p className="text-2xl font-bold text-palette-accent-2">
+                <p className="text-h2-dynamic font-bold text-palette-accent-2">
                   {stats?.admin_users || 0}
                 </p>
               </div>
@@ -290,7 +300,7 @@ export default function AdminUsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>New This Month</p>
-                <p className="text-2xl font-bold text-yellow-400">
+                <p className="text-h2-dynamic font-bold text-yellow-400">
                   {users.filter(user => {
                     const userDate = new Date(user.date_joined);
                     const now = new Date();

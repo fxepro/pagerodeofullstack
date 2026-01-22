@@ -29,13 +29,6 @@ from .payment_provider_views import (
     update_payment_provider,
     test_payment_provider,
 )
-from .deal_views import (
-    list_active_deals,
-    get_deal_by_slug,
-    get_featured_deal,
-    create_deal_subscription,
-    confirm_deal_subscription,
-)
 from .views import (
     payment_methods,
     payment_method_detail,
@@ -76,13 +69,6 @@ urlpatterns = [
     path('api/payments/providers/<str:provider_id>/', get_payment_provider, name='get_payment_provider'),
     path('api/payments/providers/<str:provider_id>/update/', update_payment_provider, name='update_payment_provider'),
     path('api/payments/providers/<str:provider_id>/test/', test_payment_provider, name='test_payment_provider'),
-
-    # Promotional deals endpoints
-    path('api/deals/active/', list_active_deals, name='list_active_deals'),
-    path('api/deals/featured/', get_featured_deal, name='get_featured_deal'),
-    path('api/deals/<slug:slug>/', get_deal_by_slug, name='get_deal_by_slug'),
-    path('api/payments/paypal/create-deal-subscription/', create_deal_subscription, name='create_deal_subscription'),
-    path('api/payments/paypal/confirm-deal/', confirm_deal_subscription, name='confirm_deal_subscription'),
 
     # User financial profile endpoints
     path('api/profile/payment-methods/', payment_methods, name='payment_methods'),

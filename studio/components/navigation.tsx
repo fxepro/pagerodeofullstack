@@ -244,21 +244,13 @@ export function Navigation() {
                   Upgrade
                 </Link>
               </Button>
-              {loggedIn ? (
+              {/* Logout button - only shown when logged in */}
+              {loggedIn && (
                 <Button
                   className="bg-white text-palette-primary border border-palette-accent-1 hover:bg-palette-accent-3 transition-all duration-300 px-3 py-2 text-sm"
                   onClick={handleLogout}
                 >
                   Logout
-                </Button>
-              ) : (
-                <Button
-                  className="bg-white text-palette-primary border border-palette-accent-1 hover:bg-palette-accent-3 transition-all duration-300 px-3 py-2 text-sm"
-                  asChild
-                >
-                  <Link href="/login">
-                    Login
-                  </Link>
                 </Button>
               )}
             </div>
@@ -433,7 +425,8 @@ export function Navigation() {
                     Upgrade
                   </Link>
                 </Button>
-                {loggedIn ? (
+                {/* Logout button - only shown when logged in */}
+                {loggedIn && (
                   <Button
                     className="w-full bg-white text-palette-primary border border-palette-accent-1 hover:bg-palette-accent-3"
                     onClick={() => {
@@ -442,15 +435,6 @@ export function Navigation() {
                     }}
                   >
                     Logout
-                  </Button>
-                ) : (
-                  <Button
-                    className="w-full bg-white text-palette-primary border border-palette-accent-1 hover:bg-palette-accent-3"
-                    asChild
-                  >
-                    <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                      Login
-                    </Link>
                   </Button>
                 )}
               </div>

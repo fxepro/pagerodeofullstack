@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Star, Send, Heart, ThumbsUp, AlertTriangle } from "lucide-react";
+import { SimpleHeroSection } from "@/components/simple-hero-section";
 
 // Use relative URL in production (browser), localhost in dev (SSR)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
@@ -122,28 +123,13 @@ export default function FeedbackMain() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 bg-gradient-to-br from-palette-primary via-palette-primary to-palette-secondary overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full animate-pulse"></div>
-          <div className="absolute top-32 right-20 w-16 h-16 bg-white/5 rounded-full animate-pulse delay-1000"></div>
-          <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-white/10 rounded-full animate-pulse delay-2000"></div>
-          <div className="absolute bottom-32 right-1/3 w-8 h-8 bg-white/5 rounded-full animate-pulse delay-3000"></div>
-        </div>
-        
-        <div className="relative z-10 container mx-auto max-w-4xl text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Share Your
-            <span className="block bg-gradient-to-r from-yellow-300 to-yellow-400 bg-clip-text text-transparent">
-              Feedback
-            </span>
-          </h1>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Help us improve PageRodeo by sharing your thoughts, suggestions, and experiences
-          </p>
-        </div>
-      </section>
+      <SimpleHeroSection
+        title="Share Your Feedback"
+        subtitle="Help us improve PageRodeo by sharing your thoughts, suggestions, and experiences"
+        gradientFrom="from-palette-primary"
+        gradientVia="via-palette-primary"
+        gradientTo="to-palette-secondary"
+      />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-16 max-w-7xl">

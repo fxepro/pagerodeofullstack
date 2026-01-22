@@ -633,7 +633,7 @@ def _normalize_url(raw_url: str) -> str:
 @permission_classes([IsAuthenticated])
 def monitored_site_list(request):
     if request.method == 'GET':
-        sites = MonitoredSite.objects.filter(user=request.user).order_by('created_at')
+        sites = MonitoredSite.objects.filter(user=request.user).order_by('-created_at')
         serializer = MonitoredSiteSerializer(sites, many=True)
         return Response(serializer.data)
 

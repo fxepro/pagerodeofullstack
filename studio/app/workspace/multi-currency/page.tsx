@@ -365,12 +365,11 @@ export default function MultiCurrencyPage() {
   };
 
   return (
-    <div className={applyTheme.page()}>
-      <div className="mb-6">
-        <h1 className={`text-3xl font-bold ${applyTheme.text('primary')}`}>Multi-Currency</h1>
-        <p className={`mt-2 ${applyTheme.text('secondary')}`}>
-          Manage currency implementations and track status across the platform
-        </p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Multi-Currency</h1>
+        <p className="text-muted-foreground mt-1">Manage currency implementations and track status across the platform</p>
       </div>
 
       {/* Stats Cards */}
@@ -380,7 +379,7 @@ export default function MultiCurrencyPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Total Currencies</p>
-                <p className="text-2xl font-bold text-blue-400">
+                <p className="text-h2-dynamic font-bold text-blue-400">
                   {currencies.length}
                 </p>
               </div>
@@ -394,7 +393,7 @@ export default function MultiCurrencyPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Active</p>
-                <p className="text-2xl font-bold text-green-400">
+                <p className="text-h2-dynamic font-bold text-green-400">
                   {currencies.filter(c => c.status === 'active').length}
                 </p>
               </div>
@@ -408,7 +407,7 @@ export default function MultiCurrencyPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Cryptocurrencies</p>
-                <p className="text-2xl font-bold text-purple-400">
+                <p className="text-h2-dynamic font-bold text-purple-400">
                   {currencies.filter(c => c.type === 'crypto').length}
                 </p>
               </div>
@@ -422,7 +421,7 @@ export default function MultiCurrencyPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Fiat Currencies</p>
-                <p className="text-2xl font-bold text-blue-400">
+                <p className="text-h2-dynamic font-bold text-blue-400">
                   {currencies.filter(c => c.type === 'fiat').length}
                 </p>
               </div>

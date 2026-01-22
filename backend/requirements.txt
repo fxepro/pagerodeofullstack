@@ -6,8 +6,18 @@ djangorestframework==3.15.2
 django-cors-headers==4.4.0
 djangorestframework-simplejwt==5.3.0
 psycopg2-binary==2.9.9
+mysql-connector-python==8.2.0
+cryptography==42.0.5
 requests==2.31.0
 beautifulsoup4==4.12.3
+dnspython==2.4.2
+
+# Security Tools Integration
+python-nmap==0.7.1  # nmap integration
+python-owasp-zap-v2.4==0.0.14  # OWASP ZAP API client
+lxml==4.9.3  # XML parsing (nmap, nikto outputs)
+defusedxml==0.7.1  # Safe XML parsing
+xmltodict==0.13.0  # XML to dict conversion
 
 # User Management System
 django-extensions==3.2.3
@@ -38,6 +48,11 @@ gunicorn==21.2.0
 # Celery for background tasks
 celery==5.3.4
 redis==5.0.1
+
+# Phase 1: Enhanced Database Connection Support
+pymssql>=2.2.11  # SQL Server (pure Python, no ODBC needed)
+oracledb>=1.4.0  # Oracle (supports thin mode, no Instant Client needed)
+pymongo>=4.6.0  # MongoDB
 
 # Security (optional - for CSP support)
 # django-csp==3.8

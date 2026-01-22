@@ -534,12 +534,11 @@ export default function MultiLanguagePage() {
   };
 
   return (
-    <div className={applyTheme.page()}>
-      <div className="mb-6">
-        <h1 className={`text-3xl font-bold ${applyTheme.text('primary')}`}>Multi-Language</h1>
-        <p className={`mt-2 ${applyTheme.text('secondary')}`}>
-          Manage language implementations and track translation status across the platform
-        </p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Multi-Language</h1>
+        <p className="text-muted-foreground mt-1">Manage language implementations and track translation status across the platform</p>
       </div>
 
       {/* Stats Cards */}
@@ -549,7 +548,7 @@ export default function MultiLanguagePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Total Languages</p>
-                <p className="text-2xl font-bold text-blue-400">
+                <p className="text-h2-dynamic font-bold text-blue-400">
                   {languages.length}
                 </p>
               </div>
@@ -563,7 +562,7 @@ export default function MultiLanguagePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Active</p>
-                <p className="text-2xl font-bold text-green-400">
+                <p className="text-h2-dynamic font-bold text-green-400">
                   {languages.filter(l => l.status === 'active').length}
                 </p>
               </div>
@@ -577,7 +576,7 @@ export default function MultiLanguagePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>RTL Languages</p>
-                <p className="text-2xl font-bold text-purple-400">
+                <p className="text-h2-dynamic font-bold text-purple-400">
                   {languages.filter(l => l.rtl).length}
                 </p>
               </div>
@@ -591,7 +590,7 @@ export default function MultiLanguagePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Avg Translation</p>
-                <p className="text-2xl font-bold text-blue-400">
+                <p className="text-h2-dynamic font-bold text-blue-400">
                   {Math.round(languages.reduce((sum, l) => sum + l.translationComplete, 0) / languages.length)}%
                 </p>
               </div>

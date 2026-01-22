@@ -159,7 +159,12 @@ export default function AdminRolesPage() {
   }
 
   return (
-    <div className={applyTheme.page()}>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Roles & Permissions</h1>
+        <p className="text-muted-foreground mt-1">Manage user roles and configure permission sets</p>
+      </div>
 
       {/* Stats Cards */}
       <div className={LAYOUT.statsGrid}>
@@ -168,7 +173,7 @@ export default function AdminRolesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Total Roles</p>
-                <p className={`text-2xl font-bold ${applyTheme.text('primary')}`}>
+                <p className={`text-h2-dynamic font-bold ${applyTheme.text('primary')}`}>
                   {stats.total_roles}
                 </p>
               </div>
@@ -182,7 +187,7 @@ export default function AdminRolesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>System Roles</p>
-                <p className="text-2xl font-bold text-palette-accent-2">
+                <p className="text-h2-dynamic font-bold text-palette-accent-2">
                   {stats.system_roles}
                 </p>
               </div>
@@ -196,7 +201,7 @@ export default function AdminRolesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Custom Roles</p>
-                <p className="text-2xl font-bold text-green-400">
+                <p className="text-h2-dynamic font-bold text-green-400">
                   {stats.custom_roles}
                 </p>
               </div>
@@ -210,7 +215,7 @@ export default function AdminRolesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Total Permissions</p>
-                <p className="text-2xl font-bold text-yellow-400">
+                <p className="text-h2-dynamic font-bold text-yellow-400">
                   {stats.total_permissions}
                 </p>
               </div>

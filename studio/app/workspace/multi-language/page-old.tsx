@@ -929,6 +929,7 @@ export default function MultiLanguagePage() {
                   </TableBody>
                 </Table>
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

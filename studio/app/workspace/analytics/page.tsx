@@ -40,7 +40,12 @@ import {
 
 export default function AdminAnalyticsPage() {
   return (
-    <div className={applyTheme.page()}>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Analytics</h1>
+        <p className="text-muted-foreground mt-1">View comprehensive analytics and performance metrics for your platform</p>
+      </div>
 
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

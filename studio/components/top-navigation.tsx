@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, BarChart3, LogIn, LogOut, User, FileText, Settings } from "lucide-react";
+import { MessageCircle, BarChart3, LogOut, User, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { LanguageSelector } from "@/components/language-selector";
@@ -218,9 +218,8 @@ export function TopNavigation() {
               </Link>
             </Button>
             
-            {loggedIn ? (
-              <>
-                {/* Logout button for all logged-in users */}
+            {/* Logout button - only shown when logged in */}
+            {loggedIn && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -229,30 +228,6 @@ export function TopNavigation() {
                 >
                   <LogOut className="h-3.5 w-3.5 mr-1" />
                   {t('navigation.logout')}
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "relative transition-all duration-300 px-2 py-1 text-xs group",
-                  pathname === "/login" || pathname.startsWith("/login")
-                    ? "text-palette-primary bg-palette-accent-3/50 font-semibold"
-                    : "text-slate-700 hover:text-palette-primary hover:bg-palette-accent-3/30"
-                )}
-                asChild
-              >
-                <Link href="/login">
-                  <LogIn className={cn(
-                    "h-3.5 w-3.5 mr-1 transition-transform duration-300",
-                    pathname === "/login" || pathname.startsWith("/login") ? "scale-110" : "group-hover:scale-110"
-                  )} />
-                  {t('navigation.login')}
-                  {(pathname === "/login" || pathname.startsWith("/login")) && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-palette-primary rounded-full animate-pulse"></span>
-                  )}
-                </Link>
               </Button>
             )}
           </div>

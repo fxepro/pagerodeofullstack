@@ -5,14 +5,15 @@ Promotional Deal API Views
 import logging
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from datetime import timedelta, datetime
 
-from .models import PromotionalDeal, UserSubscription
+from .models import PromotionalDeal, UserSubscription, SubscriptionPlan
 from .paypal_service import PayPalService
+from .serializers import PromotionalDealSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -354,6 +355,137 @@ def confirm_deal_subscription(request):
         
     except Exception as e:
         logger.error(f"Error confirming deal subscription: {str(e)}", exc_info=True)
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# ===== ADMIN ENDPOINTS FOR DEAL MANAGEMENT =====
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_subscription_plans(request):
+    """Get all subscription plans for dropdown (admin only)"""
+    try:
+        plans = SubscriptionPlan.objects.filter(is_active=True).order_by('display_order', 'price_monthly')
+        plans_data = [{
+            'id': plan.id,
+            'plan_name': plan.plan_name,
+            'display_name': plan.display_name,
+            'description': plan.description,
+            'price_monthly': float(plan.price_monthly),
+            'price_yearly': float(plan.price_yearly),
+        } for plan in plans]
+        return Response({'plans': plans_data}, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error getting subscription plans: {str(e)}", exc_info=True)
+        return Response(
+            {'error': 'Failed to fetch subscription plans'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def list_all_deals(request):
+    """List all promotional deals (admin only)"""
+    try:
+        deals = PromotionalDeal.objects.select_related('base_plan').order_by('-created_at')
+        serializer = PromotionalDealSerializer(deals, many=True)
+        return Response({
+            'deals': serializer.data,
+            'count': len(serializer.data)
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        logger.error(f"Error listing all deals: {str(e)}", exc_info=True)
+        return Response(
+            {'error': 'Failed to fetch deals'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_deal(request, deal_id):
+    """Get deal details by ID (admin only)"""
+    try:
+        deal = get_object_or_404(PromotionalDeal, id=deal_id)
+        serializer = PromotionalDealSerializer(deal)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except PromotionalDeal.DoesNotExist:
+        return Response(
+            {'error': 'Deal not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"Error getting deal: {str(e)}", exc_info=True)
+        return Response(
+            {'error': 'Failed to fetch deal'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_deal(request):
+    """Create a new promotional deal (admin only)"""
+    try:
+        serializer = PromotionalDealSerializer(data=request.data)
+        if serializer.is_valid():
+            deal = serializer.save()
+            return Response(PromotionalDealSerializer(deal).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"Error creating deal: {str(e)}", exc_info=True)
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAdminUser])
+def update_deal(request, deal_id):
+    """Update a promotional deal (admin only)"""
+    try:
+        deal = get_object_or_404(PromotionalDeal, id=deal_id)
+        serializer = PromotionalDealSerializer(deal, data=request.data, partial=True)
+        if serializer.is_valid():
+            deal = serializer.save()
+            return Response(PromotionalDealSerializer(deal).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except PromotionalDeal.DoesNotExist:
+        return Response(
+            {'error': 'Deal not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"Error updating deal: {str(e)}", exc_info=True)
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_deal(request, deal_id):
+    """Delete a promotional deal (admin only)"""
+    try:
+        deal = get_object_or_404(PromotionalDeal, id=deal_id)
+        deal.delete()
+        return Response(
+            {'message': 'Deal deleted successfully'},
+            status=status.HTTP_204_NO_CONTENT
+        )
+    except PromotionalDeal.DoesNotExist:
+        return Response(
+            {'error': 'Deal not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"Error deleting deal: {str(e)}", exc_info=True)
         return Response(
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

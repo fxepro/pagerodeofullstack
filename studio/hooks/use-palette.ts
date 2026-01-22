@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 export interface Palette {
@@ -18,6 +18,7 @@ export function usePalette() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const pathname = usePathname();
+  const fetchingRef = useRef(false);
 
   useLayoutEffect(() => {
     // Immediately apply cached palette to prevent flash
@@ -34,11 +35,6 @@ export function usePalette() {
       }
     }
   }, []);
-
-  useEffect(() => {
-    // Fetch fresh data from API on mount and route changes
-    fetchActivePalette();
-  }, [pathname]); // Re-fetch when route changes
 
   // Also apply palette whenever it changes or route changes
   useEffect(() => {
@@ -61,7 +57,11 @@ export function usePalette() {
     }
   }, [palette, pathname]); // Re-apply on palette change or route change
 
-  const fetchActivePalette = async () => {
+  const fetchActivePalette = useCallback(async () => {
+    // Prevent duplicate simultaneous requests
+    if (fetchingRef.current) return;
+    
+    fetchingRef.current = true;
     try {
       // Public endpoint - no auth required
       // ALWAYS use full Django backend URL to bypass Next.js rewrites (per critical implementation doc)
@@ -84,7 +84,7 @@ export function usePalette() {
       setLoading(false);
     } catch (err: any) {
       // Only log warning if not a network error (backend might not be running in dev)
-      if (err.message !== 'Failed to fetch') {
+      if (err.message !== 'Failed to fetch' && !err.message.includes('ERR_CONNECTION_REFUSED')) {
         console.warn('Could not fetch palette from backend:', err.message);
       }
       // Silent fallback - app will use cached or default palette
@@ -109,8 +109,15 @@ export function usePalette() {
         } satisfies Palette;
       });
       setLoading(false);
+    } finally {
+      fetchingRef.current = false;
     }
-  };
+  }, []); // Empty deps - function doesn't depend on any props/state
+
+  useEffect(() => {
+    // Fetch fresh data from API on mount and route changes
+    fetchActivePalette();
+  }, [pathname, fetchActivePalette]); // Re-fetch when route changes
 
   const applyPaletteToDOM = (paletteData: Palette) => {
     if (typeof document === 'undefined') return;

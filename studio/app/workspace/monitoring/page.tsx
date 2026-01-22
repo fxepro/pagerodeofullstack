@@ -22,7 +22,6 @@ import {
   AlertCircle,
   CheckCircle,
   TrendingUp,
-  Clock,
   Globe,
   Eye,
   Loader2,
@@ -30,7 +29,6 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { toast } from 'sonner';
 import { captureEvent } from '@/lib/posthog';
 
@@ -294,6 +292,9 @@ export default function MonitoringPage() {
       const updatedSite = applyStatusToSite(createdSite, statusData);
       setSites((prev) => prev.map((s) => (s.id === updatedSite.id ? updatedSite : s)));
       await updateSiteOnServer(updatedSite);
+      
+      // Refresh the list to ensure we have the latest data from server
+      await fetchSites();
     } catch (err: any) {
       console.error('Error adding site:', err);
       setError(err.message || 'Failed to add site');
@@ -463,17 +464,10 @@ export default function MonitoringPage() {
 
   return (
     <div className="space-y-6">
-      {/* Refresh Button Bar */}
-      <div className="flex justify-end">
-        <Button 
-          variant="outline" 
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          {t('common.update')}
-        </Button>
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Site Monitoring</h1>
+        <p className="text-muted-foreground mt-1">Monitor website uptime, response times, SSL status, and track site availability</p>
       </div>
 
       {/* Error Display */}
@@ -499,7 +493,18 @@ export default function MonitoringPage() {
       {/* Add URL Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">{t('monitoring.addSite')}</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-h4-dynamic">{t('monitoring.addSite')}</CardTitle>
+            <Button 
+              variant="outline" 
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="border-palette-accent-2 text-palette-primary hover:bg-palette-accent-3"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {t('common.update')}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex gap-3">
@@ -530,7 +535,7 @@ export default function MonitoringPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-slate-800">
+            <div className="text-h2-dynamic font-bold text-slate-800">
               {sites.length}
             </div>
             <p className="text-sm text-slate-600">{t('dashboard.totalSites')}</p>
@@ -538,7 +543,7 @@ export default function MonitoringPage() {
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-h2-dynamic font-bold text-green-600">
               {sites.filter(s => s.status === 'up').length}
             </div>
             <p className="text-sm text-slate-600">{t('monitoring.online')}</p>
@@ -546,7 +551,7 @@ export default function MonitoringPage() {
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-h2-dynamic font-bold text-red-600">
               {sites.filter(s => s.status === 'down').length}
             </div>
             <p className="text-sm text-slate-600">{t('monitoring.offline')}</p>
@@ -554,7 +559,7 @@ export default function MonitoringPage() {
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-palette-primary">
+            <div className="text-h2-dynamic font-bold text-palette-primary">
               {sites.length > 0 ? (sites.reduce((sum, s) => sum + s.uptime, 0) / sites.length).toFixed(1) : 0}%
             </div>
             <p className="text-sm text-slate-600">{t('monitoring.uptime')}</p>
@@ -592,7 +597,17 @@ export default function MonitoringPage() {
               <TableBody>
                 {sites
                   .slice()
-                  .sort((a, b) => (a.status === 'down' ? -1 : 1))
+                  .sort((a, b) => {
+                    // Sort: down sites first, then checking, then up
+                    const statusOrder = { down: 0, checking: 1, up: 2 };
+                    const orderA = statusOrder[a.status] ?? 3;
+                    const orderB = statusOrder[b.status] ?? 3;
+                    if (orderA !== orderB) {
+                      return orderA - orderB;
+                    }
+                    // If same status, sort by URL alphabetically
+                    return a.url.localeCompare(b.url);
+                  })
                   .map((site) => (
                     <TableRow 
                       key={site.id} 

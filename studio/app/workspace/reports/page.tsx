@@ -184,8 +184,12 @@ export default function Reports2Page() {
 
   return (
     <div className="space-y-6">
-      {/* Refresh Button Bar */}
-      <div className="flex justify-end">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-h4-dynamic font-bold">Reports</h1>
+          <p className="text-muted-foreground mt-1">View and manage site audit reports and analysis history</p>
+        </div>
         <Button 
           variant="outline" 
           onClick={() => fetchReports()}
@@ -222,7 +226,7 @@ export default function Reports2Page() {
         <Card className="border-slate-200">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-slate-800">{stats.total}</div>
+              <div className="text-h1-dynamic font-bold text-slate-800">{stats.total}</div>
               <p className="text-sm text-slate-600 mt-1">Total Audits</p>
             </div>
           </CardContent>
@@ -231,7 +235,7 @@ export default function Reports2Page() {
         <Card className="border-green-200 bg-green-50">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">
+              <div className="text-h1-dynamic font-bold text-green-600">
                 {reports.filter(r => (r.audit_data?.successful?.length || 0) > 0).length}
               </div>
               <p className="text-sm text-green-700 mt-1">Completed</p>
@@ -242,7 +246,7 @@ export default function Reports2Page() {
         <Card className="border-orange-200 bg-orange-50">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600">
+              <div className="text-h1-dynamic font-bold text-orange-600">
                 {reports.filter(r => (r.audit_data?.failed?.length || 0) > 0).length}
               </div>
               <p className="text-sm text-orange-700 mt-1">With Errors</p>
@@ -253,7 +257,7 @@ export default function Reports2Page() {
         <Card className="border-blue-200 bg-blue-50">
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">
+              <div className="text-h1-dynamic font-bold text-blue-600">
                 {[...new Set(reports.map(r => r.url))].length}
               </div>
               <p className="text-sm text-blue-700 mt-1">Unique Sites</p>
@@ -298,7 +302,7 @@ export default function Reports2Page() {
           ) : filteredReports.length === 0 && !error ? (
             <div className="text-center py-12 text-slate-600">
               <FileText className="h-16 w-16 mx-auto mb-4 text-slate-400" />
-              <p className="text-lg font-medium text-slate-700 mb-2">No audit history found</p>
+              <p className="text-h4-dynamic font-medium text-slate-700 mb-2">No audit history found</p>
               <p className="text-sm mt-1">Run an analysis from <strong>Site Audit</strong> to track your audits</p>
               <p className="text-xs text-slate-500 mt-2">
                 {!localStorage.getItem('access_token') 

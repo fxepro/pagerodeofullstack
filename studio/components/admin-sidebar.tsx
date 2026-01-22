@@ -16,7 +16,8 @@ import {
   Monitor,
   Network,
   Wrench,
-  CreditCard
+  CreditCard,
+  TrendingUp
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -91,8 +92,14 @@ export default function AdminSidebar({ currentPath }: AdminSidebarProps) {
       description: "Payment integrations and financial management"
     },
     {
+      title: "Marketing & Deals",
+      href: "/admin/marketing",
+      icon: TrendingUp,
+      description: "Manage promotional deals and featured offers"
+    },
+    {
       title: "System Settings",
-      href: "/admin/settings",
+      href: "/admin/system-settings",
       icon: Settings,
       description: "Application configuration"
     }

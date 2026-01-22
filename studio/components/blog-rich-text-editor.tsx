@@ -43,7 +43,7 @@ export function BlogRichTextEditor({
   const formats = [
     'header',
     'bold', 'italic', 'underline', 'strike', 'blockquote',
-    'list', 'bullet', 'indent',
+    'list', 'indent',
     'align',
     'link', 'image', 'video',
     'color', 'background',

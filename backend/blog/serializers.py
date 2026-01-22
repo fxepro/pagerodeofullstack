@@ -10,8 +10,8 @@ class AuthorSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'full_name', 'avatar_url']
-        read_only_fields = ['id', 'username', 'email']
+        fields = ['id', 'username', 'first_name', 'last_name', 'full_name', 'avatar_url']
+        read_only_fields = ['id', 'username']
     
     def get_avatar_url(self, obj):
         """Get avatar URL from BlogAuthor profile if available"""

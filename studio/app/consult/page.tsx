@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { SimpleHeroSection } from "@/components/simple-hero-section";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
 
@@ -135,41 +136,13 @@ export default function ConsultPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 bg-gradient-to-r from-palette-primary to-palette-secondary text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="container mx-auto max-w-7xl relative z-10">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Get Expert Performance Help
-            </h1>
-            <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-8 leading-relaxed">
-              Professional website performance analysis and optimization services. 
-              Let our experts help you understand, decipher, and improve your website performance.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 mb-8">
-              <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-4 py-2">
-                <Award className="h-4 w-4 mr-2" />
-                Expert Analysis
-              </Badge>
-              <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-4 py-2">
-                <Clock className="h-4 w-4 mr-2" />
-                24hr Response
-              </Badge>
-              <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-4 py-2">
-                <Shield className="h-4 w-4 mr-2" />
-                Proven Results
-              </Badge>
-            </div>
-            <div className="flex justify-center">
-              <Button size="lg" className="bg-white text-palette-primary hover:bg-palette-accent-3">
-                <MessageCircle className="h-5 w-5 mr-2" />
-                Start Free Consultation
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <SimpleHeroSection
+        title="Get Expert Performance Help"
+        subtitle="Professional website performance analysis and optimization services. Let our experts help you understand, decipher, and improve your website performance."
+        gradientFrom="from-palette-primary"
+        gradientVia="via-palette-primary"
+        gradientTo="to-palette-secondary"
+      />
 
       {/* Service Offerings */}
       <section className="py-16 px-4 bg-white">

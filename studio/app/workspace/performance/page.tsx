@@ -119,6 +119,12 @@ export default function PerformancePage() {
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Performance</h1>
+        <p className="text-muted-foreground mt-1">Monitor and analyze website performance metrics, Core Web Vitals, and load times</p>
+      </div>
+
       {/* 4 Metric Boxes */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-slate-200">
@@ -126,7 +132,7 @@ export default function PerformancePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Performance Score</p>
-                <p className="text-3xl font-bold text-slate-800">
+                <p className="text-h1-dynamic font-bold text-slate-800">
                   {performanceScore > 0 ? Math.round(performanceScore) : '--'}
                 </p>
               </div>
@@ -142,7 +148,7 @@ export default function PerformancePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Load Time</p>
-                <p className="text-3xl font-bold text-slate-800">
+                <p className="text-h1-dynamic font-bold text-slate-800">
                   {loadTime > 0 ? `${loadTime.toFixed(1)}s` : '--'}
                 </p>
               </div>
@@ -158,7 +164,7 @@ export default function PerformancePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Core Web Vitals</p>
-                <p className="text-3xl font-bold text-slate-800">
+                <p className="text-h1-dynamic font-bold text-slate-800">
                   {lcp > 0 || fid > 0 || cls > 0 ? 'Good' : '--'}
                 </p>
               </div>
@@ -174,7 +180,7 @@ export default function PerformancePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Total Requests</p>
-                <p className="text-3xl font-bold text-slate-800">{totalRequests || '--'}</p>
+                <p className="text-h1-dynamic font-bold text-slate-800">{totalRequests || '--'}</p>
               </div>
               <div className="p-3 bg-orange-100 rounded-lg">
                 <Zap className="h-6 w-6 text-orange-600" />
@@ -269,7 +275,7 @@ export default function PerformancePage() {
         {/* LCP */}
         <Card className="border-slate-200">
           <CardHeader>
-            <CardTitle className="text-lg">LCP (Last Contentful Paint)</CardTitle>
+            <CardTitle className="text-h4-dynamic">LCP (Last Contentful Paint)</CardTitle>
             <CardDescription>Target: &lt; 2.5s</CardDescription>
           </CardHeader>
           <CardContent>
@@ -312,7 +318,7 @@ export default function PerformancePage() {
         {/* FID */}
         <Card className="border-slate-200">
           <CardHeader>
-            <CardTitle className="text-lg">FID (First Input Delay)</CardTitle>
+            <CardTitle className="text-h4-dynamic">FID (First Input Delay)</CardTitle>
             <CardDescription>Target: &lt; 100ms</CardDescription>
           </CardHeader>
           <CardContent>
@@ -355,7 +361,7 @@ export default function PerformancePage() {
         {/* CLS */}
         <Card className="border-slate-200">
           <CardHeader>
-            <CardTitle className="text-lg">CLS (Cumulative Layout Shift)</CardTitle>
+            <CardTitle className="text-h4-dynamic">CLS (Cumulative Layout Shift)</CardTitle>
             <CardDescription>Target: &lt; 0.1</CardDescription>
           </CardHeader>
           <CardContent>

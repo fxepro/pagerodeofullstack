@@ -137,7 +137,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Marketing Banner - Limited Time Deal */}
+      {/* Marketing Banner - Limited Time Deal - Only show if featured deal exists */}
+      {featuredDeal && (
       <section className="py-12 px-4" style={{ backgroundColor: 'var(--theme-bg-tertiary)' }}>
         <div className="container mx-auto max-w-7xl">
           <div className="bg-white rounded-xl shadow-lg border-2 border-palette-primary/20 p-8 md:p-12">
@@ -146,15 +147,15 @@ export default function HomePage() {
               <div className="flex items-center gap-4 flex-1">
                 <div className="flex items-center gap-2 bg-gradient-to-r from-palette-primary to-palette-secondary text-white px-4 py-2 rounded-full shadow-md">
                   <Tag className="h-5 w-5" />
-                  <span className="font-bold text-sm md:text-base">{t('homepage.limitedTimeDeal')}</span>
+                    <span className="font-bold text-sm md:text-base">{featuredDeal.badge_text || t('homepage.limitedTimeDeal')}</span>
                 </div>
                 <div className="hidden md:block h-8 w-px bg-palette-accent-2"></div>
                 <div>
                   <h3 className="text-lg md:text-xl font-bold" style={{ color: 'var(--theme-text-primary)' }}>
-                    {t('homepage.analystPackage')}
+                      {featuredDeal.name}
                   </h3>
                   <p className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>
-                    {t('homepage.validUntil')}
+                      {featuredDeal.base_plan?.display_name || featuredDeal.base_plan?.name}
                   </p>
                 </div>
               </div>
@@ -162,20 +163,22 @@ export default function HomePage() {
               {/* Center - Pricing */}
               <div className="flex items-center gap-4 flex-wrap justify-center">
                 <div className="text-center">
-                  <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap justify-center">
                     <span className="text-2xl md:text-3xl font-bold line-through opacity-50" style={{ color: 'var(--theme-text-secondary)' }}>
-                      $359.88
+                        ${featuredDeal.original_price?.toFixed(2) || '0.00'}
                     </span>
+                      {featuredDeal.billing_period === 'annual' && (
                     <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-semibold">
-                      $29.99/mo × 12
+                          ${(featuredDeal.original_price / 12)?.toFixed(2) || '0.00'}/mo × 12
                     </span>
+                      )}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-3xl md:text-4xl font-bold" style={{ color: 'var(--color-primary)' }}>
-                      $199
+                        ${featuredDeal.deal_price?.toFixed(2) || '0.00'}
                     </span>
                     <span className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>
-                      {t('homepage.perYear')}
+                        {featuredDeal.billing_period === 'annual' ? t('homepage.perYear') : '/mo'}
                     </span>
                   </div>
                 </div>
@@ -184,7 +187,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 mb-1">
                     <Percent className="h-5 w-5 text-green-600" />
                     <span className="text-2xl md:text-3xl font-bold text-green-600">
-                      44%
+                        {featuredDeal.discount_percentage?.toFixed(0) || '0'}%
                     </span>
                   </div>
                   <p className="text-xs font-semibold text-green-600">{t('homepage.savings')}</p>
@@ -198,7 +201,7 @@ export default function HomePage() {
                   className="bg-gradient-to-r from-palette-primary to-palette-secondary hover:from-palette-primary-hover hover:to-palette-secondary-hover text-white px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   asChild
                 >
-                  <Link href={featuredDeal ? `/checkout?deal=${featuredDeal.slug}` : '/upgrade'}>
+                    <Link href={`/checkout?deal=${featuredDeal.slug}`}>
                     {t('homepage.claimDeal')}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
@@ -211,7 +214,9 @@ export default function HomePage() {
               <div className="flex flex-wrap items-center justify-center gap-4 text-sm mb-4" style={{ color: 'var(--theme-text-secondary)' }}>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>{t('homepage.valid')}: {t('homepage.validUntil')}</span>
+                    <span>
+                      {t('homepage.valid')}: {featuredDeal.end_date ? new Date(featuredDeal.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : t('homepage.validUntil')}
+                    </span>
                 </div>
                 <div className="hidden md:block">•</div>
                 <div className="flex items-center gap-2">
@@ -219,24 +224,18 @@ export default function HomePage() {
                   <span>{t('homepage.cancelAnytime')}</span>
                 </div>
               </div>
-              <div className="grid md:grid-cols-2 gap-3 max-w-2xl mx-auto">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>{t('homepage.allToolsIncluded')}</span>
+                {featuredDeal.description && (
+                  <div className="text-center mb-4">
+                    <p className="text-sm" style={{ color: 'var(--theme-text-secondary)' }}>
+                      {featuredDeal.description}
+                    </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>{t('homepage.testAllTools')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                  <span className="font-medium" style={{ color: 'var(--theme-text-primary)' }}>{t('homepage.monitor100Sites')}</span>
-                </div>
-              </div>
+                )}
             </div>
           </div>
         </div>
       </section>
+      )}
 
       {/* Features Section - Premium Design */}
       <section className="py-32 px-4 bg-gradient-to-br from-slate-50 to-white relative overflow-hidden">

@@ -1,0 +1,24 @@
+Attack-surface / discovery (DNS
+Port & service discovery
+External network / host vulnerability scan
+Dynamic Application Security Testing (DAST) — automated web app scanning
+Web-server misconfiguration scan
+TLS / SSL configuration & cert checks
+CMS / platform-specific remote scans
+SQL injection / targeted exploit checks
+HTTP security headers & basic hardening checks
+Automated external monitoring / continuous scanning
+Manual pentest tools (proxy & manual testing)
+
+
+
+Discovery
+Health
+Performance
+Security
+Configuration
+Compliance
+Evidence
+Change
+Cost
+Risk

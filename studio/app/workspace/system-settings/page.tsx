@@ -81,7 +81,12 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className={applyTheme.page()}>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">System Settings</h1>
+        <p className="text-muted-foreground mt-1">Configure system-wide settings and preferences</p>
+      </div>
 
       {/* Settings Sections */}
       <div className="space-y-6">

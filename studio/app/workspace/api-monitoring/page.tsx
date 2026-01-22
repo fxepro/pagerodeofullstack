@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,90 @@ import {
 import { applyTheme } from "@/lib/theme";
 import axios from "axios";
 import { getApiBaseUrl } from "@/lib/api-config";
+
+// Helper function to refresh token
+const refreshAccessToken = async (): Promise<string | null> => {
+  const apiBase = getApiBaseUrl();
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) {
+    return null;
+  }
+  
+  try {
+    const res = await axios.post(`${apiBase}/api/token/refresh/`, {
+      refresh: refreshToken,
+    });
+    const newAccessToken = res.data.access;
+    localStorage.setItem("access_token", newAccessToken);
+    if (res.data.refresh) {
+      localStorage.setItem("refresh_token", res.data.refresh);
+    }
+    return newAccessToken;
+  } catch (err) {
+    console.error("Token refresh failed:", err);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    return null;
+  }
+};
+
+// Helper function to make authenticated request with automatic token refresh
+export const makeAuthenticatedRequest = async (
+  url: string, 
+  method: string = 'GET', 
+  data?: any
+): Promise<any> => {
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    throw new Error("No access token available");
+  }
+
+  const config: any = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  try {
+    let response;
+    if (method === 'GET') {
+      response = await axios.get(url, config);
+    } else if (method === 'POST') {
+      response = await axios.post(url, data, config);
+    } else if (method === 'PUT') {
+      response = await axios.put(url, data, config);
+    } else if (method === 'DELETE') {
+      response = await axios.delete(url, config);
+    } else {
+      throw new Error(`Unsupported method: ${method}`);
+    }
+    return response;
+  } catch (err: any) {
+    // If 401, try to refresh token and retry
+    if (err.response?.status === 401) {
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        config.headers.Authorization = `Bearer ${newToken}`;
+        // Retry the request with new token
+        if (method === 'GET') {
+          return await axios.get(url, config);
+        } else if (method === 'POST') {
+          return await axios.post(url, data, config);
+        } else if (method === 'PUT') {
+          return await axios.put(url, data, config);
+        } else if (method === 'DELETE') {
+          return await axios.delete(url, config);
+        }
+      }
+      // Refresh failed, redirect to login
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      window.location.href = "/workspace/login";
+      throw err;
+    }
+    throw err;
+  }
+};
 import {
   Network,
   CheckCircle,
@@ -29,6 +114,7 @@ import {
   Search,
   Play,
   Eye,
+  Trash2,
 } from "lucide-react";
 
 interface APIEndpoint {
@@ -83,6 +169,7 @@ interface Stats {
 }
 
 export default function AdminAPIMonitoringPage() {
+  const router = useRouter();
   const [endpoints, setEndpoints] = useState<APIEndpoint[]>([]);
   const [checks, setChecks] = useState<APICheck[]>([]);
   const [alerts, setAlerts] = useState<APIAlert[]>([]);
@@ -91,12 +178,16 @@ export default function AdminAPIMonitoringPage() {
   const [testing, setTesting] = useState<number[]>([]);
   const [discovering, setDiscovering] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  // Default to current origin in production, localhost in dev
-  const [discoverUrl, setDiscoverUrl] = useState(
-    typeof window !== 'undefined' 
-      ? window.location.origin 
-      : 'http://localhost:8000'
-  );
+  const [fixingPorts, setFixingPorts] = useState(false);
+  // Default to backend API URL (port 8000), not frontend (port 3000/3001)
+  const [discoverUrl, setDiscoverUrl] = useState(() => {
+    if (typeof window !== 'undefined') {
+      // Use API base URL from config, or default to backend port 8000
+      const apiBase = getApiBaseUrl();
+      return apiBase || 'http://localhost:8000';
+    }
+    return 'http://localhost:8000';
+  });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -146,17 +237,16 @@ export default function AdminAPIMonitoringPage() {
     } catch (error: any) {
       console.error("Error fetching data:", error);
       
-      // Handle 401 Unauthorized - token expired or invalid
+      // Token refresh and redirect already handled in makeAuthenticatedRequest
       if (error.response?.status === 401) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "/login";
+        // Already redirected to login, just return
         return;
       }
       
       // Handle 403 Forbidden - not admin
       if (error.response?.status === 403) {
         console.error("Admin access required");
+        alert("Admin access required. You do not have permission to view this page.");
         // Could redirect to dashboard or show error message
       }
     } finally {
@@ -167,26 +257,16 @@ export default function AdminAPIMonitoringPage() {
   const testEndpoint = async (endpointId: number) => {
     setTesting((prev) => [...prev, endpointId]);
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
       const apiBase = getApiBaseUrl();
-      await axios.post(
+      await makeAuthenticatedRequest(
         `${apiBase}/api/admin-tools/endpoints/${endpointId}/test/`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        'POST',
+        {}
       );
       await fetchData();
     } catch (error: any) {
       console.error("Error testing endpoint:", error);
-      if (error.response?.status === 401) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "/login";
-        return;
-      }
+      // Token refresh and redirect already handled in makeAuthenticatedRequest
     } finally {
       setTesting((prev) => prev.filter((id) => id !== endpointId));
     }
@@ -198,48 +278,36 @@ export default function AdminAPIMonitoringPage() {
 
     setTesting(selected);
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
       const apiBase = getApiBaseUrl();
-      await axios.post(
+      await makeAuthenticatedRequest(
         `${apiBase}/api/admin-tools/endpoints/test-multiple/`,
-        { endpoint_ids: selected },
-        { headers: { Authorization: `Bearer ${token}` } }
+        'POST',
+        { endpoint_ids: selected }
       );
       await fetchData();
     } catch (error: any) {
       console.error("Error testing endpoints:", error);
-      if (error.response?.status === 401) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "/login";
-        return;
-      }
+      // Token refresh and redirect already handled in makeAuthenticatedRequest
     } finally {
       setTesting([]);
     }
   };
 
-  const discoverAPIs = async () => {
+  const discoverAPIs = async (refreshMode: boolean = false) => {
     setDiscovering(true);
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
       const apiBase = getApiBaseUrl();
-      const response = await axios.post(
+      const response = await makeAuthenticatedRequest(
         `${apiBase}/api/admin-tools/endpoints/discover/`,
-        { base_url: discoverUrl },
-        { headers: { Authorization: `Bearer ${token}` } }
+        'POST',
+        { base_url: discoverUrl, refresh: refreshMode }
       );
       
       // Show success feedback
-      if (response.data.created > 0) {
+      if (refreshMode && response.data.deleted > 0) {
+        console.log(`🔄 Refresh: Deleted ${response.data.deleted} old endpoints, discovered ${response.data.discovered} APIs, created ${response.data.created} new endpoints`);
+        alert(`Refresh complete! Deleted ${response.data.deleted} old endpoints, discovered ${response.data.discovered} APIs, and created ${response.data.created} new endpoints.`);
+      } else if (response.data.created > 0) {
         console.log(`✅ Discovered ${response.data.discovered} APIs, created ${response.data.created} new endpoints`);
         alert(`Success! Discovered ${response.data.discovered} APIs and created ${response.data.created} new endpoints.`);
       } else if (response.data.discovered > 0) {
@@ -252,16 +320,82 @@ export default function AdminAPIMonitoringPage() {
       await fetchData();
     } catch (error: any) {
       console.error("Error discovering APIs:", error);
+      // Token refresh and redirect already handled in makeAuthenticatedRequest
       if (error.response?.status === 401) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "/login";
+        // Already redirected to login, just return
         return;
       }
       const errorMsg = error.response?.data?.error || error.message || 'Unknown error';
       alert(`Discovery failed: ${errorMsg}`);
     } finally {
       setDiscovering(false);
+    }
+  };
+
+  const deleteEndpoint = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this endpoint?")) return;
+    try {
+      const apiBase = getApiBaseUrl();
+      await makeAuthenticatedRequest(
+        `${apiBase}/api/admin-tools/endpoints/${id}/`,
+        'DELETE'
+      );
+      await fetchData();
+    } catch (error: any) {
+      console.error("Error deleting endpoint:", error);
+      // Token refresh and redirect already handled in makeAuthenticatedRequest
+      alert('Failed to delete endpoint: ' + (error.response?.data?.error || error.message));
+    }
+  };
+
+  const handleRefresh = async () => {
+    // Refresh = delete all, discover new, update status
+    if (!confirm("Refresh will delete ALL existing endpoints and re-discover from the base URL. Continue?")) {
+      return;
+    }
+    await discoverAPIs(true); // true = refresh mode
+  };
+
+  // Fix endpoints with wrong port (3001 -> 8000)
+  const fixWrongPorts = async () => {
+    setFixingPorts(true);
+    try {
+      const apiBase = getApiBaseUrl();
+      const wrongPortEndpoints = endpoints.filter(ep => 
+        ep.url.includes(':3000') || ep.url.includes(':3001')
+      );
+      
+      if (wrongPortEndpoints.length === 0) {
+        alert('No endpoints with wrong ports found!');
+        setFixingPorts(false);
+        return;
+      }
+      
+      let fixed = 0;
+      for (const endpoint of wrongPortEndpoints) {
+        const fixedUrl = endpoint.url
+          .replace(':3000', ':8000')
+          .replace(':3001', ':8000');
+        
+        try {
+          await makeAuthenticatedRequest(
+            `${apiBase}/api/admin-tools/endpoints/${endpoint.id}/`,
+            'PUT',
+            { ...endpoint, url: fixedUrl }
+          );
+          fixed++;
+        } catch (error) {
+          console.error(`Failed to fix endpoint ${endpoint.id}:`, error);
+        }
+      }
+      
+      alert(`Fixed ${fixed} out of ${wrongPortEndpoints.length} endpoints!`);
+      await fetchData();
+    } catch (error: any) {
+      console.error("Error fixing ports:", error);
+      alert('Failed to fix endpoints: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setFixingPorts(false);
     }
   };
 
@@ -280,11 +414,6 @@ export default function AdminAPIMonitoringPage() {
   const createEndpoint = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
       const apiBase = getApiBaseUrl();
       
       // Auto-extract path from URL for name if name is empty
@@ -293,10 +422,10 @@ export default function AdminAPIMonitoringPage() {
         name: formData.name || extractPathFromUrl(formData.url),
       };
       
-      await axios.post(
+      await makeAuthenticatedRequest(
         `${apiBase}/api/admin-tools/endpoints/`,
-        endpointData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        'POST',
+        endpointData
       );
       setShowAddForm(false);
       setFormData({
@@ -311,37 +440,24 @@ export default function AdminAPIMonitoringPage() {
       await fetchData();
     } catch (error: any) {
       console.error("Error creating endpoint:", error);
-      if (error.response?.status === 401) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "/login";
-        return;
-      }
+      // Token refresh and redirect already handled in makeAuthenticatedRequest
+      alert('Failed to create endpoint: ' + (error.response?.data?.error || error.message));
     }
   };
 
   const resolveAlert = async (id: number) => {
     try {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        window.location.href = "/login";
-        return;
-      }
       const apiBase = getApiBaseUrl();
-      await axios.post(
+      await makeAuthenticatedRequest(
         `${apiBase}/api/admin-tools/alerts/${id}/resolve/`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        'POST',
+        {}
       );
       await fetchData();
     } catch (error: any) {
       console.error("Error resolving alert:", error);
-      if (error.response?.status === 401) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "/login";
-        return;
-      }
+      // Token refresh and redirect already handled in makeAuthenticatedRequest
+      alert('Failed to resolve alert: ' + (error.response?.data?.error || error.message));
     }
   };
 
@@ -357,7 +473,12 @@ export default function AdminAPIMonitoringPage() {
   }
 
   return (
-    <div className={applyTheme.page()}>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">API Monitoring</h1>
+        <p className="text-muted-foreground mt-1">Monitor API endpoints, track response times, and receive alerts for failures</p>
+      </div>
 
       {/* Stats Cards */}
       {stats && (
@@ -408,17 +529,45 @@ export default function AdminAPIMonitoringPage() {
           <CardDescription>Automatically discover API endpoints from a base URL</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2">
-            <Input
-              value={discoverUrl}
-              onChange={(e) => setDiscoverUrl(e.target.value)}
-              placeholder={typeof window !== 'undefined' ? window.location.origin : "http://localhost:8000"}
-              className="flex-1"
-            />
-            <Button onClick={discoverAPIs} disabled={discovering}>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input
+                value={discoverUrl}
+                onChange={(e) => setDiscoverUrl(e.target.value)}
+                placeholder="http://localhost:8000"
+                className="flex-1"
+              />
+            <Button onClick={() => discoverAPIs(false)} disabled={discovering}>
               <Search className="h-4 w-4 mr-2" />
               {discovering ? "Discovering..." : "Discover"}
             </Button>
+            <Button onClick={() => discoverAPIs(true)} disabled={discovering} variant="outline" title="Delete all and re-discover">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {discovering ? "Refreshing..." : "Refresh All"}
+            </Button>
+            </div>
+            {endpoints.some(ep => ep.url.includes(':3000') || ep.url.includes(':3001')) && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-yellow-800">
+                      ⚠️ Found endpoints with wrong port (3000/3001)
+                    </p>
+                    <p className="text-xs text-yellow-700 mt-1">
+                      These should point to port 8000 (backend), not 3000/3001 (frontend)
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={fixWrongPorts} 
+                    disabled={fixingPorts}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {fixingPorts ? "Fixing..." : "Fix Ports"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -491,9 +640,13 @@ export default function AdminAPIMonitoringPage() {
 
       {/* Action Buttons - Above Tabs */}
       <div className="flex items-center justify-end gap-2 mb-4">
-        <Button onClick={fetchData} variant="outline">
+        <Button onClick={handleRefresh} variant="outline" title="Delete all endpoints and re-discover">
           <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
+          Refresh & Re-discover
+        </Button>
+        <Button onClick={fetchData} variant="outline" title="Reload current data">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Reload
         </Button>
         <Button onClick={testMultiple} disabled={testing.length > 0 || endpoints.filter(e => e.is_active).length === 0}>
           <Play className="h-4 w-4 mr-2" />
@@ -539,7 +692,7 @@ export default function AdminAPIMonitoringPage() {
                 </TableHeader>
                 <TableBody>
                   {endpoints.map((endpoint) => (
-                    <TableRow key={endpoint.id}>
+                    <TableRow key={endpoint.id} className="cursor-pointer hover:bg-slate-50" onClick={() => router.push(`/workspace/api-monitoring/${endpoint.id}`)}>
                       <TableCell className="font-medium text-sm">{endpoint.url}</TableCell>
                       <TableCell className="text-sm text-slate-600">
                         {endpoint.context || 'N/A'}
@@ -570,14 +723,25 @@ export default function AdminAPIMonitoringPage() {
                           : "Never"}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => testEndpoint(endpoint.id)}
-                          disabled={testing.includes(endpoint.id)}
-                        >
-                          <Play className="h-3 w-3" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => testEndpoint(endpoint.id)}
+                            disabled={testing.includes(endpoint.id)}
+                            title="Test endpoint"
+                          >
+                            <Play className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteEndpoint(endpoint.id)}
+                            title="Delete endpoint"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

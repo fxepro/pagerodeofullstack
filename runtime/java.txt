@@ -1,0 +1,9 @@
+Java Runtime Contract
+
+Vendor: Eclipse Temurin (Adoptium)
+Version: OpenJDK 25.0.1 LTS
+Type: JRE
+Architecture: x64
+
+Command required:
+java >= 25.0.1

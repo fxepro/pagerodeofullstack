@@ -6,7 +6,6 @@ from .models import (
     PaymentProviderConfig,
     SubscriptionPlan,
     BillingAddress,
-    PromotionalDeal,
     CoinbaseCharge,
     CoinbaseTransaction,
 )
@@ -104,48 +103,6 @@ class BillingAddressAdmin(admin.ModelAdmin):
     list_filter = ("is_default", "is_active", "payment_provider")
     search_fields = ("user__username", "first_name", "last_name", "email", "city", "country")
     readonly_fields = ("created_at", "updated_at", "last_used_at")
-
-
-@admin.register(PromotionalDeal)
-class PromotionalDealAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug", "base_plan", "discount_percentage", "deal_price", "billing_period", "is_active", "featured", "start_date", "end_date")
-    list_filter = ("is_active", "featured", "billing_period")
-    search_fields = ("name", "slug", "description")
-    readonly_fields = ("created_at", "updated_at", "current_redemptions")
-    prepopulated_fields = {"slug": ("name",)}
-    fieldsets = (
-        ('Deal Information', {
-            'fields': ('name', 'slug', 'description', 'base_plan', 'billing_period')
-        }),
-        ('Pricing', {
-            'fields': ('discount_percentage', 'original_price', 'deal_price')
-        }),
-        ('PayPal Integration', {
-            'fields': ('paypal_plan_id', 'paypal_product_id'),
-            'classes': ('collapse',)
-        }),
-        ('Stripe Integration', {
-            'fields': ('stripe_plan_id', 'stripe_product_id'),
-            'classes': ('collapse',)
-        }),
-        ('Coinbase Integration', {
-            'fields': ('coinbase_plan_id',),
-            'classes': ('collapse',)
-        }),
-        ('Timing', {
-            'fields': ('start_date', 'end_date', 'is_active')
-        }),
-        ('Tracking', {
-            'fields': ('max_redemptions', 'current_redemptions')
-        }),
-        ('Display', {
-            'fields': ('badge_text', 'featured', 'display_priority')
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
 
 
 @admin.register(CoinbaseCharge)

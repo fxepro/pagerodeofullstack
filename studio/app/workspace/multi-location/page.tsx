@@ -554,14 +554,12 @@ export default function MultiLocationPage() {
   }
 
   return (
-    <div className={applyTheme.page()}>
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className={`text-3xl font-bold ${applyTheme.text('primary')}`}>Multi-Location</h1>
-          <p className={`mt-2 ${applyTheme.text('secondary')}`}>
-            Manage AWS Lightsail regions for PageSpeed/Lighthouse runners
-          </p>
+          <h1 className="text-h4-dynamic font-bold">Multi-Location</h1>
+          <p className="text-muted-foreground mt-1">Manage AWS Lightsail regions for PageSpeed/Lighthouse runners</p>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
@@ -590,7 +588,7 @@ export default function MultiLocationPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Active</p>
-                <p className="text-2xl font-bold text-green-400">
+                <p className="text-h2-dynamic font-bold text-green-400">
                   {locations.filter(l => l.status === 'active').length}
                 </p>
               </div>
@@ -604,7 +602,7 @@ export default function MultiLocationPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Pending</p>
-                <p className="text-2xl font-bold text-yellow-400">
+                <p className="text-h2-dynamic font-bold text-yellow-400">
                   {locations.filter(l => l.status === 'pending').length}
                 </p>
               </div>
@@ -618,7 +616,7 @@ export default function MultiLocationPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Avg Latency</p>
-                <p className="text-2xl font-bold text-blue-400">
+                <p className="text-h2-dynamic font-bold text-blue-400">
                   {locations.filter(l => l.latency_ms !== null).length > 0
                     ? Math.round(
                         locations

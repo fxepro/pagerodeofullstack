@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -19,6 +19,32 @@ export default function BlogPostPage() {
   const [post, setPost] = useState<BlogPost | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeHeading, setActiveHeading] = useState<string>('');
+
+  // Extract headings from content and process content with IDs
+  const { headings, processedContent } = useMemo(() => {
+    if (!post?.content) return { headings: [], processedContent: post?.content || '' };
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(post.content, 'text/html');
+    const headingElements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    
+    const headingsList = Array.from(headingElements).map((heading, index) => {
+      const id = `heading-${index}`;
+      heading.id = id;
+      return {
+        id,
+        text: heading.textContent || '',
+        level: parseInt(heading.tagName.charAt(1)),
+        tag: heading.tagName.toLowerCase(),
+      };
+    });
+
+    return {
+      headings: headingsList,
+      processedContent: doc.body.innerHTML,
+    };
+  }, [post?.content]);
 
   useEffect(() => {
     if (slug) {
@@ -73,6 +99,42 @@ export default function BlogPostPage() {
     }
   };
 
+  // Handle scroll to update active heading
+  useEffect(() => {
+    if (headings.length === 0) return;
+
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 100;
+      
+      for (let i = headings.length - 1; i >= 0; i--) {
+        const element = document.getElementById(headings[i].id);
+        if (element && element.offsetTop <= scrollPosition) {
+          setActiveHeading(headings[i].id);
+          break;
+        }
+      }
+    };
+
+    // Wait a bit for content to render
+    const timer = setTimeout(() => {
+      handleScroll(); // Initial check
+      window.addEventListener('scroll', handleScroll);
+    }, 200);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [headings]);
+
+  const scrollToHeading = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveHeading(id);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -88,7 +150,7 @@ export default function BlogPostPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Post not found</h2>
+          <h2 className="text-h2-dynamic font-bold mb-4">Post not found</h2>
           <Button onClick={() => router.push('/blog')}>Back to Blog</Button>
         </div>
       </div>
@@ -97,15 +159,17 @@ export default function BlogPostPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Back Button */}
         <Button variant="ghost" onClick={() => router.push('/blog')} className="mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Blog
         </Button>
 
-        {/* Post Header */}
-        <article className="bg-white rounded-lg shadow-lg p-8 md:p-12">
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Main Article */}
+          <article className="lg:col-span-3 bg-white rounded-lg shadow-lg p-6 md:p-10 overflow-hidden">
           {/* Category and Tags */}
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             {post.category && (
@@ -125,7 +189,7 @@ export default function BlogPostPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">{post.title}</h1>
+          <h1 className="text-h3-dynamic font-bold mb-4">{post.title}</h1>
 
           {/* Meta Information */}
           <div className="flex items-center gap-6 text-muted-foreground mb-6 pb-6 border-b">
@@ -173,15 +237,15 @@ export default function BlogPostPage() {
 
           {/* Excerpt */}
           {post.excerpt && (
-            <p className="text-xl text-muted-foreground mb-8 font-medium">
+            <p className="text-h4-dynamic text-muted-foreground mb-8 font-medium">
               {post.excerpt}
             </p>
           )}
 
           {/* Content */}
           <div
-            className="prose prose-lg max-w-none blog-content"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            className="prose prose-base max-w-none blog-content overflow-hidden break-words"
+            dangerouslySetInnerHTML={{ __html: processedContent || post.content }}
           />
 
           {/* Footer */}
@@ -200,10 +264,49 @@ export default function BlogPostPage() {
           </div>
         </article>
 
+        {/* Table of Contents Sidebar */}
+        {headings.length > 0 && (
+          <aside className="lg:col-span-1">
+            <div className="sticky top-24">
+              <Card className="p-6 bg-white rounded-lg shadow-lg overflow-hidden">
+                <h3 className="text-h4-dynamic font-semibold mb-4">Table of Contents</h3>
+                <nav className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+                  {headings.map((heading) => (
+                    <a
+                      key={heading.id}
+                      href={`#${heading.id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToHeading(heading.id);
+                      }}
+                      className={`block text-sm transition-colors break-words ${
+                        heading.level === 1
+                          ? 'font-semibold pl-0'
+                          : heading.level === 2
+                          ? 'pl-4'
+                          : heading.level === 3
+                          ? 'pl-8 text-muted-foreground'
+                          : 'pl-12 text-muted-foreground text-xs'
+                      } ${
+                        activeHeading === heading.id
+                          ? 'text-palette-primary font-medium'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {heading.text}
+                    </a>
+                  ))}
+                </nav>
+              </Card>
+            </div>
+          </aside>
+        )}
+        </div>
+
         {/* Related Posts */}
         {relatedPosts.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">Related Posts</h2>
+            <h2 className="text-h3-dynamic font-bold mb-6">Related Posts</h2>
             <div className="grid md:grid-cols-3 gap-6">
               {relatedPosts.map((relatedPost) => (
                 <Card key={relatedPost.id} className="hover:shadow-lg transition-shadow">
@@ -219,7 +322,7 @@ export default function BlogPostPage() {
                           />
                         </div>
                       )}
-                      <h3 className="text-lg font-semibold mb-2 hover:text-palette-primary">
+                      <h3 className="text-h4-dynamic font-semibold mb-2 hover:text-palette-primary">
                         {relatedPost.title}
                       </h3>
                       {relatedPost.excerpt && (
@@ -237,31 +340,48 @@ export default function BlogPostPage() {
       </div>
 
       <style jsx global>{`
+        .blog-content {
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          hyphens: auto;
+        }
         .blog-content h1,
         .blog-content h2,
         .blog-content h3,
         .blog-content h4,
         .blog-content h5,
         .blog-content h6 {
-          margin-top: 2em;
-          margin-bottom: 1em;
+          margin-top: 1.5em;
+          margin-bottom: 0.75em;
           font-weight: 600;
+          scroll-margin-top: 100px;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
-        .blog-content h1 { font-size: 2.5em; }
-        .blog-content h2 { font-size: 2em; }
-        .blog-content h3 { font-size: 1.75em; }
-        .blog-content h4 { font-size: 1.5em; }
+        .blog-content h1 { font-size: 2em; }
+        .blog-content h2 { font-size: 1.75em; }
+        .blog-content h3 { font-size: 1.5em; }
+        .blog-content h4 { font-size: 1.25em; }
+        .blog-content h5 { font-size: 1.1em; }
+        .blog-content h6 { font-size: 1em; }
         .blog-content p {
-          margin-bottom: 1.5em;
-          line-height: 1.8;
+          margin-bottom: 1.25em;
+          line-height: 1.7;
+          font-size: 1rem;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
         .blog-content ul,
         .blog-content ol {
           margin-bottom: 1.5em;
           padding-left: 2em;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
         .blog-content li {
           margin-bottom: 0.5em;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
         .blog-content img {
           max-width: 100%;
@@ -272,6 +392,8 @@ export default function BlogPostPage() {
         .blog-content a {
           color: var(--palette-primary);
           text-decoration: underline;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
         .blog-content blockquote {
           border-left: 4px solid var(--palette-primary);
@@ -279,12 +401,16 @@ export default function BlogPostPage() {
           margin: 2em 0;
           font-style: italic;
           color: #666;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
         .blog-content code {
           background: #f4f4f4;
           padding: 0.2em 0.4em;
           border-radius: 4px;
           font-size: 0.9em;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
         .blog-content pre {
           background: #f4f4f4;
@@ -292,10 +418,29 @@ export default function BlogPostPage() {
           border-radius: 8px;
           overflow-x: auto;
           margin: 2em 0;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
         .blog-content pre code {
           background: none;
           padding: 0;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        }
+        .blog-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 2em 0;
+          overflow-x: auto;
+          display: block;
+        }
+        .blog-content table th,
+        .blog-content table td {
+          padding: 0.5em;
+          border: 1px solid #ddd;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
       `}</style>
     </div>

@@ -208,9 +208,11 @@ INSTALLED_APPS = [
     'multilocation',
     'multilanguage',
     'financials',
+    'marketing',
     'emails',
     'dns',
     'blog',
+    'affiliates',
     'site_settings.apps.SettingsConfig',
     'audit_reports',
     'monitoring',
@@ -223,6 +225,9 @@ INSTALLED_APPS = [
     'api_analysis',
     'links_analysis',
     'api_monitoring',
+    'db_management',
+    'collateral',  # Learning Materials (Collateral)
+    'security_monitoring',  # Security Monitoring External Testing
 ]
 
 MIDDLEWARE = [

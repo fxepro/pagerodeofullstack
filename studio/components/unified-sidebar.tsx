@@ -14,6 +14,7 @@ import {
   TrendingUp,
   BarChart3,
   Shield,
+  ShieldCheck,
   Users,
   Monitor,
   Network,
@@ -34,6 +35,8 @@ import {
   Lock,
   Database,
   FileText,
+  GraduationCap,
+  BookOpen,
 } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
 
@@ -94,6 +97,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Lock, // Security icon
   Database, // Database Monitoring icon
   FileText, // Blogging icon
+  GraduationCap, // Learning/Collateral icon
+  BookOpen, // Alternative learning icon
+  ShieldCheck, // Security Audit icon
 };
 
 export function UnifiedSidebar({ navigation, currentPath, collapsed = false, onToggle }: UnifiedSidebarProps) {
@@ -271,14 +277,14 @@ export function UnifiedSidebar({ navigation, currentPath, collapsed = false, onT
                       key={item.id}
                       href={item.href}
                       className={cn(
-                        "flex items-center px-3 py-2 rounded-lg transition-all duration-200",
+                        "flex items-center rounded-lg transition-all duration-200",
                         isActive
                           ? "bg-palette-primary text-white shadow-md"
                           : "text-gray-700 hover:text-palette-primary hover:bg-palette-accent-3",
-                        collapsed ? "justify-center" : "space-x-3"
+                        collapsed ? "justify-center px-3 py-3" : "space-x-3 px-3 py-2"
                       )}
                     >
-                      {IconComponent && <IconComponent className="h-5 w-5 flex-shrink-0" />}
+                      {IconComponent && <IconComponent className={cn("flex-shrink-0", collapsed ? "h-7 w-7" : "h-5 w-5")} />}
                       {!collapsed && (
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{item.title}</p>

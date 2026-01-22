@@ -178,18 +178,9 @@ def discover_api_endpoints(base_url: str) -> list:
     
     Returns list of dicts with 'url', 'method', 'status_code', 'found'
     """
-    common_paths = [
-        '/api/',
-        '/api/v1/',
-        '/api/v2/',
-        '/api/health',
-        '/api/status',
-        '/api/ping',
-        '/api/',
-        '/health',
-        '/status',
-        '/ping',
-        '/api/reports/',
+    # Define endpoints with their expected HTTP methods
+    # POST-only endpoints (analysis endpoints require POST with data)
+    post_only_paths = [
         '/api/analysis/performance/',
         '/api/analysis/ssl/',
         '/api/analysis/dns/',
@@ -197,9 +188,23 @@ def discover_api_endpoints(base_url: str) -> list:
         '/api/analysis/api/',
         '/api/analysis/links/',
         '/api/analysis/typography/',
+        '/api/token/',  # POST for login
+    ]
+    
+    # GET endpoints (or endpoints that might work with GET)
+    get_paths = [
+        '/api/',
+        '/api/v1/',
+        '/api/v2/',
+        '/api/health',
+        '/api/status',
+        '/api/ping',
+        '/health',
+        '/status',
+        '/ping',
+        '/api/reports/',
         '/api/monitor/sites/',
-        '/api/token/',
-        '/api/token/refresh/',
+        '/api/token/refresh/',  # POST but might respond to GET with error
     ]
     
     discovered = []
@@ -213,41 +218,88 @@ def discover_api_endpoints(base_url: str) -> list:
         else:
             base_url = f'https://{base_url}'
     
-    for path in common_paths:
-        url = f"{base_url}{path}"
+    def try_request(url, method='GET', data=None):
+        """Try a request and return response info"""
         try:
-            # Use verify=False for self-signed certs in dev, but should verify in production
-            response = requests.get(url, timeout=5, allow_redirects=False, verify=True)
-            discovered.append({
-                'url': url,
-                'method': 'GET',
-                'status_code': response.status_code,
-                'found': True
-            })
-        except requests.exceptions.SSLError:
-            # Try without SSL verification (for dev environments)
-            try:
-                response = requests.get(url, timeout=5, allow_redirects=False, verify=False)
-                discovered.append({
+            if method == 'POST':
+                # For POST endpoints, send empty JSON to test if endpoint exists
+                # Most will return 400 (bad request) which means endpoint exists
+                response = requests.post(
+                    url, 
+                    json={}, 
+                    timeout=5, 
+                    allow_redirects=False, 
+                    verify=True
+                )
+                # 400, 401, 403, 405 all indicate endpoint exists (just wrong data/method)
+                # 404 means endpoint doesn't exist
+                found = response.status_code != 404
+                return {
+                    'url': url,
+                    'method': 'POST',
+                    'status_code': response.status_code,
+                    'found': found
+                }
+            else:
+                response = requests.get(url, timeout=5, allow_redirects=False, verify=True)
+                return {
                     'url': url,
                     'method': 'GET',
                     'status_code': response.status_code,
                     'found': True
-                })
+                }
+        except requests.exceptions.SSLError:
+            # Try without SSL verification (for dev environments)
+            try:
+                if method == 'POST':
+                    response = requests.post(
+                        url, 
+                        json={}, 
+                        timeout=5, 
+                        allow_redirects=False, 
+                        verify=False
+                    )
+                    found = response.status_code != 404
+                    return {
+                        'url': url,
+                        'method': 'POST',
+                        'status_code': response.status_code,
+                        'found': found
+                    }
+                else:
+                    response = requests.get(url, timeout=5, allow_redirects=False, verify=False)
+                    return {
+                        'url': url,
+                        'method': 'GET',
+                        'status_code': response.status_code,
+                        'found': True
+                    }
             except requests.exceptions.RequestException:
-                discovered.append({
+                return {
                     'url': url,
-                    'method': 'GET',
+                    'method': method,
                     'status_code': None,
                     'found': False
-                })
+                }
         except requests.exceptions.RequestException:
-            discovered.append({
+            return {
                 'url': url,
-                'method': 'GET',
+                'method': method,
                 'status_code': None,
                 'found': False
-            })
+            }
+    
+    # Try POST-only endpoints with POST method
+    for path in post_only_paths:
+        url = f"{base_url}{path}"
+        result = try_request(url, method='POST')
+        discovered.append(result)
+    
+    # Try GET endpoints with GET method
+    for path in get_paths:
+        url = f"{base_url}{path}"
+        result = try_request(url, method='GET')
+        discovered.append(result)
     
     return discovered
 

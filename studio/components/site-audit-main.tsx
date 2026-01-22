@@ -396,7 +396,13 @@ export function SiteAuditMain() {
   };
 
   return (
-    <div className="pt-0">
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h1-dynamic font-bold">Site Audit</h1>
+        <p className="text-muted-foreground mt-1">Comprehensive website analysis including performance, monitoring, SSL, DNS, sitemap, links, and typography</p>
+      </div>
+
       {/* URL Entry Bar */}
       <div className="mb-6 bg-gradient-to-r from-palette-primary to-palette-primary-hover rounded-2xl p-6 shadow-lg">
         <form onSubmit={handleAnalyze} className="flex flex-col gap-4">
@@ -592,7 +598,7 @@ export function SiteAuditMain() {
               {/* Results Tab Content */}
               {activeTab === "results" && (
                 <div>
-                  <h3 className="text-xl font-bold mb-4 text-slate-800 border-b pb-2">Analysis Status</h3>
+                  <h3 className="text-h3-dynamic font-bold mb-4 text-slate-800 border-b pb-2">Analysis Status</h3>
                   
                   {/* Compact Status List */}
                   <div className="bg-white rounded-lg border border-slate-200">
@@ -691,56 +697,56 @@ export function SiteAuditMain() {
               {/* Render analysis results only if completed - key ensures fresh state per URL but not per tab switch */}
               {(orchestrator.state.analyses.performance.state === 'success' || orchestrator.state.analyses.performance.state === 'error') && selectedServices.includes("performance") && (
                 <div key={`perf-${orchestrator.state.url}`} style={{ display: activeTab === "performance" ? "block" : "none" }}>
-                  <h3 className="text-xl font-bold mb-4 text-slate-800 border-b pb-2">Performance Analysis</h3>
+                  <h3 className="text-h3-dynamic font-bold mb-4 text-slate-800 border-b pb-2">Performance Analysis</h3>
                   <PerformanceDashboard url={orchestrator.state.url} />
                   <div className="h-4" />
                 </div>
               )}
               {(orchestrator.state.analyses.monitor.state === 'success' || orchestrator.state.analyses.monitor.state === 'error') && selectedServices.includes("monitor") && (
                 <div key={`mon-${orchestrator.state.url}`} style={{ display: activeTab === "monitor" ? "block" : "none" }}>
-                  <h3 className="text-xl font-bold mb-4 text-slate-800 border-b pb-2">Monitor Analysis</h3>
+                  <h3 className="text-h3-dynamic font-bold mb-4 text-slate-800 border-b pb-2">Monitor Analysis</h3>
                   <MonitorDashboard url={orchestrator.state.url} />
                   <div className="h-4" />
                 </div>
               )}
               {(orchestrator.state.analyses.ssl.state === 'success' || orchestrator.state.analyses.ssl.state === 'error') && selectedServices.includes("ssl") && (
                 <div key={`ssl-${orchestrator.state.url}`} style={{ display: activeTab === "ssl" ? "block" : "none" }}>
-                  <h3 className="text-xl font-bold mb-4 text-slate-800 border-b pb-2">SSL Analysis</h3>
+                  <h3 className="text-h3-dynamic font-bold mb-4 text-slate-800 border-b pb-2">SSL Analysis</h3>
                   <SslDashboard url={orchestrator.state.url} />
                   <div className="h-4" />
                 </div>
               )}
               {(orchestrator.state.analyses.dns.state === 'success' || orchestrator.state.analyses.dns.state === 'error') && selectedServices.includes("dns") && (
                 <div key={`dns-${orchestrator.state.url}`} style={{ display: activeTab === "dns" ? "block" : "none" }}>
-                  <h3 className="text-xl font-bold mb-4 text-slate-800 border-b pb-2">DNS Analysis</h3>
+                  <h3 className="text-h3-dynamic font-bold mb-4 text-slate-800 border-b pb-2">DNS Analysis</h3>
                   <DnsDashboard url={orchestrator.state.url} />
                   <div className="h-4" />
                 </div>
               )}
               {(orchestrator.state.analyses.sitemap.state === 'success' || orchestrator.state.analyses.sitemap.state === 'error') && selectedServices.includes("sitemap") && (
                 <div key={`site-${orchestrator.state.url}`} style={{ display: activeTab === "sitemap" ? "block" : "none" }}>
-                  <h3 className="text-xl font-bold mb-4 text-slate-800 border-b pb-2">Sitemap Analysis</h3>
+                  <h3 className="text-h3-dynamic font-bold mb-4 text-slate-800 border-b pb-2">Sitemap Analysis</h3>
                   <SitemapDashboard url={orchestrator.state.url} />
                   <div className="h-4" />
                 </div>
               )}
               {(orchestrator.state.analyses.api.state === 'success' || orchestrator.state.analyses.api.state === 'error') && selectedServices.includes("api") && (
                 <div key={`api-${orchestrator.state.url}`} style={{ display: activeTab === "api" ? "block" : "none" }}>
-                  <h3 className="text-xl font-bold mb-4 text-slate-800 border-b pb-2">API Analysis</h3>
+                  <h3 className="text-h3-dynamic font-bold mb-4 text-slate-800 border-b pb-2">API Analysis</h3>
                   <ApiDashboard url={orchestrator.state.url} />
                   <div className="h-4" />
                 </div>
               )}
               {(orchestrator.state.analyses.links.state === 'success' || orchestrator.state.analyses.links.state === 'error') && selectedServices.includes("links") && (
                 <div key={`links-${orchestrator.state.url}`} style={{ display: activeTab === "links" ? "block" : "none" }}>
-                  <h3 className="text-xl font-bold mb-4 text-slate-800 border-b pb-2">Links Analysis</h3>
+                  <h3 className="text-h3-dynamic font-bold mb-4 text-slate-800 border-b pb-2">Links Analysis</h3>
                   <LinksDashboard url={orchestrator.state.url} />
                   <div className="h-4" />
                 </div>
               )}
               {(orchestrator.state.analyses.typography.state === 'success' || orchestrator.state.analyses.typography.state === 'error') && selectedServices.includes("typography") && (
                 <div key={`typ-${orchestrator.state.url}`} style={{ display: activeTab === "typography" ? "block" : "none" }}>
-                  <h3 className="text-xl font-bold mb-4 text-slate-800 border-b pb-2">Typography Analysis</h3>
+                  <h3 className="text-h3-dynamic font-bold mb-4 text-slate-800 border-b pb-2">Typography Analysis</h3>
                   <TypographyDashboard url={orchestrator.state.url} />
                   <div className="h-4" />
                 </div>

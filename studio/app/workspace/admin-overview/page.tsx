@@ -22,7 +22,13 @@ import {
 export default function AdminDashboardPage() {
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Admin Overview</h1>
+        <p className="text-muted-foreground mt-1">Monitor platform health, user activity, and system performance</p>
+      </div>
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-white border-slate-200 shadow-sm">
@@ -30,7 +36,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Total Users</p>
-                <p className="text-2xl font-bold text-slate-800">1,234</p>
+                <p className="text-h2-dynamic font-bold text-slate-800">1,234</p>
                 <p className="text-xs text-green-600 flex items-center mt-1">
                   <TrendingUp className="h-3 w-3 mr-1" />
                   +12% from last month
@@ -48,7 +54,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Active Tests</p>
-                <p className="text-2xl font-bold text-slate-800">89</p>
+                <p className="text-h2-dynamic font-bold text-slate-800">89</p>
                 <p className="text-xs text-green-600 flex items-center mt-1">
                   <Activity className="h-3 w-3 mr-1" />
                   +5% from yesterday
@@ -66,7 +72,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">System Health</p>
-                <p className="text-2xl font-bold text-green-600">98.5%</p>
+                <p className="text-h2-dynamic font-bold text-green-600">98.5%</p>
                 <p className="text-xs text-green-600 flex items-center mt-1">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   All systems operational
@@ -84,7 +90,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Feedback</p>
-                <p className="text-2xl font-bold text-slate-800">23</p>
+                <p className="text-h2-dynamic font-bold text-slate-800">23</p>
                 <p className="text-xs text-yellow-600 flex items-center mt-1">
                   <Clock className="h-3 w-3 mr-1" />
                   3 pending review

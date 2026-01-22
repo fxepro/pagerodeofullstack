@@ -283,7 +283,12 @@ export default function AdminFeedbackPage() {
   }
 
   return (
-    <div className={applyTheme.page()}>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Feedback</h1>
+        <p className="text-muted-foreground mt-1">View and manage user feedback and suggestions</p>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -292,7 +297,7 @@ export default function AdminFeedbackPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Total Feedback</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.total}</p>
+                <p className="text-h2-dynamic font-bold text-slate-800">{stats.total}</p>
               </div>
               <MessageSquare className="h-8 w-8 text-blue-400" />
             </div>
@@ -304,7 +309,7 @@ export default function AdminFeedbackPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">New Feedback</p>
-                <p className="text-2xl font-bold text-blue-400">{stats.new}</p>
+                <p className="text-h2-dynamic font-bold text-blue-400">{stats.new}</p>
               </div>
               <Badge className="bg-blue-600 text-white">New</Badge>
             </div>
@@ -316,7 +321,7 @@ export default function AdminFeedbackPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Average Rating</p>
-                <p className="text-2xl font-bold text-yellow-400">
+                <p className="text-h2-dynamic font-bold text-yellow-400">
                   {stats.average_rating.toFixed(1)}
                 </p>
               </div>
@@ -332,7 +337,7 @@ export default function AdminFeedbackPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Response Rate</p>
-                <p className="text-2xl font-bold text-green-400">{stats.response_rate.toFixed(0)}%</p>
+                <p className="text-h2-dynamic font-bold text-green-400">{stats.response_rate.toFixed(0)}%</p>
               </div>
               <Reply className="h-8 w-8 text-green-400" />
             </div>
@@ -499,7 +504,7 @@ export default function AdminFeedbackPage() {
         <Card className="bg-white border-slate-200 shadow-sm">
           <CardContent className="p-12 text-center">
             <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">No feedback found</h3>
+            <h3 className="text-h4-dynamic font-semibold text-slate-800 mb-2">No feedback found</h3>
             <p className="text-slate-500">Try adjusting your search or filter criteria.</p>
           </CardContent>
         </Card>

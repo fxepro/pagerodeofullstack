@@ -21,6 +21,7 @@ import {
   Users,
   Headphones
 } from "lucide-react"
+import { SimpleHeroSection } from "@/components/simple-hero-section"
 
 // Use relative URL in production (browser), localhost in dev (SSR)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
@@ -82,38 +83,13 @@ export function ContactMain() {
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      {/* Hero Section */}
-      <section className="relative min-h-[50vh] flex items-center justify-center bg-gradient-to-br from-palette-accent-2 via-palette-accent-1 to-palette-primary">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -inset-10 opacity-35">
-            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-palette-primary-hover rounded-full mix-blend-multiply filter blur-2xl opacity-60 animate-pulse"></div>
-            <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-800 rounded-full mix-blend-multiply filter blur-2xl opacity-50 animate-pulse animation-delay-2000"></div>
-            <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-palette-primary rounded-full mix-blend-multiply filter blur-2xl opacity-55 animate-pulse animation-delay-4000"></div>
-          </div>
-        </div>
-        
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:100px_100px]"></div>
-        
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <div className="mb-8">
-            <Badge variant="outline" className="border-white/40 text-white bg-white/15 backdrop-blur-sm px-6 py-2 text-sm font-medium shadow-lg">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Get in Touch
-            </Badge>
-          </div>
-          
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Contact Us
-          </h1>
-          
-          <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed">
-            Have questions about our services? Need help with your website performance? 
-            We're here to help you succeed.
-          </p>
-        </div>
-      </section>
+      <SimpleHeroSection
+        title="Contact Us"
+        subtitle="Have questions about our services? Need help with your website performance? We're here to help you succeed."
+        gradientFrom="from-palette-accent-2"
+        gradientVia="via-palette-accent-1"
+        gradientTo="to-palette-primary"
+      />
 
       {/* Main Content */}
       <div className="bg-gradient-to-br from-palette-accent-3 via-white to-palette-accent-3">

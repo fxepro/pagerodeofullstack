@@ -5,13 +5,11 @@ import { applyTheme } from "@/lib/theme";
 
 export default function GoogleAnalyticsPage() {
   return (
-    <div className={applyTheme.page()}>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
-          <TrendingUp className="h-8 w-8 text-palette-primary" />
-          Google Analytics
-        </h1>
-        <p className="text-slate-600 mt-2">View and analyze your Google Analytics data</p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Google Analytics</h1>
+        <p className="text-muted-foreground mt-1">View and analyze your Google Analytics data</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
@@ -23,7 +21,7 @@ export default function GoogleAnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
+            <div className="text-h2-dynamic font-bold">--</div>
             <p className="text-xs text-slate-600 mt-1">Total users</p>
           </CardContent>
         </Card>
@@ -36,7 +34,7 @@ export default function GoogleAnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
+            <div className="text-h2-dynamic font-bold">--</div>
             <p className="text-xs text-slate-600 mt-1">Total views</p>
           </CardContent>
         </Card>
@@ -49,7 +47,7 @@ export default function GoogleAnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
+            <div className="text-h2-dynamic font-bold">--</div>
             <p className="text-xs text-slate-600 mt-1">Total clicks</p>
           </CardContent>
         </Card>
@@ -62,7 +60,7 @@ export default function GoogleAnalyticsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
+            <div className="text-h2-dynamic font-bold">--</div>
             <p className="text-xs text-slate-600 mt-1">Average rate</p>
           </CardContent>
         </Card>

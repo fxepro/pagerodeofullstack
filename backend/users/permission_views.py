@@ -145,6 +145,20 @@ def get_navigation(request):
                         "permission": "database_monitoring.view"
                     },
                     {
+                        "id": "security_monitoring",
+                        "title": "Security Monitoring",
+                        "href": "/workspace/security-monitoring",
+                        "icon": "Shield",
+                        "permission": "security_monitoring.view"
+                    },
+                    {
+                        "id": "security_audit",
+                        "title": "Security Audit",
+                        "href": "/workspace/security-audit",
+                        "icon": "ShieldCheck",
+                        "permission": "security_monitoring.view"
+                    },
+                    {
                         "id": "api_monitoring_user",
                         "title": "API Monitoring",
                         "href": "/workspace/api-monitoring-user",
@@ -152,11 +166,32 @@ def get_navigation(request):
                         "permission": "api_monitoring_user.view"
                     },
                     {
+                        "id": "seo_monitoring",
+                        "title": "SEO Monitoring",
+                        "href": "/workspace/seo-monitoring",
+                        "icon": "Globe",
+                        "permission": "seo_monitoring.view"
+                    },
+                    {
                         "id": "settings",
                         "title": "Settings",
                         "href": "/workspace/settings",
                         "icon": "Settings",
                         "permission": "profile.edit"
+                    }
+                ]
+            },
+            {
+                "id": "collateral",
+                "title": "Collateral",
+                "icon": "GraduationCap",
+                "items": [
+                    {
+                        "id": "collateral_main",
+                        "title": "Learning & Resources",
+                        "href": "/workspace/collateral",
+                        "icon": "GraduationCap",
+                        "permission": "collateral.view"
                     }
                 ]
             },
@@ -178,70 +213,13 @@ def get_navigation(request):
                         "href": "/workspace/wordpress",
                         "icon": "Package",
                         "permission": "wordpress.view"
-                    }
-                ]
-            },
-            {
-                "id": "coming_soon",
-                "title": "Coming Soon",
-                "icon": "Clock",
-                "permission": "users.view",  # Admin only (requires users.view which is admin permission)
-                "items": [
-                    {
-                        "id": "ai_analysis",
-                        "title": "AI Analysis",
-                        "href": "/workspace/ai-analysis",
-                        "icon": "Cpu",
-                        "permission": "users.view"
                     },
                     {
-                        "id": "security_test",
-                        "title": "Security Test",
-                        "href": "/workspace/security",
-                        "icon": "Shield",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "apis",
-                        "title": "APIs",
-                        "href": "/workspace/apis",
-                        "icon": "Network",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "site_maintenance",
-                        "title": "Site Maintenance",
-                        "href": "/workspace/site-maintenance",
-                        "icon": "Wrench",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "saas_monitoring",
-                        "title": "SAAS Monitoring",
-                        "href": "/workspace/saas-monitoring",
-                        "icon": "Plug",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "ui_testing",
-                        "title": "UI Testing",
-                        "href": "/workspace/ui-testing",
-                        "icon": "Monitor",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "seo_monitoring",
-                        "title": "SEO Monitoring",
-                        "href": "/workspace/seo-monitoring",
-                        "icon": "Search",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "cloud_monitoring",
-                        "title": "Cloud Monitoring",
-                        "href": "/workspace/cloud-monitoring",
-                        "icon": "Cloud",
-                        "permission": "users.view"
+                        "id": "communication",
+                        "title": "Communication",
+                        "href": "/workspace/communication",
+                        "icon": "MessageSquare",
+                        "permission": "communication.view"
                     }
                 ]
             },
@@ -315,11 +293,32 @@ def get_navigation(request):
                         "permission": "financials.view"
                     },
                     {
+                        "id": "marketing",
+                        "title": "Marketing & Deals",
+                        "href": "/workspace/marketing",
+                        "icon": "TrendingUp",
+                        "permission": "marketing.view"
+                    },
+                    {
+                        "id": "affiliates",
+                        "title": "Affiliates",
+                        "href": "/workspace/affiliates",
+                        "icon": "Users",
+                        "permission": "affiliates.view"
+                    },
+                    {
                         "id": "blogging",
                         "title": "Blogging",
                         "href": "/workspace/blogging",
                         "icon": "FileText",
                         "permission": "blog.view"
+                    },
+                    {
+                        "id": "collateral_management",
+                        "title": "Collateral",
+                        "href": "/workspace/collateral-management",
+                        "icon": "GraduationCap",
+                        "permission": "users.view"
                     },
                     {
                         "id": "admin_settings",
@@ -351,7 +350,7 @@ def get_navigation(request):
                     },
                     {
                         "id": "security",
-                        "title": "Security",
+                        "title": "Site Security",
                         "href": "/workspace/security",
                         "icon": "Lock",
                         "permission": "users.view"
@@ -487,6 +486,20 @@ def get_sidebar_matrix(request):
                         "permission": "database_monitoring.view"
                     },
                     {
+                        "id": "security_monitoring",
+                        "title": "Security Monitoring",
+                        "href": "/workspace/security-monitoring",
+                        "icon": "Shield",
+                        "permission": "security_monitoring.view"
+                    },
+                    {
+                        "id": "security_audit",
+                        "title": "Security Audit",
+                        "href": "/workspace/security-audit",
+                        "icon": "ShieldCheck",
+                        "permission": "security_monitoring.view"
+                    },
+                    {
                         "id": "api_monitoring_user",
                         "title": "API Monitoring",
                         "href": "/workspace/api-monitoring-user",
@@ -494,11 +507,32 @@ def get_sidebar_matrix(request):
                         "permission": "api_monitoring_user.view"
                     },
                     {
+                        "id": "seo_monitoring",
+                        "title": "SEO Monitoring",
+                        "href": "/workspace/seo-monitoring",
+                        "icon": "Globe",
+                        "permission": "seo_monitoring.view"
+                    },
+                    {
                         "id": "settings",
                         "title": "Settings",
                         "href": "/workspace/settings",
                         "icon": "Settings",
                         "permission": "profile.edit"
+                    }
+                ]
+            },
+            {
+                "id": "collateral",
+                "title": "Collateral",
+                "icon": "GraduationCap",
+                "items": [
+                    {
+                        "id": "collateral_main",
+                        "title": "Learning & Resources",
+                        "href": "/workspace/collateral",
+                        "icon": "GraduationCap",
+                        "permission": "collateral.view"
                     }
                 ]
             },
@@ -520,70 +554,13 @@ def get_sidebar_matrix(request):
                         "href": "/workspace/wordpress",
                         "icon": "Package",
                         "permission": "wordpress.view"
-                    }
-                ]
-            },
-            {
-                "id": "coming_soon",
-                "title": "Coming Soon",
-                "icon": "Clock",
-                "permission": "users.view",  # Admin only (requires users.view which is admin permission)
-                "items": [
-                    {
-                        "id": "ai_analysis",
-                        "title": "AI Analysis",
-                        "href": "/workspace/ai-analysis",
-                        "icon": "Cpu",
-                        "permission": "users.view"
                     },
                     {
-                        "id": "security_test",
-                        "title": "Security Test",
-                        "href": "/workspace/security",
-                        "icon": "Shield",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "apis",
-                        "title": "APIs",
-                        "href": "/workspace/apis",
-                        "icon": "Network",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "site_maintenance",
-                        "title": "Site Maintenance",
-                        "href": "/workspace/site-maintenance",
-                        "icon": "Wrench",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "saas_monitoring",
-                        "title": "SAAS Monitoring",
-                        "href": "/workspace/saas-monitoring",
-                        "icon": "Plug",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "ui_testing",
-                        "title": "UI Testing",
-                        "href": "/workspace/ui-testing",
-                        "icon": "Monitor",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "seo_monitoring",
-                        "title": "SEO Monitoring",
-                        "href": "/workspace/seo-monitoring",
-                        "icon": "Search",
-                        "permission": "users.view"
-                    },
-                    {
-                        "id": "cloud_monitoring",
-                        "title": "Cloud Monitoring",
-                        "href": "/workspace/cloud-monitoring",
-                        "icon": "Cloud",
-                        "permission": "users.view"
+                        "id": "communication",
+                        "title": "Communication",
+                        "href": "/workspace/communication",
+                        "icon": "MessageSquare",
+                        "permission": "communication.view"
                     }
                 ]
             },
@@ -657,11 +634,32 @@ def get_sidebar_matrix(request):
                         "permission": "financials.view"
                     },
                     {
+                        "id": "marketing",
+                        "title": "Marketing & Deals",
+                        "href": "/workspace/marketing",
+                        "icon": "TrendingUp",
+                        "permission": "marketing.view"
+                    },
+                    {
+                        "id": "affiliates",
+                        "title": "Affiliates",
+                        "href": "/workspace/affiliates",
+                        "icon": "Users",
+                        "permission": "affiliates.view"
+                    },
+                    {
                         "id": "blogging",
                         "title": "Blogging",
                         "href": "/workspace/blogging",
                         "icon": "FileText",
                         "permission": "blog.view"
+                    },
+                    {
+                        "id": "collateral_management",
+                        "title": "Collateral",
+                        "href": "/workspace/collateral-management",
+                        "icon": "GraduationCap",
+                        "permission": "users.view"
                     },
                     {
                         "id": "admin_settings",
@@ -693,7 +691,7 @@ def get_sidebar_matrix(request):
                     },
                     {
                         "id": "security",
-                        "title": "Security",
+                        "title": "Site Security",
                         "href": "/workspace/security",
                         "icon": "Lock",
                         "permission": "users.view"

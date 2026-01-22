@@ -243,13 +243,11 @@ export default function SecurityPage() {
   }
 
   return (
-    <div className={applyTheme.page()}>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className={`text-3xl font-bold ${applyTheme.text('primary')}`}>Security Management</h1>
-        <p className={`mt-2 ${applyTheme.text('secondary')}`}>
-          Manage security settings, user authentication, and platform policies
-        </p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-h4-dynamic font-bold">Security Management</h1>
+        <p className="text-muted-foreground mt-1">Manage security settings, user authentication, and platform policies</p>
       </div>
 
       {/* Stats Cards */}
@@ -259,7 +257,7 @@ export default function SecurityPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Total Users</p>
-                <p className={`text-2xl font-bold ${applyTheme.text('primary')}`}>
+                <p className={`text-h2-dynamic font-bold ${applyTheme.text('primary')}`}>
                   {stats?.total_users || 0}
                 </p>
               </div>
@@ -273,7 +271,7 @@ export default function SecurityPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Verified Emails</p>
-                <p className="text-2xl font-bold text-green-400">
+                <p className="text-h2-dynamic font-bold text-green-400">
                   {stats?.verified_emails || 0}
                 </p>
               </div>
@@ -287,7 +285,7 @@ export default function SecurityPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>2FA Enabled</p>
-                <p className="text-2xl font-bold text-blue-400">
+                <p className="text-h2-dynamic font-bold text-blue-400">
                   {stats?.two_factor_enabled || 0}
                 </p>
               </div>
@@ -301,7 +299,7 @@ export default function SecurityPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${applyTheme.text('secondary')}`}>Active Sessions</p>
-                <p className="text-2xl font-bold text-yellow-400">
+                <p className="text-h2-dynamic font-bold text-yellow-400">
                   {stats?.active_sessions || 0}
                 </p>
               </div>
@@ -347,7 +345,7 @@ export default function SecurityPage() {
               <div className="space-y-6">
                 {/* Email Management Settings */}
                 <div>
-                  <h3 className={`text-lg font-semibold ${applyTheme.text('primary')} mb-2`}>
+                  <h3 className={`text-h4-dynamic font-semibold ${applyTheme.text('primary')} mb-2`}>
                     Email Management Settings
                   </h3>
                   <p className={`text-sm ${applyTheme.text('secondary')} mb-6`}>
@@ -425,7 +423,7 @@ export default function SecurityPage() {
 
                 {/* Email Deliverability & Domain Controls */}
                 <div>
-                  <h3 className={`text-lg font-semibold ${applyTheme.text('primary')} mb-2`}>
+                  <h3 className={`text-h4-dynamic font-semibold ${applyTheme.text('primary')} mb-2`}>
                     Email Deliverability & Domain Controls
                   </h3>
                   <p className={`text-sm ${applyTheme.text('secondary')} mb-6`}>
@@ -512,7 +510,7 @@ export default function SecurityPage() {
               <div className="space-y-6">
                 {/* Password Settings Section */}
                 <div>
-                  <h3 className={`text-lg font-semibold ${applyTheme.text('primary')} mb-2`}>
+                  <h3 className={`text-h4-dynamic font-semibold ${applyTheme.text('primary')} mb-2`}>
                     Password Settings
                   </h3>
                   <p className={`text-sm ${applyTheme.text('secondary')} mb-6`}>
@@ -567,7 +565,7 @@ export default function SecurityPage() {
 
                 {/* Password Policy Controls Per Organization */}
                 <div>
-                  <h3 className={`text-lg font-semibold ${applyTheme.text('primary')} mb-2`}>
+                  <h3 className={`text-h4-dynamic font-semibold ${applyTheme.text('primary')} mb-2`}>
                     Password Policy Controls (Per Organization)
                   </h3>
                   <p className={`text-sm ${applyTheme.text('secondary')} mb-6`}>
@@ -672,7 +670,7 @@ export default function SecurityPage() {
             <TabsContent value="mfa" className="mt-6">
               <div className="space-y-6">
                 <div>
-                  <h3 className={`text-lg font-semibold ${applyTheme.text('primary')} mb-2`}>
+                  <h3 className={`text-h4-dynamic font-semibold ${applyTheme.text('primary')} mb-2`}>
                     2-step verification
                   </h3>
                   <p className={`text-sm ${applyTheme.text('secondary')} mb-6`}>
@@ -791,7 +789,7 @@ export default function SecurityPage() {
             <TabsContent value="connections" className="mt-6">
               <div className="space-y-6">
                 <div>
-                  <h3 className={`text-lg font-semibold ${applyTheme.text('primary')} mb-2`}>
+                  <h3 className={`text-h4-dynamic font-semibold ${applyTheme.text('primary')} mb-2`}>
                     Social Login Connections
                   </h3>
                   <p className={`text-sm ${applyTheme.text('secondary')} mb-6`}>
@@ -805,7 +803,7 @@ export default function SecurityPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
                         <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-200">
-                          <span className="text-xl font-bold text-blue-600">G</span>
+                          <span className="text-h3-dynamic font-bold text-blue-600">G</span>
                         </div>
                         <div className="flex-1">
                           <h4 className={`font-semibold ${applyTheme.text('primary')} mb-1`}>Google</h4>
@@ -825,7 +823,7 @@ export default function SecurityPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
                         <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                          <span className="text-xl font-bold text-white">🍎</span>
+                          <span className="text-h3-dynamic font-bold text-white">🍎</span>
                         </div>
                         <div className="flex-1">
                           <h4 className={`font-semibold ${applyTheme.text('primary')} mb-1`}>Apple ID</h4>
@@ -845,7 +843,7 @@ export default function SecurityPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
                         <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                          <span className="text-xl font-bold text-white">f</span>
+                          <span className="text-h3-dynamic font-bold text-white">f</span>
                         </div>
                         <div className="flex-1">
                           <h4 className={`font-semibold ${applyTheme.text('primary')} mb-1`}>Facebook</h4>
@@ -865,7 +863,7 @@ export default function SecurityPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
                         <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center">
-                          <span className="text-xl font-bold text-white">G</span>
+                          <span className="text-h3-dynamic font-bold text-white">G</span>
                         </div>
                         <div className="flex-1">
                           <h4 className={`font-semibold ${applyTheme.text('primary')} mb-1`}>GitHub</h4>
@@ -885,7 +883,7 @@ export default function SecurityPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
                         <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
-                          <span className="text-xl font-bold text-white">M</span>
+                          <span className="text-h3-dynamic font-bold text-white">M</span>
                         </div>
                         <div className="flex-1">
                           <h4 className={`font-semibold ${applyTheme.text('primary')} mb-1`}>Microsoft</h4>
@@ -905,7 +903,7 @@ export default function SecurityPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
                         <div className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center">
-                          <span className="text-xl font-bold text-white">in</span>
+                          <span className="text-h3-dynamic font-bold text-white">in</span>
                         </div>
                         <div className="flex-1">
                           <h4 className={`font-semibold ${applyTheme.text('primary')} mb-1`}>LinkedIn</h4>
@@ -925,7 +923,7 @@ export default function SecurityPage() {
             <TabsContent value="sessions" className="mt-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className={`text-lg font-semibold ${applyTheme.text('primary')}`}>
+                  <h3 className={`text-h4-dynamic font-semibold ${applyTheme.text('primary')}`}>
                     Active Sessions
                   </h3>
                   <Button variant="outline" size="sm">
@@ -945,7 +943,7 @@ export default function SecurityPage() {
             <TabsContent value="admin-policy" className="mt-6">
               <div className="space-y-6">
                 <div>
-                  <h3 className={`text-lg font-semibold ${applyTheme.text('primary')} mb-4`}>
+                  <h3 className={`text-h4-dynamic font-semibold ${applyTheme.text('primary')} mb-4`}>
                     Security Policy Configuration
                   </h3>
                   <div className="space-y-6">

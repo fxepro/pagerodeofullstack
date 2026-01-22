@@ -129,7 +129,7 @@ export default function EditPostPage() {
           Back
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Edit Blog Post</h1>
+          <h1 className="text-h4-dynamic font-bold">Edit Blog Post</h1>
           <p className="text-muted-foreground mt-1">Update your blog post</p>
         </div>
       </div>
@@ -203,14 +203,14 @@ export default function EditPostPage() {
               <div>
                 <Label htmlFor="category">Category</Label>
                 <Select
-                  value={formData.category_id?.toString() || ''}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value ? parseInt(value) : null }))}
+                  value={formData.category_id?.toString() || 'none'}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value === 'none' ? null : parseInt(value) }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id.toString()}>
                         {cat.name}

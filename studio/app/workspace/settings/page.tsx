@@ -173,7 +173,12 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end mb-4">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-h4-dynamic font-bold">Settings</h1>
+          <p className="text-muted-foreground mt-1">Manage your account preferences, monitoring settings, and notifications</p>
+        </div>
         <Button
           onClick={saveSettings}
           disabled={saving}
