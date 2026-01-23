@@ -62,7 +62,7 @@ const nextConfig = {
     pagesBufferLength: 1, // Only 1 page instead of 2
   },
   async rewrites() {
-    // Only use rewrites in development - nginx handles routing in production
+    // Only use rewrites in development - Apache handles routing in production
     if (process.env.NODE_ENV === 'production') {
       return [];
     }
