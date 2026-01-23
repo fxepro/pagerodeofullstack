@@ -10,9 +10,7 @@ import { Label } from "@/components/ui/label";
 import { User, Lock, LogIn, UserPlus } from "lucide-react";
 import { captureEvent, identifyUser } from "@/lib/posthog";
 import { SimpleHeroSection } from "@/components/simple-hero-section";
-
-// Use relative URL in production (browser), localhost in dev (SSR)
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? (typeof window !== 'undefined' ? '' : 'http://localhost:8000');
+import { getApiBaseUrl } from "@/lib/api-config";
 
 export default function WorkspaceLoginPage() {
   const [username, setUsername] = useState("");
@@ -27,7 +25,17 @@ export default function WorkspaceLoginPage() {
     setLoading(true);
     
     try {
-      const res = await axios.post(`${API_BASE}/api/token/`, {
+      const apiBase = getApiBaseUrl();
+      const tokenUrl = `${apiBase}/api/token/`;
+      
+      console.log('[Login] Attempting login with:', {
+        apiBase,
+        tokenUrl,
+        username,
+        hasPassword: !!password
+      });
+      
+      const res = await axios.post(tokenUrl, {
         username,
         password,
       });
@@ -39,7 +47,8 @@ export default function WorkspaceLoginPage() {
       localStorage.removeItem("pagerodeo_analysis_state");
       
       // Fetch user info to check roles
-      const userRes = await axios.get(`${API_BASE}/api/user-info/`, {
+      const apiBase = getApiBaseUrl();
+      const userRes = await axios.get(`${apiBase}/api/user-info/`, {
         headers: { Authorization: `Bearer ${res.data.access}` },
       });
       
@@ -68,13 +77,37 @@ export default function WorkspaceLoginPage() {
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      const errorMessage = err.response?.data?.detail || 
-                          err.response?.data?.error || 
-                          err.response?.data?.message ||
-                          (err.response?.status === 401 ? "Invalid username or password. Please check your credentials." : 
-                           err.response?.status === 400 ? "Invalid request. Please check your input." :
-                           err.response?.status === 500 ? "Server error. Please try again later." :
-                           err.message || "Login failed. Please check your credentials.");
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        url: err.config?.url,
+      });
+      
+      let errorMessage = "Login failed. Please check your credentials.";
+      
+      if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+        errorMessage = "Cannot connect to server. Please check if the backend is running and accessible.";
+      } else if (err.response?.status === 401) {
+        errorMessage = err.response?.data?.detail || 
+                      err.response?.data?.error || 
+                      "Invalid username or password. Please check your credentials.";
+      } else if (err.response?.status === 400) {
+        errorMessage = err.response?.data?.detail || 
+                      err.response?.data?.error || 
+                      "Invalid request. Please check your input.";
+      } else if (err.response?.status === 500) {
+        errorMessage = "Server error. Please try again later.";
+      } else if (err.response?.data) {
+        errorMessage = err.response?.data?.detail || 
+                      err.response?.data?.error || 
+                      err.response?.data?.message ||
+                      errorMessage;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
       setLoading(false);
     }
